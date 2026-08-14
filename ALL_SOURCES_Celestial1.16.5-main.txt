@@ -1,0 +1,4863 @@
+﻿===================================================
+FILE: ALL_SOURCES.txt
+===================================================
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\access\AccessibleMatrix3f.java
+===================================================
+package fishcute.celestial.access;
+
+public interface AccessibleMatrix3f {
+    float celestial$m00(float value);
+    float celestial$m01(float value);
+    float celestial$m02(float value);
+    float celestial$m10(float value);
+    float celestial$m11(float value);
+    float celestial$m12(float value);
+    float celestial$m20(float value);
+    float celestial$m21(float value);
+    float celestial$m22(float value);
+    float celestial$m00();
+    float celestial$m01();
+    float celestial$m02();
+    float celestial$m10();
+    float celestial$m11();
+    float celestial$m12();
+    float celestial$m20();
+    float celestial$m21();
+    float celestial$m22();
+}
+
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\access\AccessibleMatrix4f.java
+===================================================
+package fishcute.celestial.access;
+
+public interface AccessibleMatrix4f {
+    float celestial$m00(float value);
+    float celestial$m01(float value);
+    float celestial$m02(float value);
+    float celestial$m03(float value);
+    float celestial$m10(float value);
+    float celestial$m11(float value);
+    float celestial$m12(float value);
+    float celestial$m13(float value);
+    float celestial$m20(float value);
+    float celestial$m21(float value);
+    float celestial$m22(float value);
+    float celestial$m23(float value);
+    float celestial$m30(float value);
+    float celestial$m31(float value);
+    float celestial$m32(float value);
+    float celestial$m33(float value);
+    float celestial$m00();
+    float celestial$m01();
+    float celestial$m02();
+    float celestial$m03();
+    float celestial$m10();
+    float celestial$m11();
+    float celestial$m12();
+    float celestial$m13();
+    float celestial$m20();
+    float celestial$m21();
+    float celestial$m22();
+    float celestial$m23();
+    float celestial$m30();
+    float celestial$m31();
+    float celestial$m32();
+    float celestial$m33();
+}
+
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\Celestial.java
+===================================================
+package fishcute.celestial;
+
+import fishcute.celestialmain.util.Util;
+import fishcute.celestialmain.version.independent.Instances;
+
+public class Celestial
+{
+	public static final String MOD_ID = "celestial";
+
+	public static void init() {
+		Util.log("Initializing Celestial");
+		VInstances.setInstances();
+	}
+}
+
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\api\CameraMixin.java
+===================================================
+package fishcute.celestial.mixin.api;
+
+import fishcute.celestialmain.api.minecraft.wrappers.ICameraWrapper;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(Camera.class)
+public class CameraMixin implements ICameraWrapper {
+    @Override
+    public boolean celestial$doesFogBlockSky() {
+        Camera self = (Camera)(Object) this;
+        Fluid type = self.getFluidInCamera().getType();
+        return type != Fluids.FLOWING_LAVA || type != Fluids.LAVA;
+    }
+
+    @Override
+    public boolean celestial$doesMobEffectBlockSky() {
+        Entity entity = Minecraft.getInstance().getCameraEntity();
+        if (!(entity instanceof LivingEntity)) {
+            return false;
+        } else {
+            LivingEntity livingEntity = (LivingEntity) entity;
+            return livingEntity.hasEffect(MobEffects.BLINDNESS);
+        }
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\api\ClientLevelMixin.java
+===================================================
+package fishcute.celestial.mixin.api;
+
+import fishcute.celestial.Vector;
+import fishcute.celestialmain.api.minecraft.IMcVector;
+import fishcute.celestialmain.api.minecraft.wrappers.ILevelWrapper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+
+@Mixin(ClientLevel.class)
+public class ClientLevelMixin implements ILevelWrapper {
+    @Shadow @Final private ClientLevel.ClientLevelData clientLevelData;
+
+    @Override
+    public IMcVector celestial$getSkyColor(float tickDelta) {
+        ClientLevel level = (ClientLevel)(Object) this;
+        return Vector.fromVec(level.getSkyColor(Minecraft.getInstance().gameRenderer.getMainCamera().getBlockPosition(), tickDelta));
+    }
+
+    @Override
+    public float[] celestial$getSunriseColor(float tickDelta) {
+        ClientLevel self = (ClientLevel)(Object) this;
+        return Minecraft.getInstance().level.effects().getSunriseColor(self.getTimeOfDay(tickDelta), tickDelta);
+    }
+
+    @Override
+    public float celestial$getTimeOfDay(float tickDelta) {
+        ClientLevel self = (ClientLevel)(Object) this;
+        return self.getTimeOfDay(tickDelta);
+    }
+
+    @Override
+    public float celestial$getSunAngle(float tickDelta) {
+        ClientLevel self = (ClientLevel)(Object) this;
+        return self.getSunAngle(tickDelta);
+    }
+
+    @Override
+    public double celestial$getHorizonHeight() {
+        ClientLevel self = (ClientLevel)(Object) this;
+        return self.getLevelData().getHorizonHeight();
+    }
+
+    @Override
+    public boolean celestial$hasGround() {
+        ClientLevel self = (ClientLevel)(Object) this;
+        return self.effects().hasGround();
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\api\PoseStackMixin.java
+===================================================
+package fishcute.celestial.mixin.api;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Matrix3f;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
+import fishcute.celestial.VMath;
+import fishcute.celestial.access.AccessibleMatrix3f;
+import fishcute.celestial.access.AccessibleMatrix4f;
+import fishcute.celestial.mixin.PoseMixin;
+import fishcute.celestialmain.api.minecraft.wrappers.IPoseStackWrapper;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+
+@Mixin(PoseStack.class)
+public class PoseStackMixin implements IPoseStackWrapper {
+
+    @Override
+    public Object celestial$lastPose() {
+        PoseStack self = ((PoseStack)(Object) this);
+        return self.last().pose();
+    }
+
+    @Override
+    public void celestial$pushPose() {
+        PoseStack self = ((PoseStack)(Object) this);
+        self.pushPose();
+    }
+
+    @Override
+    public void celestial$popPose() {
+        PoseStack self = ((PoseStack)(Object) this);
+        self.popPose();
+    }
+
+    @Override
+    public void celestial$translate(double x, double y, double z) {
+        PoseStack self = ((PoseStack)(Object) this);
+        self.translate((float) x, (float) y, (float) z);
+    }
+
+    @Unique
+    private final static Matrix4f celestial$int4 = new Matrix4f();
+    @Unique
+    private final static Matrix3f celestial$int3 = new Matrix3f();
+
+    @Unique
+    private static final Vector3f celestial$XN = new Vector3f(1.0F, 0.0F, 0.0F);
+    @Unique
+    private static final Vector3f celestial$YN = new Vector3f(0.0F, 1.0F, 0.0F);
+    @Unique
+    private static final Vector3f celestial$ZN = new Vector3f(0.0F, 0.0F, 1.0F);
+
+    @Override
+    public void celestial$mulPose(Axis a, float rot) {
+        switch (a) {
+            case X:
+                VMath.matrix3fSetAxisAngle((AccessibleMatrix3f)(Object) celestial$int3, celestial$XN, rot);
+                this.celestial$mulPose((Object) celestial$int3, (Object) celestial$int4);
+                break;
+            case Y:
+                VMath.matrix3fSetAxisAngle((AccessibleMatrix3f)(Object) celestial$int3, celestial$YN, rot);
+                this.celestial$mulPose((Object) celestial$int3, (Object) celestial$int4);
+                break;
+            case Z:
+                VMath.matrix3fSetAxisAngle((AccessibleMatrix3f)(Object) celestial$int3, celestial$ZN, rot);
+                this.celestial$mulPose((Object) celestial$int3, (Object) celestial$int4);
+                break;
+        }
+    }
+
+    @Override
+    public void celestial$mulPose(Object quaternion) {
+        this.celestial$mulPose(quaternion, (Object) celestial$int4, (Object) celestial$int3);
+    }
+
+    @Override
+    public void celestial$mulPose(Object quaternion, Object intermediate4, Object intermediate3) {
+        PoseStack.Pose pose = ((PoseStack)(Object) this).last();
+        VMath.matrix3fCopyQuaternion(((AccessibleMatrix3f) intermediate3), quaternion);
+        VMath.matrix4fCopyMatrix3f(((AccessibleMatrix4f) intermediate4), (AccessibleMatrix3f) intermediate3);
+
+        ((PoseMixin)(Object) pose).getPose().multiply((Matrix4f) intermediate4);
+        ((PoseMixin)(Object) pose).getNormal().mul((Matrix3f) intermediate3);
+    }
+
+    @Override
+    public void celestial$mulPose(Object matrix3f, Object intermediate4) {
+        PoseStack self = ((PoseStack)(Object) this);
+        PoseStack.Pose pose = self.last();
+        VMath.matrix4fCopyMatrix3f(((AccessibleMatrix4f) intermediate4), (AccessibleMatrix3f) matrix3f);
+        ((PoseMixin)(Object) pose).getPose().multiply((Matrix4f) intermediate4);
+        ((PoseMixin)(Object) pose).getNormal().mul((Matrix3f) matrix3f);
+    }
+
+    @Override
+    public Object celestial$rotate(float i, float j, float k) {
+        this.celestial$pushPose();
+
+        if (i != 0) {
+            this.celestial$mulPose(Axis.X, i);
+        }
+        if (j != 0) {
+            this.celestial$mulPose(Axis.Y, j);
+        }
+        if (k != 0) {
+            this.celestial$mulPose(Axis.Z, k);
+        }
+
+        Object matrix4f = this.celestial$lastPose();
+        this.celestial$popPose();
+
+        return matrix4f;
+    }
+
+    @Override
+    public Object celestial$rotateThenTranslate(float i, float j, float k, float x, float y, float z) {
+        this.celestial$pushPose();
+
+        if (i != 0) {
+            this.celestial$mulPose(Axis.X, i);
+        }
+        if (j != 0) {
+            this.celestial$mulPose(Axis.Y, j);
+        }
+        if (k != 0) {
+            this.celestial$mulPose(Axis.Z, k);
+        }
+
+        this.celestial$translate(x, y, z);
+
+        Object matrix4f = this.celestial$lastPose();
+        this.celestial$popPose();
+
+        return matrix4f;
+    }
+
+    @Override
+    public Object celestial$translateThenRotate(float i, float j, float k, float x, float y, float z) {
+        this.celestial$pushPose();
+
+        this.celestial$translate(x, y, z);
+
+        if (i != 0) {
+            this.celestial$mulPose(Axis.X, i);
+        }
+        if (j != 0) {
+            this.celestial$mulPose(Axis.Y, j);
+        }
+        if (k != 0) {
+            this.celestial$mulPose(Axis.Z, k);
+        }
+
+        Object matrix4f = this.celestial$lastPose();
+        this.celestial$popPose();
+
+        return matrix4f;
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\api\ProgramMixin.java
+===================================================
+package fishcute.celestial.mixin.api;
+
+import com.mojang.blaze3d.shaders.Program;
+import fishcute.celestialmain.api.minecraft.wrappers.IShaderInstanceWrapper;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(Program.class)
+public class ProgramMixin implements IShaderInstanceWrapper {
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\api\ResourceLocationMixin.java
+===================================================
+package fishcute.celestial.mixin.api;
+
+import fishcute.celestialmain.api.minecraft.wrappers.IResourceLocationWrapper;
+import net.minecraft.resources.ResourceLocation;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(ResourceLocation.class)
+public class ResourceLocationMixin implements IResourceLocationWrapper {
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\api\VertexBufferMixin.java
+===================================================
+package fishcute.celestial.mixin.api;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import com.mojang.math.Matrix4f;
+import fishcute.celestialmain.api.math.DrawMode;
+import fishcute.celestialmain.api.minecraft.wrappers.IShaderInstanceWrapper;
+import fishcute.celestialmain.api.minecraft.wrappers.IVertexBufferWrapper;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(VertexBuffer.class)
+public class VertexBufferMixin implements IVertexBufferWrapper {
+    @Override
+    public void celestial$bind() {
+        ((VertexBuffer)(Object) this).bind();
+    }
+
+    //TODO: I Have no clue if this will work
+    @Override
+    public void celestial$drawWithShader(Object matrix, Object projectionMatrix, IShaderInstanceWrapper shader) {
+        VertexBuffer self = ((VertexBuffer)(Object) this);
+
+        self.draw(((Matrix4f) matrix), 7);
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\BiomeMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import net.minecraft.world.level.biome.Biome;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(Biome.class)
+public class BiomeMixin {
+//    @Inject(method = "getFogColor", at = @At("RETURN"), cancellable = true)
+//    private void getFogColor(CallbackInfoReturnable<Integer> info) {
+//        info.setReturnValue(VersionSky.getFogColor(info.getReturnValue(), ((VRenderSystem) Instances.renderSystem).getBiomeFogColor((Biome) (Object) this)));
+//    }
+//    @Inject(method = "getSkyColor", at = @At("RETURN"), cancellable = true)
+//    private void getSkyColor(CallbackInfoReturnable<Integer> info) {
+//        info.setReturnValue(VersionSky.getSkyColor(info.getReturnValue()));
+//    }
+}
+
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\ClientLevelMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import fishcute.celestial.Vector;
+import fishcute.celestialmain.version.independent.VersionSky;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+@Mixin(ClientLevel.class)
+public class ClientLevelMixin {
+    @Inject(method = "getCloudColor", at = @At("RETURN"), cancellable = true)
+    private void getCloudColor(float f, CallbackInfoReturnable<Vec3> info) {
+        float[] color = VersionSky.getCloudColor(new float[]{(float) info.getReturnValue().x, (float) info.getReturnValue().y, (float) info.getReturnValue().z});
+        info.setReturnValue(Vector.toVecFromArray(color));
+    }
+    @Inject(method = "getSkyColor", at = @At("RETURN"), cancellable = true)
+    private void getSkyColor(BlockPos blockPos, float f, CallbackInfoReturnable<Vec3> info) {
+        float[] color = VersionSky.getClientLevelSkyColor(new float[]{(float) info.getReturnValue().x, (float) info.getReturnValue().y, (float) info.getReturnValue().z});
+        info.setReturnValue(Vector.toVecFromArray(color));
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\DimensionSpecialEffectsMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import fishcute.celestialmain.version.independent.VersionSky;
+import net.minecraft.client.renderer.DimensionSpecialEffects;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+@Mixin(DimensionSpecialEffects.class)
+public class DimensionSpecialEffectsMixin {
+
+    @Inject(method = "getCloudHeight", at = @At("RETURN"), cancellable = true)
+    private void getCloudHeight(CallbackInfoReturnable<Float> info) {
+        info.setReturnValue(VersionSky.getCloudHeight(info.getReturnValue()));
+    }
+    @Inject(method = "getSunriseColor", at = @At("RETURN"), cancellable = true)
+    private void getFogColorOverride(float skyAngle, float tickDelta, CallbackInfoReturnable<float[]> info) {
+        info.setReturnValue(new float[]{0, 0, 0, 0});
+    }
+}
+
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\FogRendererMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import fishcute.celestialmain.version.independent.Instances;
+import fishcute.celestialmain.version.independent.VersionSky;
+import net.minecraft.client.Camera;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.FogRenderer;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(FogRenderer.class)
+public class FogRendererMixin {
+    @Inject(method = "setupFog", at = @At("RETURN"))
+    private static void setupFog(Camera camera, FogRenderer.FogMode fogType, float viewDistance, boolean thickFog, CallbackInfo info) {
+        VersionSky.setupFogStartEnd(fogType == FogRenderer.FogMode.FOG_SKY, viewDistance, thickFog);
+        VersionSky.setupFog();
+    }
+
+    @Shadow
+    private static float fogRed;
+
+    @Shadow
+    private static float fogGreen;
+
+    @Shadow
+    private static float fogBlue;
+
+    @Inject(method = "setupColor", at = @At("RETURN"))
+    private static void setupColor(Camera camera, float f, ClientLevel clientLevel, int i, float g, CallbackInfo ci) {
+        float[] color = VersionSky.setupFogColor();
+
+        if (color != null) {
+            fogRed = color[0];
+            fogGreen = color[1];
+            fogBlue = color[2];
+        }
+
+        color = VersionSky.applyPostFogChanges(fogRed, fogGreen, fogBlue);
+        fogRed = color[0];
+        fogGreen = color[1];
+        fogBlue = color[2];
+
+        Instances.renderSystem.clearColor(fogRed, fogGreen, fogBlue, 0.0F);
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\LevelRendererMixin.java
+===================================================
+package fishcute.celestial.mixin;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
+import fishcute.celestialmain.api.minecraft.wrappers.*;
+import fishcute.celestialmain.sky.CelestialSky;
+import fishcute.celestialmain.version.independent.Instances;
+import fishcute.celestialmain.version.independent.VersionLevelRenderer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.LevelRenderer;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(LevelRenderer.class)
+public class LevelRendererMixin {
+    @Shadow
+    private VertexBuffer skyBuffer;
+    @Shadow
+    private VertexBuffer darkBuffer;
+    @Shadow
+    private VertexFormat skyFormat;
+    @Shadow
+    private ClientLevel level;
+
+    private final VersionLevelRenderer.RunnableArg skyFormatF = new VersionLevelRenderer.RunnableArg() {
+        public void run() {
+            if (this.b) {
+                RenderSystem.enableFog();
+                skyFormat.setupBufferState(0L);
+            }
+            else {
+                skyFormat.clearBufferState();
+                RenderSystem.disableFog();
+            }
+        }
+    };
+
+    @Inject(method = "renderSky", at = @At("HEAD"), cancellable = true)
+    private void renderSky(PoseStack matrices, float tickDelta, CallbackInfo info) {
+        if (CelestialSky.doesDimensionHaveCustomSky()) {
+            info.cancel();
+            
+            VersionLevelRenderer.renderLevel((Object) matrices.last().pose(),
+                    (IPoseStackWrapper) matrices,
+                    (IVertexBufferWrapper) skyBuffer,
+                    (IVertexBufferWrapper) darkBuffer,
+                    (ICameraWrapper) Minecraft.getInstance().gameRenderer.getMainCamera(),
+                    (ILevelWrapper) level,
+                    tickDelta,
+                    skyFormatF
+            );
+        }
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\Matrix3fMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import com.mojang.math.Matrix3f;
+import fishcute.celestial.access.AccessibleMatrix3f;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+
+
+@Mixin(Matrix3f.class)
+public class Matrix3fMixin implements AccessibleMatrix3f {
+    @Shadow
+    protected float m00;
+    @Shadow
+    protected float m01;
+    @Shadow
+    protected float m02;
+    @Shadow
+    protected float m10;
+    @Shadow
+    protected float m11;
+    @Shadow
+    protected float m12;
+    @Shadow
+    protected float m20;
+    @Shadow
+    protected float m21;
+    @Shadow
+    protected float m22;
+
+    @Override
+    public float celestial$m00(float value) {
+        this.m00 = value;
+        return this.m00;
+    }
+
+    @Override
+    public float celestial$m01(float value) {
+        this.m01 = value;
+        return this.m01;
+    }
+
+    @Override
+    public float celestial$m02(float value) {
+        this.m02 = value;
+        return this.m02;
+    }
+
+    @Override
+    public float celestial$m10(float value) {
+        this.m10 = value;
+        return this.m10;
+    }
+
+    @Override
+    public float celestial$m11(float value) {
+        this.m11 = value;
+        return this.m11;
+    }
+
+    @Override
+    public float celestial$m12(float value) {
+        this.m12 = value;
+        return this.m12;
+    }
+
+    @Override
+    public float celestial$m20(float value) {
+        this.m20 = value;
+        return this.m20;
+    }
+
+    @Override
+    public float celestial$m21(float value) {
+        this.m21 = value;
+        return this.m21;
+    }
+
+    @Override
+    public float celestial$m22(float value) {
+        this.m22 = value;
+        return this.m22;
+    }
+
+    @Override
+    public float celestial$m00() {
+        return this.m00;
+    }
+
+    @Override
+    public float celestial$m01() {
+        return this.m01;
+    }
+
+    @Override
+    public float celestial$m02() {
+        return this.m02;
+    }
+
+    @Override
+    public float celestial$m10() {
+        return this.m10;
+    }
+
+    @Override
+    public float celestial$m11() {
+        return this.m11;
+    }
+
+    @Override
+    public float celestial$m12() {
+        return this.m12;
+    }
+
+    @Override
+    public float celestial$m20() {
+        return this.m20;
+    }
+
+    @Override
+    public float celestial$m21() {
+        return this.m21;
+    }
+
+    @Override
+    public float celestial$m22() {
+        return this.m22;
+    }
+}
+
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\Matrix4fMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import com.mojang.math.Matrix4f;
+import fishcute.celestial.access.AccessibleMatrix4f;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+
+@Mixin(Matrix4f.class)
+public class Matrix4fMixin implements AccessibleMatrix4f {
+
+    @Shadow
+    protected float m00;
+    @Shadow
+    protected float m01;
+    @Shadow
+    protected float m02;
+    @Shadow
+    protected float m03;
+    @Shadow
+    protected float m10;
+    @Shadow
+    protected float m11;
+    @Shadow
+    protected float m12;
+    @Shadow
+    protected float m13;
+    @Shadow
+    protected float m20;
+    @Shadow
+    protected float m21;
+    @Shadow
+    protected float m22;
+    @Shadow
+    protected float m23;
+    @Shadow
+    protected float m30;
+    @Shadow
+    protected float m31;
+    @Shadow
+    protected float m32;
+    @Shadow
+    protected float m33;
+
+    @Override
+    public float celestial$m00(float value) {
+        this.m00 = value;
+        return this.m00;
+    }
+
+    @Override
+    public float celestial$m01(float value) {
+        this.m01 = value;
+        return this.m01;
+    }
+
+    @Override
+    public float celestial$m02(float value) {
+        this.m02 = value;
+        return this.m02;
+    }
+
+    @Override
+    public float celestial$m03(float value) {
+        this.m03 = value;
+        return this.m03;
+    }
+
+    @Override
+    public float celestial$m10(float value) {
+        this.m10 = value;
+        return this.m10;
+    }
+
+    @Override
+    public float celestial$m11(float value) {
+        this.m11 = value;
+        return this.m11;
+    }
+
+    @Override
+    public float celestial$m12(float value) {
+        this.m12 = value;
+        return this.m12;
+    }
+
+    @Override
+    public float celestial$m13(float value) {
+        this.m13 = value;
+        return this.m13;
+    }
+
+    @Override
+    public float celestial$m20(float value) {
+        this.m20 = value;
+        return this.m20;
+    }
+
+    @Override
+    public float celestial$m21(float value) {
+        this.m21 = value;
+        return this.m21;
+    }
+
+    @Override
+    public float celestial$m22(float value) {
+        this.m22 = value;
+        return this.m22;
+    }
+
+    @Override
+    public float celestial$m23(float value) {
+        this.m23 = value;
+        return this.m23;
+    }
+
+    @Override
+    public float celestial$m30(float value) {
+        this.m30 = value;
+        return this.m30;
+    }
+
+    @Override
+    public float celestial$m31(float value) {
+        this.m31 = value;
+        return this.m31;
+    }
+
+    @Override
+    public float celestial$m32(float value) {
+        this.m32 = value;
+        return this.m32;
+    }
+
+    @Override
+    public float celestial$m33(float value) {
+        this.m33 = value;
+        return this.m33;
+    }
+    @Override
+    public float celestial$m00() {
+        return this.m00;
+    }
+
+    @Override
+    public float celestial$m01() {
+        return this.m01;
+    }
+
+    @Override
+    public float celestial$m02() {
+        return this.m02;
+    }
+
+    @Override
+    public float celestial$m03() {
+        return this.m03;
+    }
+
+    @Override
+    public float celestial$m10() {
+        return this.m10;
+    }
+
+    @Override
+    public float celestial$m11() {
+        return this.m11;
+    }
+
+    @Override
+    public float celestial$m12() {
+        return this.m12;
+    }
+
+    @Override
+    public float celestial$m13() {
+        return this.m13;
+    }
+
+    @Override
+    public float celestial$m20() {
+        return this.m20;
+    }
+
+    @Override
+    public float celestial$m21() {
+        return this.m21;
+    }
+
+    @Override
+    public float celestial$m22() {
+        return this.m22;
+    }
+
+    @Override
+    public float celestial$m23() {
+        return this.m23;
+    }
+
+    @Override
+    public float celestial$m30() {
+        return this.m30;
+    }
+
+    @Override
+    public float celestial$m31() {
+        return this.m31;
+    }
+
+    @Override
+    public float celestial$m32() {
+        return this.m32;
+    }
+
+    @Override
+    public float celestial$m33() {
+        return this.m33;
+    }
+    
+}
+
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\MinecraftMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import fishcute.celestialmain.util.ClientTick;
+import net.minecraft.client.Minecraft;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(Minecraft.class)
+public class MinecraftMixin {
+    @Inject(method = "runTick", at = @At("HEAD"))
+    private void tick(CallbackInfo info) {
+        ClientTick.onTick();
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\PoseMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Matrix3f;
+import com.mojang.math.Matrix4f;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
+
+@Mixin(PoseStack.Pose.class)
+public interface PoseMixin {
+    @Accessor
+    Matrix4f getPose();
+
+    @Accessor
+    Matrix3f getNormal();
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\PoseStackMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
+
+import java.util.Deque;
+
+@Mixin(PoseStack.class)
+public interface PoseStackMixin {
+    @Accessor
+    Deque<PoseStack.Pose> getPoseStack();
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\TextureManagerMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import fishcute.celestialmain.util.ClientTick;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.concurrent.*;
+
+@Mixin(TextureManager.class)
+public class TextureManagerMixin {
+    @Inject(method = "reload", at = @At("RETURN"))
+    private void reload(PreparableReloadListener.PreparationBarrier preparationBarrier, ResourceManager resourceManager, ProfilerFiller profilerFiller, ProfilerFiller profilerFiller2, Executor executor, Executor executor2, CallbackInfoReturnable<CompletableFuture<Void>> cir) {
+        ClientTick.onReload();
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\Vector.java
+===================================================
+package fishcute.celestial;
+
+import fishcute.celestialmain.api.minecraft.IMcVector;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+
+public class Vector implements IMcVector {
+    private final BlockPos.MutableBlockPos blockPos;
+    public static Vector fromVec(Vec3 v) {
+        return new Vector(v.x, v.y, v.z);
+    }
+
+    public Vec3 toVec() {
+        return new Vec3(this.x, this.y, this.z);
+    }
+    public double x;
+    public double y;
+    public double z;
+    public Vector(double x, double y, double z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        blockPos = new BlockPos.MutableBlockPos(x, y, z);
+    }
+
+    @Override
+    public float x() {
+        return (float) this.x;
+    }
+
+    @Override
+    public float y() {
+        return (float) this.y;
+    }
+
+    @Override
+    public float z() {
+        return (float) this.z;
+    }
+
+    @Override
+    public float setX(float v) {
+        this.x = v;
+        this.blockPos.set(v, y, z);
+        return v;
+    }
+
+    @Override
+    public float setY(float v) {
+        this.y = v;
+        this.blockPos.set(x, v, z);
+        return v;
+    }
+
+    @Override
+    public float setZ(float v) {
+        this.z = v;
+        this.blockPos.set(x, y, v);
+        return v;
+    }
+
+    @Override
+    public void set(float x, float y, float z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.blockPos.set(x, y, z);
+    }
+
+    public void set(double x, double y, double z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.blockPos.set(x, y, z);
+    }
+    public BlockPos toBlockPos() {
+        return this.blockPos;
+    }
+    // Putting this here to keep vec things in one file
+    public static Vec3 toVecFromArray(float[] a) {
+        return new Vec3(a[0], a[1], a[2]);
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\VInstances.java
+===================================================
+package fishcute.celestial;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.Tesselator;
+import fishcute.celestialmain.api.minecraft.IMcVector;
+import fishcute.celestialmain.api.minecraft.wrappers.IBufferBuilderWrapper;
+import fishcute.celestialmain.api.minecraft.wrappers.IResourceLocationWrapper;
+import fishcute.celestialmain.api.minecraft.wrappers.IShaderInstanceWrapper;
+import fishcute.celestialmain.version.independent.Instances;
+
+public class VInstances {
+    public static void setInstances() {
+        Instances.minecraft = new VMinecraftInstance();
+        Instances.renderSystem = new VRenderSystem();
+
+        Instances.bufferBuilderFactory = new Factories.BufferBuilder();
+        Instances.shaderInstanceFactory = new Factories.ShaderInstance();
+        Instances.resourceLocationFactory = new Factories.ResourceLocation();
+        Instances.vectorFactory = new Factories.Vector();
+    }
+
+    protected interface Factories {
+        class BufferBuilder implements IBufferBuilderWrapper.Factory {
+            @Override
+            public IBufferBuilderWrapper build() {
+                return (IBufferBuilderWrapper) Tesselator.getInstance().getBuilder();
+            }
+        }
+
+        class ShaderInstance implements IShaderInstanceWrapper.Factory {
+            @Override
+            public IShaderInstanceWrapper build() {
+                return null;
+            }
+        }
+
+        class ResourceLocation implements IResourceLocationWrapper.Factory {
+            @Override
+            public IResourceLocationWrapper build(String name) {
+                return (IResourceLocationWrapper) new net.minecraft.resources.ResourceLocation(name);
+            }
+        }
+
+        class Vector implements IMcVector.Factory {
+
+            @Override
+            public IMcVector build(float x, float y, float z) {
+            return new fishcute.celestial.Vector(x, y, z);
+            }
+        }
+    }
+}
+
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\VMath.java
+===================================================
+package fishcute.celestial;
+
+import com.mojang.math.Quaternion;
+import com.mojang.math.Vector3f;
+import fishcute.celestial.access.AccessibleMatrix3f;
+import fishcute.celestial.access.AccessibleMatrix4f;
+import net.minecraft.util.Mth;
+
+public class VMath {
+    public static float sin(float o) {
+        return Mth.sin(o);
+    }
+    public static float cos(float o) {
+        return Mth.cos(o);
+    }
+    public static void matrix3fCopyQuaternion(AccessibleMatrix3f matrix3f, Object quaternion) {
+        Quaternion quat = (Quaternion) quaternion;
+        float f = quat.r();
+        float g = quat.i();
+        float h = quat.j();
+        float i = quat.k();
+        float j = 2.0F * f * f;
+        float k = 2.0F * g * g;
+        float l = 2.0F * h * h;
+        matrix3f.celestial$m00(1.0F - k - l);
+        matrix3f.celestial$m11(1.0F - l - j);
+        matrix3f.celestial$m22(1.0F - j - k);
+        float m = f * g;
+        float n = g * h;
+        float o = h * f;
+        float p = f * i;
+        float q = g * i;
+        float r = h * i;
+        matrix3f.celestial$m10(2.0F * (m + r));
+        matrix3f.celestial$m01(2.0F * (m - r));
+        matrix3f.celestial$m20(2.0F * (o - q));
+        matrix3f.celestial$m02(2.0F * (o + q));
+        matrix3f.celestial$m21(2.0F * (n + p));
+        matrix3f.celestial$m12(2.0F * (n - p));
+    }
+    public static void matrix3fSetAxisAngle(AccessibleMatrix3f matrix3f, Vector3f axis, float angle) {
+        angle *= 0.017453292F;
+
+        float g = Mth.sin(angle / 2.0F);
+        float a = axis.x() * g;
+        float b = axis.y() * g;
+        float c = axis.z() * g;
+        float d = Mth.cos(angle / 2.0F);
+
+        float j = 2.0F * a * a;
+        float k = 2.0F * b * b;
+        float l = 2.0F * c * c;
+        matrix3f.celestial$m00(1.0F - k - l);
+        matrix3f.celestial$m11(1.0F - l - j);
+        matrix3f.celestial$m22(1.0F - j - k);
+        float m = a * b;
+        float n = b * c;
+        float o = c * a;
+        float p = a * d;
+        float q = b * d;
+        float r = c * d;
+        matrix3f.celestial$m10(2.0F * (m + r));
+        matrix3f.celestial$m01(2.0F * (m - r));
+        matrix3f.celestial$m20(2.0F * (o - q));
+        matrix3f.celestial$m02(2.0F * (o + q));
+        matrix3f.celestial$m21(2.0F * (n + p));
+        matrix3f.celestial$m12(2.0F * (n - p));
+    }
+
+    public static void matrix4fCopyQuaternion(AccessibleMatrix4f matrix4f, Quaternion quaternion) {
+        float f = quaternion.r();
+        float g = quaternion.i();
+        float h = quaternion.j();
+        float i = quaternion.k();
+        float j = 2.0F * f * f;
+        float k = 2.0F * g * g;
+        float l = 2.0F * h * h;
+        matrix4f.celestial$m00(1.0F - k - l);
+        matrix4f.celestial$m11(1.0F - l - j);
+        matrix4f.celestial$m22(1.0F - j - k);
+        matrix4f.celestial$m33(1.0F);
+        float m = f * g;
+        float n = g * h;
+        float o = h * f;
+        float p = f * i;
+        float q = g * i;
+        float r = h * i;
+        matrix4f.celestial$m10(2.0F * (m + r));
+        matrix4f.celestial$m01(2.0F * (m - r));
+        matrix4f.celestial$m20(2.0F * (o - q));
+        matrix4f.celestial$m02(2.0F * (o + q));
+        matrix4f.celestial$m21(2.0F * (n + p));
+        matrix4f.celestial$m12(2.0F * (n - p));
+    }
+
+    public static void matrix4fCopyMatrix3f(AccessibleMatrix4f matrix4f, AccessibleMatrix3f matrix3f) {
+        matrix4f.celestial$m00((matrix3f).celestial$m00());
+        matrix4f.celestial$m11((matrix3f).celestial$m11());
+        matrix4f.celestial$m22((matrix3f).celestial$m22());
+        matrix4f.celestial$m10((matrix3f).celestial$m10());
+        matrix4f.celestial$m01((matrix3f).celestial$m01());
+        matrix4f.celestial$m20((matrix3f).celestial$m20());
+        matrix4f.celestial$m02((matrix3f).celestial$m02());
+        matrix4f.celestial$m21((matrix3f).celestial$m21());
+        matrix4f.celestial$m12((matrix3f).celestial$m12());
+
+        matrix4f.celestial$m03(0.0f);
+        matrix4f.celestial$m13(0.0f);
+        matrix4f.celestial$m23(0.0f);
+        matrix4f.celestial$m30(0.0f);
+        matrix4f.celestial$m31(0.0f);
+        matrix4f.celestial$m32(0.0f);
+        matrix4f.celestial$m33(0.0f);
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\VMinecraftInstance.java
+===================================================
+package fishcute.celestial;
+
+import com.mojang.datafixers.util.Pair;
+import com.mojang.math.Vector3f;
+import fishcute.celestialmain.api.minecraft.IMcVector;
+import fishcute.celestialmain.api.minecraft.IMinecraftInstance;
+import fishcute.celestialmain.api.minecraft.wrappers.IResourceLocationWrapper;
+import fishcute.celestialmain.util.Util;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.util.CubicSampler;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.phys.Vec3;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+public class VMinecraftInstance implements IMinecraftInstance {
+    private static final Minecraft minecraft = Minecraft.getInstance();
+    public boolean doesLevelExist() {
+        return minecraft.level != null;
+    }
+    public boolean doesPlayerExist() {
+        return minecraft.player != null;
+    }
+    public String getLevelPath() {
+        return minecraft.level.dimension().location().getPath();
+    }
+    public float getTickDelta() {
+        return minecraft.getFrameTime();
+    }
+
+    @Override
+    public long getMillis() {
+        return net.minecraft.Util.getMillis();
+    }
+
+    public Vector getPlayerEyePosition() {
+        return Vector.fromVec(minecraft.player.getEyePosition(getTickDelta()));
+    }
+
+    public void sendFormattedErrorMessage(String error, String type, String location) {
+        minecraft.player.displayClientMessage(
+
+                Component.nullToEmpty(ChatFormatting.DARK_RED +
+                        "[Celestial] " + type +
+                        ChatFormatting.GRAY + " at " +
+                        ChatFormatting.YELLOW + location +
+                        ChatFormatting.GRAY + ": " +
+                        ChatFormatting.WHITE + error
+                ), false);
+    }
+    public void sendInfoMessage(String i) {
+        minecraft.player.displayClientMessage(Component.nullToEmpty(
+                ChatFormatting.DARK_AQUA + "[Celestial] " +
+                        ChatFormatting.AQUA + i), false);
+    }
+    public void sendErrorMessage(String i) {
+        minecraft.player.displayClientMessage(
+                Component.nullToEmpty(ChatFormatting.DARK_RED +
+                        "[Celestial] " +
+                        ChatFormatting.RED + i
+                ), false);
+    }
+    public void sendRedMessage(String i) {
+        minecraft.player.displayClientMessage(
+                Component.nullToEmpty(ChatFormatting.RED + i
+                ), false);
+    }
+    public InputStream getResource(String path) throws IOException {
+        return minecraft.getResourceManager().getResource(new ResourceLocation(path)).getInputStream();
+    }
+    public boolean isGamePaused() {
+        return minecraft.isPaused();
+    }
+    public void sendMessage(String text, boolean actionBar) {
+        minecraft.player.displayClientMessage(Component.nullToEmpty(text), actionBar);
+    }
+    public double getPlayerX() {
+        return minecraft.player.getX();
+    }
+    public double getPlayerY() {
+        return minecraft.player.getY();
+    }
+    public double getPlayerZ() {
+        return minecraft.player.getZ();
+    }
+    public double getRainLevel() {
+        return minecraft.level.getRainLevel(getTickDelta());
+    }
+    public boolean isPlayerInWater() {
+        return minecraft.player.isInWater();
+    }
+    public long getGameTime() {
+        return minecraft.level.getGameTime();
+    }
+    public long getWorldTime() {
+        return minecraft.level.dayTime();
+    }
+    public float getStarBrightness() {
+        return minecraft.level.getStarBrightness(getTickDelta());
+    }
+    public float getTimeOfDay() {
+        return minecraft.level.getTimeOfDay(getTickDelta());
+    }
+    public float getViewXRot() {
+        return minecraft.player.getViewXRot(getTickDelta());
+    }
+    public float getViewYRot() {
+        return minecraft.player.getViewYRot(getTickDelta());
+    }
+
+    @Override
+    public float getCameraLookVectorTwilight(float h, float rotate) {
+        Vector3f v = minecraft.gameRenderer.getMainCamera().getLookVector();
+        v.transform(Vector3f.YP.rotation(rotate * 0.0174533F));
+        return v.dot(new Vector3f(h, 0.0F, 0.0F));
+    }
+
+    public BlockPos getPlayerBlockPosition() {
+        return minecraft.player.blockPosition();
+    }
+    public float getRenderDistance() {
+        return minecraft.options.renderDistance;
+    }
+    public float getMoonPhase() {
+        return minecraft.level.getMoonPhase();
+    }
+    public float getSkyDarken() {
+        return minecraft.level.getSkyDarken();
+    }
+    public float getBossSkyDarken() {
+        return minecraft.gameRenderer.getDarkenWorldAmount(getTickDelta());
+    }
+    public float getSkyFlashTime() {
+        return minecraft.level.getSkyFlashTime();
+    }
+    public float getThunderLevel() {
+        return minecraft.level.getThunderLevel(getTickDelta());
+    }
+    public float getSkyLight() {
+        return minecraft.level.getBrightness(LightLayer.SKY, getPlayerBlockPosition());
+    }
+    public float getBlockLight() {
+        return minecraft.level.getBrightness(LightLayer.BLOCK, getPlayerBlockPosition());
+    }
+    public float getBiomeTemperature() {
+        return minecraft.level.getBiome(getPlayerBlockPosition()).getBaseTemperature();
+    }
+    public float getBiomeDownfall() {
+        // TODO: Experiment with this
+        return minecraft.level.getBiome(getPlayerBlockPosition()).getDownfall() > 0 ? 1 : 0;
+    }
+    public boolean getBiomeSnow() {
+        return minecraft.level.getBiome(getPlayerBlockPosition()).getBaseTemperature() <= 0.15;
+    }
+    public boolean isRightClicking() {
+        return minecraft.mouseHandler.isRightPressed();
+    }
+    public boolean isLeftClicking() {
+        return minecraft.mouseHandler.isLeftPressed();
+    }
+    public IResourceLocationWrapper getMainHandItemKey() {
+        return (IResourceLocationWrapper) Registry.ITEM.getKey(minecraft.player.getMainHandItem().getItem());
+    }
+    public String getMainHandItemNamespace() {
+        return ((ResourceLocation) getMainHandItemKey()).getNamespace();
+    }
+    public String getMainHandItemPath() {
+        return ((ResourceLocation) getMainHandItemKey()).getPath();
+    }
+
+    // TODO: Experiment with biome stuff working
+    HashMap<Biome, Pair<String, String>> biomeNameMap = new HashMap<>();
+
+    public void addToBiomeMap(Biome biome, ResourceKey<Biome> b) {
+        biomeNameMap.put(biome,
+                new com.mojang.datafixers.util.Pair<>(
+                        b.location().getPath() + ":" + b.location().getNamespace(),
+                        b.location().getPath()
+                ));
+    }
+    public boolean equalToBiome(IMcVector position, String... name) {
+        Biome biome = minecraft.level.getBiome(position == null ? getPlayerBlockPosition() : ((Vector) position).toBlockPos());
+        Optional<ResourceKey<Biome>> b = minecraft.level.getBiomeName(position == null ? getPlayerBlockPosition() : ((Vector) position).toBlockPos());
+
+        String biomePath = b.get().location().getPath();
+        String biomeNamespace  = b.get().location().getNamespace();
+
+        if (!biomeNameMap.containsKey(biome))
+            addToBiomeMap(biome, b.get());
+        return Arrays.stream(name).collect(Collectors.toList()).contains(biomeNameMap.get(biome).getFirst())
+                || Arrays.stream(name).collect(Collectors.toList()).contains(biomeNameMap.get(biome).getSecond());
+
+        //return Arrays.stream(name).toList().contains(biomeNameMap.get(b.get().location().getPath())) || Arrays.stream(name).toList().contains(biomeNameMap.get(b.value()).getB());
+    }
+    public double[] getBiomeSkyColor() {
+        double[] c = new double[3];
+        Util.getRealSkyColor = true;
+        Vec3 vec = CubicSampler.gaussianSampleVec3(minecraft.player.position(), (ix, jx, kx) -> {
+            return Vec3.fromRGB24((minecraft.level.getBiome(new BlockPos(ix, jx, kx))).getSkyColor());
+        });
+        Util.getRealSkyColor = false;
+        c[0] = vec.x;
+        c[1] = vec.y;
+        c[2] = vec.z;
+        return c;
+    }
+    public double[] getBiomeFogColor() {
+        double[] c = new double[3];
+        Util.getRealFogColor = true;
+        Vec3 vec = CubicSampler.gaussianSampleVec3(minecraft.player.position(), (ix, jx, kx) -> {
+            return Vec3.fromRGB24((minecraft.level.getBiome(new BlockPos(ix, jx, kx))).getFogColor());
+        });
+        Util.getRealFogColor = false;
+        c[0] = vec.x;
+        c[1] = vec.y;
+        c[2] = vec.z;
+        return c;
+    }
+
+    @Override
+    public double[] getBiomeWaterFogColor() {
+        double[] c = new double[3];
+        Util.getRealFogColor = true;
+        Vec3 vec = CubicSampler.gaussianSampleVec3(minecraft.player.position(), (ix, jx, kx) -> {
+            return Vec3.fromRGB24((minecraft.level.getBiome(new BlockPos(ix, jx, kx))).getWaterFogColor());
+        });
+        Util.getRealFogColor = false;
+        c[0] = vec.x;
+        c[1] = vec.y;
+        c[2] = vec.z;
+        return c;
+    }
+
+    @Override
+    public float getWaterVision() {
+        return minecraft.player.getWaterVision();
+    }
+
+    @Override
+    public boolean doesBiomeHaveCloserFog() {
+        return false;
+    }
+
+    public boolean isCameraInWater() {
+        return minecraft.cameraEntity != null && minecraft.cameraEntity.isEyeInFluid(FluidTags.WATER);
+    }
+
+    @Override
+    public boolean isCameraInLava() {
+        return minecraft.cameraEntity != null && minecraft.cameraEntity.isEyeInFluid(FluidTags.LAVA);
+    }
+
+    @Override
+    public boolean isCameraInPowderedSnow() {
+        // Powdered snow does not exist in 1.16
+        return false;
+    }
+
+    @Override
+    public boolean isCameraBlinded() {
+        return minecraft.player.hasEffect(MobEffects.BLINDNESS);
+    }
+
+    public double getNightVisionModifier() {
+        if (!doesPlayerExist() || !minecraft.player.hasEffect(MobEffects.NIGHT_VISION))
+            return 0;
+        return GameRenderer.getNightVisionScale(minecraft.player, getTickDelta());
+    }
+    public boolean isSneaking() {
+        return minecraft.player.isShiftKeyDown();
+    }
+
+    public float getDarknessFogEffect(float fogStart) {
+        // Darkness does not exist in 1.16
+        return 0;
+    }
+    public boolean hasDarkness() {
+        // Darkness does not exist in 1.16
+        return false;
+    }
+}
+
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\VRenderSystem.java
+===================================================
+package fishcute.celestial;
+
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import fishcute.celestialmain.api.minecraft.IRenderSystem;
+import fishcute.celestialmain.api.minecraft.wrappers.IBufferBuilderWrapper;
+import fishcute.celestialmain.api.minecraft.wrappers.IResourceLocationWrapper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.biome.Biome;
+
+public class VRenderSystem implements IRenderSystem {
+    public void setShaderFogStart(float start) {
+        RenderSystem.fogStart(start);
+        RenderSystem.setupNvFogDistance();
+    }
+    public void setShaderFogEnd(float end) {
+        RenderSystem.fogEnd(end);
+        RenderSystem.setupNvFogDistance();
+    }
+    public int getBiomeFogColor(Biome biome) {
+        return biome.getSpecialEffects().getFogColor();
+    }
+    public void levelFogColor() {
+        FogRenderer.levelFogColor();
+    }
+    public void setupNoFog() {
+        FogRenderer.setupNoFog();
+    }
+    public void defaultBlendFunc() {
+        RenderSystem.defaultBlendFunc();
+    }
+
+    public void depthMask(boolean enable) {
+        RenderSystem.depthMask(enable);
+    }
+    public void setShaderColor(float f, float g, float h, float a) {
+        RenderSystem.color4f(f, g, h, a);
+    }
+    public void clearColor(float f, float g, float h, float a) {
+        RenderSystem.clearColor(f, g, h, a);
+    }
+    public void unbindVertexBuffer() {
+        VertexBuffer.unbind();
+    }
+    public void toggleBlend(boolean enable) {
+        if (enable)
+            RenderSystem.enableBlend();
+        else
+            RenderSystem.disableBlend();
+    }
+    public void defaultBlendFunction() {
+        RenderSystem.defaultBlendFunc();
+    }
+    public void setShaderPositionColor() {
+        //RenderSystem.setShader(GameRenderer::getPositionColorShader);
+    }
+    public void setShaderPositionTex() {
+        //RenderSystem.setShader(GameRenderer::getPositionTexShader);
+    }
+
+    public void toggleTexture(boolean texture) {
+        if (texture) {
+            RenderSystem.enableTexture();
+        }
+        else {
+            RenderSystem.disableTexture();
+        }
+    }
+    public void blendFuncSeparate() {
+        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+    }
+
+    public void setShaderTexture(int i, IResourceLocationWrapper j) {
+        Minecraft.getInstance().getTextureManager().bind((ResourceLocation) j);
+    }
+    public void shadeModel(int i) {
+        RenderSystem.shadeModel(i);
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\resources\celestial-common.mixins.json
+===================================================
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "fishcute.celestial.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "BiomeMixin",
+    "ClientLevelMixin",
+    "DimensionSpecialEffectsMixin",
+    "FogRendererMixin",
+    "LevelRendererMixin",
+    "MinecraftMixin",
+    "PoseMixin",
+    "PoseStackMixin",
+    "api.BufferBuilderMixin",
+    "api.CameraMixin",
+    "api.PoseStackMixin",
+    "api.VertexBufferMixin",
+    "TextureManagerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "Matrix3fMixin",
+    "Matrix4fMixin",
+    "api.ClientLevelMixin",
+    "api.ResourceLocationMixin"
+  ]
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\fabric\src\main\java\fishcute\celestial\fabric\CelestialFabric.java
+===================================================
+package fishcute.celestial.fabric;
+
+
+import com.mojang.blaze3d.platform.InputConstants;
+import fishcute.celestial.Celestial;
+import fishcute.celestialmain.util.ClientTick;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.ResourceManager;
+
+public class CelestialFabric implements ModInitializer {
+
+    public static KeyMapping reloadSky;
+    @Override
+    public void onInitialize() {
+        Celestial.init();
+
+        reloadSky = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+                "key.reload_sky",
+                InputConstants.getKey("key.keyboard.f10").getValue(),
+                "key.categories.misc"
+        ));
+
+        ClientTickEvents.END_CLIENT_TICK.register((endTick -> {
+            while (reloadSky.consumeClick()) {
+                ClientTick.onReloadKey();
+            }
+        }));
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\fabric\src\main\resources\fabric.mod.json
+===================================================
+{
+  "schemaVersion": 1,
+  "id": "celestial",
+  "version": "${version}",
+
+  "name": "Celestial",
+  "description": "A Minecraft mod for Fabric and Forge that allows you to customize the sky.",
+  "authors": [
+    "fishcute",
+    "block36_"
+  ],
+  "contact": {
+    "repo": "https://github.com/fishcute/Celestial",
+    "sources": "https://github.com/fishcute/Celestial1.18.2",
+    "issues": "https://github.com/fishcute/Celestial/issues"
+  },
+
+  "license": "MIT",
+  "icon": "icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "fishcute.celestial.fabric.CelestialFabric"
+    ]
+  },
+  "mixins": [
+    "celestial-common.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.7",
+    "minecraft": ">=1.16.5"
+  }
+}
+
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\forge\gradle.properties
+===================================================
+loom.platform=forge
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\forge\src\main\java\fishcute\celestial\forge\CelestialForge.java
+===================================================
+package fishcute.celestial.forge;
+
+
+import com.mojang.blaze3d.platform.InputConstants;
+import fishcute.celestial.Celestial;
+import fishcute.celestialmain.util.ClientTick;
+import net.minecraft.client.KeyMapping;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.Mod;
+
+@Mod(Celestial.MOD_ID)
+public class CelestialForge {
+    private static KeyMapping reloadSky = new KeyMapping(
+            "key.reload_sky",
+            InputConstants.getKey("key.keyboard.f10").getValue(),
+            "key.categories.misc"
+    );
+
+    @SubscribeEvent
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
+            while (reloadSky.consumeClick()) {
+                ClientTick.onReload();
+            }
+        }
+    }
+    public CelestialForge() {
+        Celestial.init();
+        ClientRegistry.registerKeyBinding(reloadSky);
+        MinecraftForge.EVENT_BUS.register(CelestialForge.class);
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\gradle.properties
+===================================================
+org.gradle.jvmargs=-Xmx3G
+
+minecraft_version=1.16.5
+enabled_platforms=fabric,forge
+
+archives_base_name=Celestial1.16.5
+mod_version=2.1
+maven_group=fishcute
+
+architectury_version=${ARCHITECTURY_API_VERSION}
+
+fabric_loader_version=0.15.7
+fabric_api_version=0.42.0+1.16
+
+forge_version=1.16.5-36.2.34
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\gradle\wrapper\gradle-wrapper.properties
+===================================================
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.6-bin.zip
+networkTimeout=10000
+validateDistributionUrl=true
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+
+
+
+
+
+
+
+===================================================
+FILE: merge_final.ps1
+===================================================
+$folderName = Split-Path -Leaf (Get-Location)
+$outputFile = "ALL_SOURCES_$folderName.txt"
+
+$binaryExtensions = @(
+    ".jar", ".class", ".zip", ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico",
+    ".ttf", ".otf", ".mp3", ".ogg", ".wav", ".exe", ".dll", ".so", ".dylib",
+    ".7z", ".rar", ".pdf", ".woff", ".woff2", ".nbt", ".dat",
+    ".bin", ".mca", ".gz", ".dat_old", ".probe", ".lock"
+)
+
+$excludeDirNames = @(".git", ".gradle", "build", "bin", "out", ".idea", "objects", "assets")
+
+if (Test-Path $outputFile) { Remove-Item $outputFile }
+
+$allFiles = Get-ChildItem -Path . -Recurse -File -ErrorAction SilentlyContinue
+Write-Host "Всего файлов в проекте: $($allFiles.Count)"
+
+$files = $allFiles | Where-Object {
+    $f = $_
+    $ext = [System.IO.Path]::GetExtension($f.Name).ToLower()
+    if ($binaryExtensions -contains $ext) { return $false }
+
+    $pathParts = $f.FullName -split '\\'
+    $inExcluded = $false
+    foreach ($dirName in $excludeDirNames) {
+        if ($pathParts -contains $dirName) { $inExcluded = $true; break }
+    }
+    -not $inExcluded
+}
+Write-Host "Подходящих файлов после фильтра: $($files.Count)"
+
+$sw = New-Object System.IO.StreamWriter($outputFile, $false, [System.Text.Encoding]::UTF8)
+$i = 0
+foreach ($file in $files) {
+    $relativePath = $file.FullName.Replace((Get-Location).Path + "\", "")
+    $sw.WriteLine("===================================================")
+    $sw.WriteLine("FILE: $relativePath")
+    $sw.WriteLine("===================================================")
+    try {
+        $sw.WriteLine([System.IO.File]::ReadAllText($file.FullName))
+    } catch {
+        $sw.WriteLine("[ОШИБКА ЧТЕНИЯ ФАЙЛА: $($_.Exception.Message)]")
+    }
+    $sw.WriteLine("`n")
+    $i++
+    if ($i % 500 -eq 0) { Write-Host "Обработано: $i / $($files.Count)" }
+}
+$sw.Close()
+
+$sizeKB = (Get-Item $outputFile).Length / 1KB
+Write-Host "Готово. Файл: $outputFile"
+Write-Host "Размер: $sizeKB KB"
+
+
+
+===================================================
+FILE: merge_sources.ps1
+===================================================
+$outputFile = "ALL_SOURCES.txt"
+
+$extensions = @(
+    "*.java", "*.kt", "*.kts",
+    "*.gradle", "*.properties",
+    "*.json", "*.yml", "*.yaml",
+    "*.md", "*.txt", "*.xml"
+)
+
+$excludeDirs = @(".git", ".gradle", "build", "assets", "bin", "out")
+
+if (Test-Path $outputFile) { Remove-Item $outputFile }
+
+$files = @()
+foreach ($ext in $extensions) {
+    $files += Get-ChildItem -Path . -Recurse -Filter $ext -File -ErrorAction SilentlyContinue
+}
+
+$files = $files | Sort-Object FullName -Unique | Where-Object {
+    $path = $_.FullName
+    $skip = $false
+    foreach ($dir in $excludeDirs) {
+        if ($path -match [regex]::Escape($dir)) { $skip = $true }
+    }
+    -not $skip
+}
+
+Write-Host "Files found: $($files.Count)"
+
+foreach ($file in $files) {
+    $relativePath = $file.FullName.Replace((Get-Location).Path + "\", "")
+    Add-Content -Path $outputFile -Value "==================================================="
+    Add-Content -Path $outputFile -Value "FILE: $relativePath"
+    Add-Content -Path $outputFile -Value "==================================================="
+    Get-Content -Path $file.FullName -Raw -ErrorAction SilentlyContinue | Add-Content -Path $outputFile
+    Add-Content -Path $outputFile -Value "`n`n"
+}
+
+$sizeKB = (Get-Item $outputFile).Length / 1KB
+Write-Host "Done. Output file: $outputFile"
+Write-Host "Size: $sizeKB KB"
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\.gitignore
+===================================================
+# User-specific stuff
+.idea/
+
+*.iml
+*.ipr
+*.iws
+
+# IntelliJ
+out/
+# mpeltonen/sbt-idea plugin
+.idea_modules/
+
+# JIRA plugin
+atlassian-ide-plugin.xml
+
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+*~
+
+# temporary files which can be created if a process still has a handle open of a deleted file
+.fuse_hidden*
+
+# KDE directory preferences
+.directory
+
+# Linux trash folder which might appear on any partition or disk
+.Trash-*
+
+# .nfs files are created when an open file is removed but is still being accessed
+.nfs*
+
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows thumbnail cache files
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+
+# Dump file
+*.stackdump
+
+# Folder config file
+[Dd]esktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+.gradle
+build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Cache of project
+.gradletasknamecache
+
+**/build/
+
+# Common working directory
+run/
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\.gitmodules
+===================================================
+[submodule "CelestialMain"]
+	path = CelestialMain
+	url = https://github.com/fishcute/CelestialMain.git
+[submodule "CelestialExpressions"]
+	path = CelestialExpressions
+	url = https://github.com/block36underscore/CelestialExpressions.git
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\build.gradle
+===================================================
+plugins {
+    id "architectury-plugin" version "3.4-SNAPSHOT"
+    id "dev.architectury.loom" version "1.3-SNAPSHOT" apply false
+}
+
+architectury {
+    minecraft = rootProject.minecraft_version
+}
+
+subprojects {
+    apply plugin: "dev.architectury.loom"
+
+    loom {
+        silentMojangMappingsLicense()
+    }
+
+    dependencies {
+        minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
+        // The following line declares the mojmap mappings, you may use other mappings as well
+        mappings loom.officialMojangMappings()
+        // The following line declares the yarn mappings you may select this one as well.
+        // mappings "net.fabricmc:yarn:@YARN_MAPPINGS@:v2"
+    }
+}
+
+allprojects {
+    apply plugin: "java"
+    apply plugin: "architectury-plugin"
+    apply plugin: "maven-publish"
+
+    archivesBaseName = rootProject.archives_base_name
+    version = rootProject.mod_version
+    group = rootProject.maven_group
+
+    repositories {
+        // Add repositories to retrieve artifacts from in here.
+        // You should only use this when depending on other mods because
+        // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+        // See https://docs.gradle.org/current/userguide/declaring_repositories.html
+        // for more information about repositories.
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
+        options.release.set(8)
+    }
+
+    java {
+        withSourcesJar()
+
+//        toolchain {
+//            languageVersion = JavaLanguageVersion.of(8)
+//        }
+    }
+}
+
+configure(subprojects.findAll {it.name != "CelestialExpressions"} ) {
+    dependencies {
+        implementation project(":CelestialExpressions")
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\gradle.properties
+===================================================
+org.gradle.jvmargs=-Xmx3G
+
+minecraft_version=1.16.5
+enabled_platforms=fabric,forge
+
+archives_base_name=Celestial1.16.5
+mod_version=2.1
+maven_group=fishcute
+
+architectury_version=${ARCHITECTURY_API_VERSION}
+
+fabric_loader_version=0.15.7
+fabric_api_version=0.42.0+1.16
+
+forge_version=1.16.5-36.2.34
+
+
+===================================================
+FILE: Celestial1.16.5-main\gradlew
+===================================================
+#!/bin/sh
+
+#
+# Copyright © 2015-2021 the original authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+##############################################################################
+#
+#   Gradle start up script for POSIX generated by Gradle.
+#
+#   Important for running:
+#
+#   (1) You need a POSIX-compliant shell to run this script. If your /bin/sh is
+#       noncompliant, but you have some other compliant shell such as ksh or
+#       bash, then to run this script, type that shell name before the whole
+#       command line, like:
+#
+#           ksh Gradle
+#
+#       Busybox and similar reduced shells will NOT work, because this script
+#       requires all of these POSIX shell features:
+#         * functions;
+#         * expansions «$var», «${var}», «${var:-default}», «${var+SET}»,
+#           «${var#prefix}», «${var%suffix}», and «$( cmd )»;
+#         * compound commands having a testable exit status, especially «case»;
+#         * various built-in commands including «command», «set», and «ulimit».
+#
+#   Important for patching:
+#
+#   (2) This script targets any POSIX shell, so it avoids extensions provided
+#       by Bash, Ksh, etc; in particular arrays are avoided.
+#
+#       The "traditional" practice of packing multiple parameters into a
+#       space-separated string is a well documented source of bugs and security
+#       problems, so this is (mostly) avoided, by progressively accumulating
+#       options in "$@", and eventually passing that to Java.
+#
+#       Where the inherited environment variables (DEFAULT_JVM_OPTS, JAVA_OPTS,
+#       and GRADLE_OPTS) rely on word-splitting, this is performed explicitly;
+#       see the in-line comments for details.
+#
+#       There are tweaks for specific operating systems such as AIX, CygWin,
+#       Darwin, MinGW, and NonStop.
+#
+#   (3) This script is generated from the Groovy template
+#       https://github.com/gradle/gradle/blob/HEAD/subprojects/plugins/src/main/resources/org/gradle/api/internal/plugins/unixStartScript.txt
+#       within the Gradle project.
+#
+#       You can find Gradle at https://github.com/gradle/gradle/.
+#
+##############################################################################
+
+# Attempt to set APP_HOME
+
+# Resolve links: $0 may be a link
+app_path=$0
+
+# Need this for daisy-chained symlinks.
+while
+    APP_HOME=${app_path%"${app_path##*/}"}  # leaves a trailing /; empty if no leading path
+    [ -h "$app_path" ]
+do
+    ls=$( ls -ld "$app_path" )
+    link=${ls#*' -> '}
+    case $link in             #(
+      /*)   app_path=$link ;; #(
+      *)    app_path=$APP_HOME$link ;;
+    esac
+done
+
+# This is normally unused
+# shellcheck disable=SC2034
+APP_BASE_NAME=${0##*/}
+# Discard cd standard output in case $CDPATH is set (https://github.com/gradle/gradle/issues/25036)
+APP_HOME=$( cd "${APP_HOME:-./}" > /dev/null && pwd -P ) || exit
+
+# Use the maximum available, or set MAX_FD != -1 to use that value.
+MAX_FD=maximum
+
+warn () {
+    echo "$*"
+} >&2
+
+die () {
+    echo
+    echo "$*"
+    echo
+    exit 1
+} >&2
+
+# OS specific support (must be 'true' or 'false').
+cygwin=false
+msys=false
+darwin=false
+nonstop=false
+case "$( uname )" in                #(
+  CYGWIN* )         cygwin=true  ;; #(
+  Darwin* )         darwin=true  ;; #(
+  MSYS* | MINGW* )  msys=true    ;; #(
+  NONSTOP* )        nonstop=true ;;
+esac
+
+CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
+
+
+# Determine the Java command to use to start the JVM.
+if [ -n "$JAVA_HOME" ] ; then
+    if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
+        # IBM's JDK on AIX uses strange locations for the executables
+        JAVACMD=$JAVA_HOME/jre/sh/java
+    else
+        JAVACMD=$JAVA_HOME/bin/java
+    fi
+    if [ ! -x "$JAVACMD" ] ; then
+        die "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME
+
+Please set the JAVA_HOME variable in your environment to match the
+location of your Java installation."
+    fi
+else
+    JAVACMD=java
+    if ! command -v java >/dev/null 2>&1
+    then
+        die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+
+Please set the JAVA_HOME variable in your environment to match the
+location of your Java installation."
+    fi
+fi
+
+# Increase the maximum file descriptors if we can.
+if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
+    case $MAX_FD in #(
+      max*)
+        # In POSIX sh, ulimit -H is undefined. That's why the result is checked to see if it worked.
+        # shellcheck disable=SC2039,SC3045
+        MAX_FD=$( ulimit -H -n ) ||
+            warn "Could not query maximum file descriptor limit"
+    esac
+    case $MAX_FD in  #(
+      '' | soft) :;; #(
+      *)
+        # In POSIX sh, ulimit -n is undefined. That's why the result is checked to see if it worked.
+        # shellcheck disable=SC2039,SC3045
+        ulimit -n "$MAX_FD" ||
+            warn "Could not set maximum file descriptor limit to $MAX_FD"
+    esac
+fi
+
+# Collect all arguments for the java command, stacking in reverse order:
+#   * args from the command line
+#   * the main class name
+#   * -classpath
+#   * -D...appname settings
+#   * --module-path (only if needed)
+#   * DEFAULT_JVM_OPTS, JAVA_OPTS, and GRADLE_OPTS environment variables.
+
+# For Cygwin or MSYS, switch paths to Windows format before running java
+if "$cygwin" || "$msys" ; then
+    APP_HOME=$( cygpath --path --mixed "$APP_HOME" )
+    CLASSPATH=$( cygpath --path --mixed "$CLASSPATH" )
+
+    JAVACMD=$( cygpath --unix "$JAVACMD" )
+
+    # Now convert the arguments - kludge to limit ourselves to /bin/sh
+    for arg do
+        if
+            case $arg in                                #(
+              -*)   false ;;                            # don't mess with options #(
+              /?*)  t=${arg#/} t=/${t%%/*}              # looks like a POSIX filepath
+                    [ -e "$t" ] ;;                      #(
+              *)    false ;;
+            esac
+        then
+            arg=$( cygpath --path --ignore --mixed "$arg" )
+        fi
+        # Roll the args list around exactly as many times as the number of
+        # args, so each arg winds up back in the position where it started, but
+        # possibly modified.
+        #
+        # NB: a `for` loop captures its iteration list before it begins, so
+        # changing the positional parameters here affects neither the number of
+        # iterations, nor the values presented in `arg`.
+        shift                   # remove old arg
+        set -- "$@" "$arg"      # push replacement arg
+    done
+fi
+
+
+# Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
+DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+
+# Collect all arguments for the java command:
+#   * DEFAULT_JVM_OPTS, JAVA_OPTS, JAVA_OPTS, and optsEnvironmentVar are not allowed to contain shell fragments,
+#     and any embedded shellness will be escaped.
+#   * For example: A user cannot expect ${Hostname} to be expanded, as it is an environment variable and will be
+#     treated as '${Hostname}' itself on the command line.
+
+set -- \
+        "-Dorg.gradle.appname=$APP_BASE_NAME" \
+        -classpath "$CLASSPATH" \
+        org.gradle.wrapper.GradleWrapperMain \
+        "$@"
+
+# Stop when "xargs" is not available.
+if ! command -v xargs >/dev/null 2>&1
+then
+    die "xargs is not available"
+fi
+
+# Use "xargs" to parse quoted args.
+#
+# With -n1 it outputs one arg per line, with the quotes and backslashes removed.
+#
+# In Bash we could simply go:
+#
+#   readarray ARGS < <( xargs -n1 <<<"$var" ) &&
+#   set -- "${ARGS[@]}" "$@"
+#
+# but POSIX shell has neither arrays nor command substitution, so instead we
+# post-process each arg (as a line of input to sed) to backslash-escape any
+# character that might be a shell metacharacter, then use eval to reverse
+# that process (while maintaining the separation between arguments), and wrap
+# the whole thing up as a single "set" statement.
+#
+# This will of course break if any of these variables contains a newline or
+# an unmatched quote.
+#
+
+eval "set -- $(
+        printf '%s\n' "$DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS" |
+        xargs -n1 |
+        sed ' s~[^-[:alnum:]+,./:=@_]~\\&~g; ' |
+        tr '\n' ' '
+    )" '"$@"'
+
+exec "$JAVACMD" "$@"
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\gradlew.bat
+===================================================
+@rem
+@rem Copyright 2015 the original author or authors.
+@rem
+@rem Licensed under the Apache License, Version 2.0 (the "License");
+@rem you may not use this file except in compliance with the License.
+@rem You may obtain a copy of the License at
+@rem
+@rem      https://www.apache.org/licenses/LICENSE-2.0
+@rem
+@rem Unless required by applicable law or agreed to in writing, software
+@rem distributed under the License is distributed on an "AS IS" BASIS,
+@rem WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+@rem See the License for the specific language governing permissions and
+@rem limitations under the License.
+@rem
+
+@if "%DEBUG%"=="" @echo off
+@rem ##########################################################################
+@rem
+@rem  Gradle startup script for Windows
+@rem
+@rem ##########################################################################
+
+@rem Set local scope for the variables with windows NT shell
+if "%OS%"=="Windows_NT" setlocal
+
+set DIRNAME=%~dp0
+if "%DIRNAME%"=="" set DIRNAME=.
+@rem This is normally unused
+set APP_BASE_NAME=%~n0
+set APP_HOME=%DIRNAME%
+
+@rem Resolve any "." and ".." in APP_HOME to make it shorter.
+for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
+
+@rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
+set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
+
+@rem Find java.exe
+if defined JAVA_HOME goto findJavaFromJavaHome
+
+set JAVA_EXE=java.exe
+%JAVA_EXE% -version >NUL 2>&1
+if %ERRORLEVEL% equ 0 goto execute
+
+echo. 1>&2
+echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH. 1>&2
+echo. 1>&2
+echo Please set the JAVA_HOME variable in your environment to match the 1>&2
+echo location of your Java installation. 1>&2
+
+goto fail
+
+:findJavaFromJavaHome
+set JAVA_HOME=%JAVA_HOME:"=%
+set JAVA_EXE=%JAVA_HOME%/bin/java.exe
+
+if exist "%JAVA_EXE%" goto execute
+
+echo. 1>&2
+echo ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME% 1>&2
+echo. 1>&2
+echo Please set the JAVA_HOME variable in your environment to match the 1>&2
+echo location of your Java installation. 1>&2
+
+goto fail
+
+:execute
+@rem Setup the command line
+
+set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
+
+
+@rem Execute Gradle
+"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
+
+:end
+@rem End local scope for the variables with windows NT shell
+if %ERRORLEVEL% equ 0 goto mainEnd
+
+:fail
+rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
+rem the _cmd.exe /c_ return code!
+set EXIT_CODE=%ERRORLEVEL%
+if %EXIT_CODE% equ 0 set EXIT_CODE=1
+if not ""=="%GRADLE_EXIT_CONSOLE%" exit %EXIT_CODE%
+exit /b %EXIT_CODE%
+
+:mainEnd
+if "%OS%"=="Windows_NT" endlocal
+
+:omega
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\LICENSE
+===================================================
+The MIT License (MIT)
+
+Copyright (c) 2024 fishcute, block36_
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\settings.gradle
+===================================================
+pluginManagement {
+    repositories {
+        maven { url "https://maven.fabricmc.net/" }
+        maven { url "https://maven.architectury.dev/" }
+        maven { url "https://maven.minecraftforge.net/" }
+        gradlePluginPortal()
+    }
+}
+
+include("common")
+include("fabric")
+include("forge")
+
+include(":CelestialMain")
+
+include(":CelestialExpressions")
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\build.gradle
+===================================================
+architectury {
+    common(rootProject.enabled_platforms.split(","))
+}
+
+
+
+dependencies {
+    // We depend on fabric loader here to use the fabric @Environment annotations and get the mixin dependencies
+    // Do NOT use other classes from fabric loader
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    implementation project(":CelestialMain")
+}
+
+publishing {
+    publications {
+        mavenCommon(MavenPublication) {
+            artifactId = rootProject.archives_base_name
+            from components.java
+        }
+    }
+
+    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+    repositories {
+        // Add repositories to publish to here.
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\Celestial.java
+===================================================
+package fishcute.celestial;
+
+import fishcute.celestialmain.util.Util;
+import fishcute.celestialmain.version.independent.Instances;
+
+public class Celestial
+{
+	public static final String MOD_ID = "celestial";
+
+	public static void init() {
+		Util.log("Initializing Celestial");
+		VInstances.setInstances();
+	}
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\Vector.java
+===================================================
+package fishcute.celestial;
+
+import fishcute.celestialmain.api.minecraft.IMcVector;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+
+public class Vector implements IMcVector {
+    private final BlockPos.MutableBlockPos blockPos;
+    public static Vector fromVec(Vec3 v) {
+        return new Vector(v.x, v.y, v.z);
+    }
+
+    public Vec3 toVec() {
+        return new Vec3(this.x, this.y, this.z);
+    }
+    public double x;
+    public double y;
+    public double z;
+    public Vector(double x, double y, double z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        blockPos = new BlockPos.MutableBlockPos(x, y, z);
+    }
+
+    @Override
+    public float x() {
+        return (float) this.x;
+    }
+
+    @Override
+    public float y() {
+        return (float) this.y;
+    }
+
+    @Override
+    public float z() {
+        return (float) this.z;
+    }
+
+    @Override
+    public float setX(float v) {
+        this.x = v;
+        this.blockPos.set(v, y, z);
+        return v;
+    }
+
+    @Override
+    public float setY(float v) {
+        this.y = v;
+        this.blockPos.set(x, v, z);
+        return v;
+    }
+
+    @Override
+    public float setZ(float v) {
+        this.z = v;
+        this.blockPos.set(x, y, v);
+        return v;
+    }
+
+    @Override
+    public void set(float x, float y, float z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.blockPos.set(x, y, z);
+    }
+
+    public void set(double x, double y, double z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.blockPos.set(x, y, z);
+    }
+    public BlockPos toBlockPos() {
+        return this.blockPos;
+    }
+    // Putting this here to keep vec things in one file
+    public static Vec3 toVecFromArray(float[] a) {
+        return new Vec3(a[0], a[1], a[2]);
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\VInstances.java
+===================================================
+package fishcute.celestial;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.Tesselator;
+import fishcute.celestialmain.api.minecraft.IMcVector;
+import fishcute.celestialmain.api.minecraft.wrappers.IBufferBuilderWrapper;
+import fishcute.celestialmain.api.minecraft.wrappers.IResourceLocationWrapper;
+import fishcute.celestialmain.api.minecraft.wrappers.IShaderInstanceWrapper;
+import fishcute.celestialmain.version.independent.Instances;
+
+public class VInstances {
+    public static void setInstances() {
+        Instances.minecraft = new VMinecraftInstance();
+        Instances.renderSystem = new VRenderSystem();
+
+        Instances.bufferBuilderFactory = new Factories.BufferBuilder();
+        Instances.shaderInstanceFactory = new Factories.ShaderInstance();
+        Instances.resourceLocationFactory = new Factories.ResourceLocation();
+        Instances.vectorFactory = new Factories.Vector();
+    }
+
+    protected interface Factories {
+        class BufferBuilder implements IBufferBuilderWrapper.Factory {
+            @Override
+            public IBufferBuilderWrapper build() {
+                return (IBufferBuilderWrapper) Tesselator.getInstance().getBuilder();
+            }
+        }
+
+        class ShaderInstance implements IShaderInstanceWrapper.Factory {
+            @Override
+            public IShaderInstanceWrapper build() {
+                return null;
+            }
+        }
+
+        class ResourceLocation implements IResourceLocationWrapper.Factory {
+            @Override
+            public IResourceLocationWrapper build(String name) {
+                return (IResourceLocationWrapper) new net.minecraft.resources.ResourceLocation(name);
+            }
+        }
+
+        class Vector implements IMcVector.Factory {
+
+            @Override
+            public IMcVector build(float x, float y, float z) {
+            return new fishcute.celestial.Vector(x, y, z);
+            }
+        }
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\VMath.java
+===================================================
+package fishcute.celestial;
+
+import com.mojang.math.Quaternion;
+import com.mojang.math.Vector3f;
+import fishcute.celestial.access.AccessibleMatrix3f;
+import fishcute.celestial.access.AccessibleMatrix4f;
+import net.minecraft.util.Mth;
+
+public class VMath {
+    public static float sin(float o) {
+        return Mth.sin(o);
+    }
+    public static float cos(float o) {
+        return Mth.cos(o);
+    }
+    public static void matrix3fCopyQuaternion(AccessibleMatrix3f matrix3f, Object quaternion) {
+        Quaternion quat = (Quaternion) quaternion;
+        float f = quat.r();
+        float g = quat.i();
+        float h = quat.j();
+        float i = quat.k();
+        float j = 2.0F * f * f;
+        float k = 2.0F * g * g;
+        float l = 2.0F * h * h;
+        matrix3f.celestial$m00(1.0F - k - l);
+        matrix3f.celestial$m11(1.0F - l - j);
+        matrix3f.celestial$m22(1.0F - j - k);
+        float m = f * g;
+        float n = g * h;
+        float o = h * f;
+        float p = f * i;
+        float q = g * i;
+        float r = h * i;
+        matrix3f.celestial$m10(2.0F * (m + r));
+        matrix3f.celestial$m01(2.0F * (m - r));
+        matrix3f.celestial$m20(2.0F * (o - q));
+        matrix3f.celestial$m02(2.0F * (o + q));
+        matrix3f.celestial$m21(2.0F * (n + p));
+        matrix3f.celestial$m12(2.0F * (n - p));
+    }
+    public static void matrix3fSetAxisAngle(AccessibleMatrix3f matrix3f, Vector3f axis, float angle) {
+        angle *= 0.017453292F;
+
+        float g = Mth.sin(angle / 2.0F);
+        float a = axis.x() * g;
+        float b = axis.y() * g;
+        float c = axis.z() * g;
+        float d = Mth.cos(angle / 2.0F);
+
+        float j = 2.0F * a * a;
+        float k = 2.0F * b * b;
+        float l = 2.0F * c * c;
+        matrix3f.celestial$m00(1.0F - k - l);
+        matrix3f.celestial$m11(1.0F - l - j);
+        matrix3f.celestial$m22(1.0F - j - k);
+        float m = a * b;
+        float n = b * c;
+        float o = c * a;
+        float p = a * d;
+        float q = b * d;
+        float r = c * d;
+        matrix3f.celestial$m10(2.0F * (m + r));
+        matrix3f.celestial$m01(2.0F * (m - r));
+        matrix3f.celestial$m20(2.0F * (o - q));
+        matrix3f.celestial$m02(2.0F * (o + q));
+        matrix3f.celestial$m21(2.0F * (n + p));
+        matrix3f.celestial$m12(2.0F * (n - p));
+    }
+
+    public static void matrix4fCopyQuaternion(AccessibleMatrix4f matrix4f, Quaternion quaternion) {
+        float f = quaternion.r();
+        float g = quaternion.i();
+        float h = quaternion.j();
+        float i = quaternion.k();
+        float j = 2.0F * f * f;
+        float k = 2.0F * g * g;
+        float l = 2.0F * h * h;
+        matrix4f.celestial$m00(1.0F - k - l);
+        matrix4f.celestial$m11(1.0F - l - j);
+        matrix4f.celestial$m22(1.0F - j - k);
+        matrix4f.celestial$m33(1.0F);
+        float m = f * g;
+        float n = g * h;
+        float o = h * f;
+        float p = f * i;
+        float q = g * i;
+        float r = h * i;
+        matrix4f.celestial$m10(2.0F * (m + r));
+        matrix4f.celestial$m01(2.0F * (m - r));
+        matrix4f.celestial$m20(2.0F * (o - q));
+        matrix4f.celestial$m02(2.0F * (o + q));
+        matrix4f.celestial$m21(2.0F * (n + p));
+        matrix4f.celestial$m12(2.0F * (n - p));
+    }
+
+    public static void matrix4fCopyMatrix3f(AccessibleMatrix4f matrix4f, AccessibleMatrix3f matrix3f) {
+        matrix4f.celestial$m00((matrix3f).celestial$m00());
+        matrix4f.celestial$m11((matrix3f).celestial$m11());
+        matrix4f.celestial$m22((matrix3f).celestial$m22());
+        matrix4f.celestial$m10((matrix3f).celestial$m10());
+        matrix4f.celestial$m01((matrix3f).celestial$m01());
+        matrix4f.celestial$m20((matrix3f).celestial$m20());
+        matrix4f.celestial$m02((matrix3f).celestial$m02());
+        matrix4f.celestial$m21((matrix3f).celestial$m21());
+        matrix4f.celestial$m12((matrix3f).celestial$m12());
+
+        matrix4f.celestial$m03(0.0f);
+        matrix4f.celestial$m13(0.0f);
+        matrix4f.celestial$m23(0.0f);
+        matrix4f.celestial$m30(0.0f);
+        matrix4f.celestial$m31(0.0f);
+        matrix4f.celestial$m32(0.0f);
+        matrix4f.celestial$m33(0.0f);
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\VMinecraftInstance.java
+===================================================
+package fishcute.celestial;
+
+import com.mojang.datafixers.util.Pair;
+import com.mojang.math.Vector3f;
+import fishcute.celestialmain.api.minecraft.IMcVector;
+import fishcute.celestialmain.api.minecraft.IMinecraftInstance;
+import fishcute.celestialmain.api.minecraft.wrappers.IResourceLocationWrapper;
+import fishcute.celestialmain.util.Util;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.util.CubicSampler;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.phys.Vec3;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+public class VMinecraftInstance implements IMinecraftInstance {
+    private static final Minecraft minecraft = Minecraft.getInstance();
+    public boolean doesLevelExist() {
+        return minecraft.level != null;
+    }
+    public boolean doesPlayerExist() {
+        return minecraft.player != null;
+    }
+    public String getLevelPath() {
+        return minecraft.level.dimension().location().getPath();
+    }
+    public float getTickDelta() {
+        return minecraft.getFrameTime();
+    }
+
+    @Override
+    public long getMillis() {
+        return net.minecraft.Util.getMillis();
+    }
+
+    public Vector getPlayerEyePosition() {
+        return Vector.fromVec(minecraft.player.getEyePosition(getTickDelta()));
+    }
+
+    public void sendFormattedErrorMessage(String error, String type, String location) {
+        minecraft.player.displayClientMessage(
+
+                Component.nullToEmpty(ChatFormatting.DARK_RED +
+                        "[Celestial] " + type +
+                        ChatFormatting.GRAY + " at " +
+                        ChatFormatting.YELLOW + location +
+                        ChatFormatting.GRAY + ": " +
+                        ChatFormatting.WHITE + error
+                ), false);
+    }
+    public void sendInfoMessage(String i) {
+        minecraft.player.displayClientMessage(Component.nullToEmpty(
+                ChatFormatting.DARK_AQUA + "[Celestial] " +
+                        ChatFormatting.AQUA + i), false);
+    }
+    public void sendErrorMessage(String i) {
+        minecraft.player.displayClientMessage(
+                Component.nullToEmpty(ChatFormatting.DARK_RED +
+                        "[Celestial] " +
+                        ChatFormatting.RED + i
+                ), false);
+    }
+    public void sendRedMessage(String i) {
+        minecraft.player.displayClientMessage(
+                Component.nullToEmpty(ChatFormatting.RED + i
+                ), false);
+    }
+    public InputStream getResource(String path) throws IOException {
+        return minecraft.getResourceManager().getResource(new ResourceLocation(path)).getInputStream();
+    }
+    public boolean isGamePaused() {
+        return minecraft.isPaused();
+    }
+    public void sendMessage(String text, boolean actionBar) {
+        minecraft.player.displayClientMessage(Component.nullToEmpty(text), actionBar);
+    }
+    public double getPlayerX() {
+        return minecraft.player.getX();
+    }
+    public double getPlayerY() {
+        return minecraft.player.getY();
+    }
+    public double getPlayerZ() {
+        return minecraft.player.getZ();
+    }
+    public double getRainLevel() {
+        return minecraft.level.getRainLevel(getTickDelta());
+    }
+    public boolean isPlayerInWater() {
+        return minecraft.player.isInWater();
+    }
+    public long getGameTime() {
+        return minecraft.level.getGameTime();
+    }
+    public long getWorldTime() {
+        return minecraft.level.dayTime();
+    }
+    public float getStarBrightness() {
+        return minecraft.level.getStarBrightness(getTickDelta());
+    }
+    public float getTimeOfDay() {
+        return minecraft.level.getTimeOfDay(getTickDelta());
+    }
+    public float getViewXRot() {
+        return minecraft.player.getViewXRot(getTickDelta());
+    }
+    public float getViewYRot() {
+        return minecraft.player.getViewYRot(getTickDelta());
+    }
+
+    @Override
+    public float getCameraLookVectorTwilight(float h, float rotate) {
+        Vector3f v = minecraft.gameRenderer.getMainCamera().getLookVector();
+        v.transform(Vector3f.YP.rotation(rotate * 0.0174533F));
+        return v.dot(new Vector3f(h, 0.0F, 0.0F));
+    }
+
+    public BlockPos getPlayerBlockPosition() {
+        return minecraft.player.blockPosition();
+    }
+    public float getRenderDistance() {
+        return minecraft.options.renderDistance;
+    }
+    public float getMoonPhase() {
+        return minecraft.level.getMoonPhase();
+    }
+    public float getSkyDarken() {
+        return minecraft.level.getSkyDarken();
+    }
+    public float getBossSkyDarken() {
+        return minecraft.gameRenderer.getDarkenWorldAmount(getTickDelta());
+    }
+    public float getSkyFlashTime() {
+        return minecraft.level.getSkyFlashTime();
+    }
+    public float getThunderLevel() {
+        return minecraft.level.getThunderLevel(getTickDelta());
+    }
+    public float getSkyLight() {
+        return minecraft.level.getBrightness(LightLayer.SKY, getPlayerBlockPosition());
+    }
+    public float getBlockLight() {
+        return minecraft.level.getBrightness(LightLayer.BLOCK, getPlayerBlockPosition());
+    }
+    public float getBiomeTemperature() {
+        return minecraft.level.getBiome(getPlayerBlockPosition()).getBaseTemperature();
+    }
+    public float getBiomeDownfall() {
+        // TODO: Experiment with this
+        return minecraft.level.getBiome(getPlayerBlockPosition()).getDownfall() > 0 ? 1 : 0;
+    }
+    public boolean getBiomeSnow() {
+        return minecraft.level.getBiome(getPlayerBlockPosition()).getBaseTemperature() <= 0.15;
+    }
+    public boolean isRightClicking() {
+        return minecraft.mouseHandler.isRightPressed();
+    }
+    public boolean isLeftClicking() {
+        return minecraft.mouseHandler.isLeftPressed();
+    }
+    public IResourceLocationWrapper getMainHandItemKey() {
+        return (IResourceLocationWrapper) Registry.ITEM.getKey(minecraft.player.getMainHandItem().getItem());
+    }
+    public String getMainHandItemNamespace() {
+        return ((ResourceLocation) getMainHandItemKey()).getNamespace();
+    }
+    public String getMainHandItemPath() {
+        return ((ResourceLocation) getMainHandItemKey()).getPath();
+    }
+
+    // TODO: Experiment with biome stuff working
+    HashMap<Biome, Pair<String, String>> biomeNameMap = new HashMap<>();
+
+    public void addToBiomeMap(Biome biome, ResourceKey<Biome> b) {
+        biomeNameMap.put(biome,
+                new com.mojang.datafixers.util.Pair<>(
+                        b.location().getPath() + ":" + b.location().getNamespace(),
+                        b.location().getPath()
+                ));
+    }
+    public boolean equalToBiome(IMcVector position, String... name) {
+        Biome biome = minecraft.level.getBiome(position == null ? getPlayerBlockPosition() : ((Vector) position).toBlockPos());
+        Optional<ResourceKey<Biome>> b = minecraft.level.getBiomeName(position == null ? getPlayerBlockPosition() : ((Vector) position).toBlockPos());
+
+        String biomePath = b.get().location().getPath();
+        String biomeNamespace  = b.get().location().getNamespace();
+
+        if (!biomeNameMap.containsKey(biome))
+            addToBiomeMap(biome, b.get());
+        return Arrays.stream(name).collect(Collectors.toList()).contains(biomeNameMap.get(biome).getFirst())
+                || Arrays.stream(name).collect(Collectors.toList()).contains(biomeNameMap.get(biome).getSecond());
+
+        //return Arrays.stream(name).toList().contains(biomeNameMap.get(b.get().location().getPath())) || Arrays.stream(name).toList().contains(biomeNameMap.get(b.value()).getB());
+    }
+    public double[] getBiomeSkyColor() {
+        double[] c = new double[3];
+        Util.getRealSkyColor = true;
+        Vec3 vec = CubicSampler.gaussianSampleVec3(minecraft.player.position(), (ix, jx, kx) -> {
+            return Vec3.fromRGB24((minecraft.level.getBiome(new BlockPos(ix, jx, kx))).getSkyColor());
+        });
+        Util.getRealSkyColor = false;
+        c[0] = vec.x;
+        c[1] = vec.y;
+        c[2] = vec.z;
+        return c;
+    }
+    public double[] getBiomeFogColor() {
+        double[] c = new double[3];
+        Util.getRealFogColor = true;
+        Vec3 vec = CubicSampler.gaussianSampleVec3(minecraft.player.position(), (ix, jx, kx) -> {
+            return Vec3.fromRGB24((minecraft.level.getBiome(new BlockPos(ix, jx, kx))).getFogColor());
+        });
+        Util.getRealFogColor = false;
+        c[0] = vec.x;
+        c[1] = vec.y;
+        c[2] = vec.z;
+        return c;
+    }
+
+    @Override
+    public double[] getBiomeWaterFogColor() {
+        double[] c = new double[3];
+        Util.getRealFogColor = true;
+        Vec3 vec = CubicSampler.gaussianSampleVec3(minecraft.player.position(), (ix, jx, kx) -> {
+            return Vec3.fromRGB24((minecraft.level.getBiome(new BlockPos(ix, jx, kx))).getWaterFogColor());
+        });
+        Util.getRealFogColor = false;
+        c[0] = vec.x;
+        c[1] = vec.y;
+        c[2] = vec.z;
+        return c;
+    }
+
+    @Override
+    public float getWaterVision() {
+        return minecraft.player.getWaterVision();
+    }
+
+    @Override
+    public boolean doesBiomeHaveCloserFog() {
+        return false;
+    }
+
+    public boolean isCameraInWater() {
+        return minecraft.cameraEntity != null && minecraft.cameraEntity.isEyeInFluid(FluidTags.WATER);
+    }
+
+    @Override
+    public boolean isCameraInLava() {
+        return minecraft.cameraEntity != null && minecraft.cameraEntity.isEyeInFluid(FluidTags.LAVA);
+    }
+
+    @Override
+    public boolean isCameraInPowderedSnow() {
+        // Powdered snow does not exist in 1.16
+        return false;
+    }
+
+    @Override
+    public boolean isCameraBlinded() {
+        return minecraft.player.hasEffect(MobEffects.BLINDNESS);
+    }
+
+    public double getNightVisionModifier() {
+        if (!doesPlayerExist() || !minecraft.player.hasEffect(MobEffects.NIGHT_VISION))
+            return 0;
+        return GameRenderer.getNightVisionScale(minecraft.player, getTickDelta());
+    }
+    public boolean isSneaking() {
+        return minecraft.player.isShiftKeyDown();
+    }
+
+    public float getDarknessFogEffect(float fogStart) {
+        // Darkness does not exist in 1.16
+        return 0;
+    }
+    public boolean hasDarkness() {
+        // Darkness does not exist in 1.16
+        return false;
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\VRenderSystem.java
+===================================================
+package fishcute.celestial;
+
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import fishcute.celestialmain.api.minecraft.IRenderSystem;
+import fishcute.celestialmain.api.minecraft.wrappers.IBufferBuilderWrapper;
+import fishcute.celestialmain.api.minecraft.wrappers.IResourceLocationWrapper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.biome.Biome;
+
+public class VRenderSystem implements IRenderSystem {
+    public void setShaderFogStart(float start) {
+        RenderSystem.fogStart(start);
+        RenderSystem.setupNvFogDistance();
+    }
+    public void setShaderFogEnd(float end) {
+        RenderSystem.fogEnd(end);
+        RenderSystem.setupNvFogDistance();
+    }
+    public int getBiomeFogColor(Biome biome) {
+        return biome.getSpecialEffects().getFogColor();
+    }
+    public void levelFogColor() {
+        FogRenderer.levelFogColor();
+    }
+    public void setupNoFog() {
+        FogRenderer.setupNoFog();
+    }
+    public void defaultBlendFunc() {
+        RenderSystem.defaultBlendFunc();
+    }
+
+    public void depthMask(boolean enable) {
+        RenderSystem.depthMask(enable);
+    }
+    public void setShaderColor(float f, float g, float h, float a) {
+        RenderSystem.color4f(f, g, h, a);
+    }
+    public void clearColor(float f, float g, float h, float a) {
+        RenderSystem.clearColor(f, g, h, a);
+    }
+    public void unbindVertexBuffer() {
+        VertexBuffer.unbind();
+    }
+    public void toggleBlend(boolean enable) {
+        if (enable)
+            RenderSystem.enableBlend();
+        else
+            RenderSystem.disableBlend();
+    }
+    public void defaultBlendFunction() {
+        RenderSystem.defaultBlendFunc();
+    }
+    public void setShaderPositionColor() {
+        //RenderSystem.setShader(GameRenderer::getPositionColorShader);
+    }
+    public void setShaderPositionTex() {
+        //RenderSystem.setShader(GameRenderer::getPositionTexShader);
+    }
+
+    public void toggleTexture(boolean texture) {
+        if (texture) {
+            RenderSystem.enableTexture();
+        }
+        else {
+            RenderSystem.disableTexture();
+        }
+    }
+    public void blendFuncSeparate() {
+        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+    }
+
+    public void setShaderTexture(int i, IResourceLocationWrapper j) {
+        Minecraft.getInstance().getTextureManager().bind((ResourceLocation) j);
+    }
+    public void shadeModel(int i) {
+        RenderSystem.shadeModel(i);
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\access\AccessibleMatrix3f.java
+===================================================
+package fishcute.celestial.access;
+
+public interface AccessibleMatrix3f {
+    float celestial$m00(float value);
+    float celestial$m01(float value);
+    float celestial$m02(float value);
+    float celestial$m10(float value);
+    float celestial$m11(float value);
+    float celestial$m12(float value);
+    float celestial$m20(float value);
+    float celestial$m21(float value);
+    float celestial$m22(float value);
+    float celestial$m00();
+    float celestial$m01();
+    float celestial$m02();
+    float celestial$m10();
+    float celestial$m11();
+    float celestial$m12();
+    float celestial$m20();
+    float celestial$m21();
+    float celestial$m22();
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\access\AccessibleMatrix4f.java
+===================================================
+package fishcute.celestial.access;
+
+public interface AccessibleMatrix4f {
+    float celestial$m00(float value);
+    float celestial$m01(float value);
+    float celestial$m02(float value);
+    float celestial$m03(float value);
+    float celestial$m10(float value);
+    float celestial$m11(float value);
+    float celestial$m12(float value);
+    float celestial$m13(float value);
+    float celestial$m20(float value);
+    float celestial$m21(float value);
+    float celestial$m22(float value);
+    float celestial$m23(float value);
+    float celestial$m30(float value);
+    float celestial$m31(float value);
+    float celestial$m32(float value);
+    float celestial$m33(float value);
+    float celestial$m00();
+    float celestial$m01();
+    float celestial$m02();
+    float celestial$m03();
+    float celestial$m10();
+    float celestial$m11();
+    float celestial$m12();
+    float celestial$m13();
+    float celestial$m20();
+    float celestial$m21();
+    float celestial$m22();
+    float celestial$m23();
+    float celestial$m30();
+    float celestial$m31();
+    float celestial$m32();
+    float celestial$m33();
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\BiomeMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import net.minecraft.world.level.biome.Biome;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(Biome.class)
+public class BiomeMixin {
+//    @Inject(method = "getFogColor", at = @At("RETURN"), cancellable = true)
+//    private void getFogColor(CallbackInfoReturnable<Integer> info) {
+//        info.setReturnValue(VersionSky.getFogColor(info.getReturnValue(), ((VRenderSystem) Instances.renderSystem).getBiomeFogColor((Biome) (Object) this)));
+//    }
+//    @Inject(method = "getSkyColor", at = @At("RETURN"), cancellable = true)
+//    private void getSkyColor(CallbackInfoReturnable<Integer> info) {
+//        info.setReturnValue(VersionSky.getSkyColor(info.getReturnValue()));
+//    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\ClientLevelMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import fishcute.celestial.Vector;
+import fishcute.celestialmain.version.independent.VersionSky;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+@Mixin(ClientLevel.class)
+public class ClientLevelMixin {
+    @Inject(method = "getCloudColor", at = @At("RETURN"), cancellable = true)
+    private void getCloudColor(float f, CallbackInfoReturnable<Vec3> info) {
+        float[] color = VersionSky.getCloudColor(new float[]{(float) info.getReturnValue().x, (float) info.getReturnValue().y, (float) info.getReturnValue().z});
+        info.setReturnValue(Vector.toVecFromArray(color));
+    }
+    @Inject(method = "getSkyColor", at = @At("RETURN"), cancellable = true)
+    private void getSkyColor(BlockPos blockPos, float f, CallbackInfoReturnable<Vec3> info) {
+        float[] color = VersionSky.getClientLevelSkyColor(new float[]{(float) info.getReturnValue().x, (float) info.getReturnValue().y, (float) info.getReturnValue().z});
+        info.setReturnValue(Vector.toVecFromArray(color));
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\DimensionSpecialEffectsMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import fishcute.celestialmain.version.independent.VersionSky;
+import net.minecraft.client.renderer.DimensionSpecialEffects;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+@Mixin(DimensionSpecialEffects.class)
+public class DimensionSpecialEffectsMixin {
+
+    @Inject(method = "getCloudHeight", at = @At("RETURN"), cancellable = true)
+    private void getCloudHeight(CallbackInfoReturnable<Float> info) {
+        info.setReturnValue(VersionSky.getCloudHeight(info.getReturnValue()));
+    }
+    @Inject(method = "getSunriseColor", at = @At("RETURN"), cancellable = true)
+    private void getFogColorOverride(float skyAngle, float tickDelta, CallbackInfoReturnable<float[]> info) {
+        info.setReturnValue(new float[]{0, 0, 0, 0});
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\FogRendererMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import fishcute.celestialmain.version.independent.Instances;
+import fishcute.celestialmain.version.independent.VersionSky;
+import net.minecraft.client.Camera;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.FogRenderer;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(FogRenderer.class)
+public class FogRendererMixin {
+    @Inject(method = "setupFog", at = @At("RETURN"))
+    private static void setupFog(Camera camera, FogRenderer.FogMode fogType, float viewDistance, boolean thickFog, CallbackInfo info) {
+        VersionSky.setupFogStartEnd(fogType == FogRenderer.FogMode.FOG_SKY, viewDistance, thickFog);
+        VersionSky.setupFog();
+    }
+
+    @Shadow
+    private static float fogRed;
+
+    @Shadow
+    private static float fogGreen;
+
+    @Shadow
+    private static float fogBlue;
+
+    @Inject(method = "setupColor", at = @At("RETURN"))
+    private static void setupColor(Camera camera, float f, ClientLevel clientLevel, int i, float g, CallbackInfo ci) {
+        float[] color = VersionSky.setupFogColor();
+
+        if (color != null) {
+            fogRed = color[0];
+            fogGreen = color[1];
+            fogBlue = color[2];
+        }
+
+        color = VersionSky.applyPostFogChanges(fogRed, fogGreen, fogBlue);
+        fogRed = color[0];
+        fogGreen = color[1];
+        fogBlue = color[2];
+
+        Instances.renderSystem.clearColor(fogRed, fogGreen, fogBlue, 0.0F);
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\LevelRendererMixin.java
+===================================================
+package fishcute.celestial.mixin;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
+import fishcute.celestialmain.api.minecraft.wrappers.*;
+import fishcute.celestialmain.sky.CelestialSky;
+import fishcute.celestialmain.version.independent.Instances;
+import fishcute.celestialmain.version.independent.VersionLevelRenderer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.LevelRenderer;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(LevelRenderer.class)
+public class LevelRendererMixin {
+    @Shadow
+    private VertexBuffer skyBuffer;
+    @Shadow
+    private VertexBuffer darkBuffer;
+    @Shadow
+    private VertexFormat skyFormat;
+    @Shadow
+    private ClientLevel level;
+
+    private final VersionLevelRenderer.RunnableArg skyFormatF = new VersionLevelRenderer.RunnableArg() {
+        public void run() {
+            if (this.b) {
+                RenderSystem.enableFog();
+                skyFormat.setupBufferState(0L);
+            }
+            else {
+                skyFormat.clearBufferState();
+                RenderSystem.disableFog();
+            }
+        }
+    };
+
+    @Inject(method = "renderSky", at = @At("HEAD"), cancellable = true)
+    private void renderSky(PoseStack matrices, float tickDelta, CallbackInfo info) {
+        if (CelestialSky.doesDimensionHaveCustomSky()) {
+            info.cancel();
+            
+            VersionLevelRenderer.renderLevel((Object) matrices.last().pose(),
+                    (IPoseStackWrapper) matrices,
+                    (IVertexBufferWrapper) skyBuffer,
+                    (IVertexBufferWrapper) darkBuffer,
+                    (ICameraWrapper) Minecraft.getInstance().gameRenderer.getMainCamera(),
+                    (ILevelWrapper) level,
+                    tickDelta,
+                    skyFormatF
+            );
+        }
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\Matrix3fMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import com.mojang.math.Matrix3f;
+import fishcute.celestial.access.AccessibleMatrix3f;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+
+
+@Mixin(Matrix3f.class)
+public class Matrix3fMixin implements AccessibleMatrix3f {
+    @Shadow
+    protected float m00;
+    @Shadow
+    protected float m01;
+    @Shadow
+    protected float m02;
+    @Shadow
+    protected float m10;
+    @Shadow
+    protected float m11;
+    @Shadow
+    protected float m12;
+    @Shadow
+    protected float m20;
+    @Shadow
+    protected float m21;
+    @Shadow
+    protected float m22;
+
+    @Override
+    public float celestial$m00(float value) {
+        this.m00 = value;
+        return this.m00;
+    }
+
+    @Override
+    public float celestial$m01(float value) {
+        this.m01 = value;
+        return this.m01;
+    }
+
+    @Override
+    public float celestial$m02(float value) {
+        this.m02 = value;
+        return this.m02;
+    }
+
+    @Override
+    public float celestial$m10(float value) {
+        this.m10 = value;
+        return this.m10;
+    }
+
+    @Override
+    public float celestial$m11(float value) {
+        this.m11 = value;
+        return this.m11;
+    }
+
+    @Override
+    public float celestial$m12(float value) {
+        this.m12 = value;
+        return this.m12;
+    }
+
+    @Override
+    public float celestial$m20(float value) {
+        this.m20 = value;
+        return this.m20;
+    }
+
+    @Override
+    public float celestial$m21(float value) {
+        this.m21 = value;
+        return this.m21;
+    }
+
+    @Override
+    public float celestial$m22(float value) {
+        this.m22 = value;
+        return this.m22;
+    }
+
+    @Override
+    public float celestial$m00() {
+        return this.m00;
+    }
+
+    @Override
+    public float celestial$m01() {
+        return this.m01;
+    }
+
+    @Override
+    public float celestial$m02() {
+        return this.m02;
+    }
+
+    @Override
+    public float celestial$m10() {
+        return this.m10;
+    }
+
+    @Override
+    public float celestial$m11() {
+        return this.m11;
+    }
+
+    @Override
+    public float celestial$m12() {
+        return this.m12;
+    }
+
+    @Override
+    public float celestial$m20() {
+        return this.m20;
+    }
+
+    @Override
+    public float celestial$m21() {
+        return this.m21;
+    }
+
+    @Override
+    public float celestial$m22() {
+        return this.m22;
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\Matrix4fMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import com.mojang.math.Matrix4f;
+import fishcute.celestial.access.AccessibleMatrix4f;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+
+@Mixin(Matrix4f.class)
+public class Matrix4fMixin implements AccessibleMatrix4f {
+
+    @Shadow
+    protected float m00;
+    @Shadow
+    protected float m01;
+    @Shadow
+    protected float m02;
+    @Shadow
+    protected float m03;
+    @Shadow
+    protected float m10;
+    @Shadow
+    protected float m11;
+    @Shadow
+    protected float m12;
+    @Shadow
+    protected float m13;
+    @Shadow
+    protected float m20;
+    @Shadow
+    protected float m21;
+    @Shadow
+    protected float m22;
+    @Shadow
+    protected float m23;
+    @Shadow
+    protected float m30;
+    @Shadow
+    protected float m31;
+    @Shadow
+    protected float m32;
+    @Shadow
+    protected float m33;
+
+    @Override
+    public float celestial$m00(float value) {
+        this.m00 = value;
+        return this.m00;
+    }
+
+    @Override
+    public float celestial$m01(float value) {
+        this.m01 = value;
+        return this.m01;
+    }
+
+    @Override
+    public float celestial$m02(float value) {
+        this.m02 = value;
+        return this.m02;
+    }
+
+    @Override
+    public float celestial$m03(float value) {
+        this.m03 = value;
+        return this.m03;
+    }
+
+    @Override
+    public float celestial$m10(float value) {
+        this.m10 = value;
+        return this.m10;
+    }
+
+    @Override
+    public float celestial$m11(float value) {
+        this.m11 = value;
+        return this.m11;
+    }
+
+    @Override
+    public float celestial$m12(float value) {
+        this.m12 = value;
+        return this.m12;
+    }
+
+    @Override
+    public float celestial$m13(float value) {
+        this.m13 = value;
+        return this.m13;
+    }
+
+    @Override
+    public float celestial$m20(float value) {
+        this.m20 = value;
+        return this.m20;
+    }
+
+    @Override
+    public float celestial$m21(float value) {
+        this.m21 = value;
+        return this.m21;
+    }
+
+    @Override
+    public float celestial$m22(float value) {
+        this.m22 = value;
+        return this.m22;
+    }
+
+    @Override
+    public float celestial$m23(float value) {
+        this.m23 = value;
+        return this.m23;
+    }
+
+    @Override
+    public float celestial$m30(float value) {
+        this.m30 = value;
+        return this.m30;
+    }
+
+    @Override
+    public float celestial$m31(float value) {
+        this.m31 = value;
+        return this.m31;
+    }
+
+    @Override
+    public float celestial$m32(float value) {
+        this.m32 = value;
+        return this.m32;
+    }
+
+    @Override
+    public float celestial$m33(float value) {
+        this.m33 = value;
+        return this.m33;
+    }
+    @Override
+    public float celestial$m00() {
+        return this.m00;
+    }
+
+    @Override
+    public float celestial$m01() {
+        return this.m01;
+    }
+
+    @Override
+    public float celestial$m02() {
+        return this.m02;
+    }
+
+    @Override
+    public float celestial$m03() {
+        return this.m03;
+    }
+
+    @Override
+    public float celestial$m10() {
+        return this.m10;
+    }
+
+    @Override
+    public float celestial$m11() {
+        return this.m11;
+    }
+
+    @Override
+    public float celestial$m12() {
+        return this.m12;
+    }
+
+    @Override
+    public float celestial$m13() {
+        return this.m13;
+    }
+
+    @Override
+    public float celestial$m20() {
+        return this.m20;
+    }
+
+    @Override
+    public float celestial$m21() {
+        return this.m21;
+    }
+
+    @Override
+    public float celestial$m22() {
+        return this.m22;
+    }
+
+    @Override
+    public float celestial$m23() {
+        return this.m23;
+    }
+
+    @Override
+    public float celestial$m30() {
+        return this.m30;
+    }
+
+    @Override
+    public float celestial$m31() {
+        return this.m31;
+    }
+
+    @Override
+    public float celestial$m32() {
+        return this.m32;
+    }
+
+    @Override
+    public float celestial$m33() {
+        return this.m33;
+    }
+    
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\MinecraftMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import fishcute.celestialmain.util.ClientTick;
+import net.minecraft.client.Minecraft;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(Minecraft.class)
+public class MinecraftMixin {
+    @Inject(method = "runTick", at = @At("HEAD"))
+    private void tick(CallbackInfo info) {
+        ClientTick.onTick();
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\PoseMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Matrix3f;
+import com.mojang.math.Matrix4f;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
+
+@Mixin(PoseStack.Pose.class)
+public interface PoseMixin {
+    @Accessor
+    Matrix4f getPose();
+
+    @Accessor
+    Matrix3f getNormal();
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\PoseStackMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
+
+import java.util.Deque;
+
+@Mixin(PoseStack.class)
+public interface PoseStackMixin {
+    @Accessor
+    Deque<PoseStack.Pose> getPoseStack();
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\TextureManagerMixin.java
+===================================================
+package fishcute.celestial.mixin;
+
+import fishcute.celestialmain.util.ClientTick;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.concurrent.*;
+
+@Mixin(TextureManager.class)
+public class TextureManagerMixin {
+    @Inject(method = "reload", at = @At("RETURN"))
+    private void reload(PreparableReloadListener.PreparationBarrier preparationBarrier, ResourceManager resourceManager, ProfilerFiller profilerFiller, ProfilerFiller profilerFiller2, Executor executor, Executor executor2, CallbackInfoReturnable<CompletableFuture<Void>> cir) {
+        ClientTick.onReload();
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\api\BufferBuilderMixin.java
+===================================================
+package fishcute.celestial.mixin.api;
+
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.math.Matrix4f;
+import fishcute.celestialmain.api.math.DrawMode;
+import fishcute.celestialmain.api.minecraft.wrappers.IBufferBuilderWrapper;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(BufferBuilder.class)
+public class BufferBuilderMixin implements IBufferBuilderWrapper {
+    @Override
+    public void celestial$beginTriangleFan() {
+        BufferBuilder self = (BufferBuilder)(Object) this;
+        self.begin(DrawMode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);;
+    }
+
+    @Override
+    public void celestial$beginObject() {
+        BufferBuilder self = (BufferBuilder)(Object) this;
+        self.begin(DrawMode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+    }
+
+    @Override
+    public void celestial$beginColorObject() {
+        BufferBuilder self = (BufferBuilder)(Object) this;
+        self.begin(DrawMode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+    }
+
+    @Override
+    public void celestial$vertex(Object matrix4f, float x, float y, float z, float r, float g, float b, float a) {
+        BufferBuilder self = (BufferBuilder)(Object) this;
+        self.vertex((Matrix4f) matrix4f, x, y, z).color(r, g, b, a).endVertex();
+    }
+
+    @Override
+    public void celestial$vertexUv(Object matrix4f, float x, float y, float z, float u, float v, float r, float g, float b, float a) {
+        BufferBuilder self = (BufferBuilder)(Object) this;
+        self.vertex((Matrix4f) matrix4f, x, y, z).uv(u, v).color(r, g, b, a).endVertex();
+    }
+
+    @Override
+    public void celestial$upload() {
+        BufferBuilder self = (BufferBuilder)(Object) this;
+        self.end();
+        BufferUploader.end(self);
+    }
+
+//    @Override
+//    public IBufferBuilderWrapper celestial$init() {
+//        return null;
+//    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\api\CameraMixin.java
+===================================================
+package fishcute.celestial.mixin.api;
+
+import fishcute.celestialmain.api.minecraft.wrappers.ICameraWrapper;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(Camera.class)
+public class CameraMixin implements ICameraWrapper {
+    @Override
+    public boolean celestial$doesFogBlockSky() {
+        Camera self = (Camera)(Object) this;
+        Fluid type = self.getFluidInCamera().getType();
+        return type != Fluids.FLOWING_LAVA || type != Fluids.LAVA;
+    }
+
+    @Override
+    public boolean celestial$doesMobEffectBlockSky() {
+        Entity entity = Minecraft.getInstance().getCameraEntity();
+        if (!(entity instanceof LivingEntity)) {
+            return false;
+        } else {
+            LivingEntity livingEntity = (LivingEntity) entity;
+            return livingEntity.hasEffect(MobEffects.BLINDNESS);
+        }
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\api\ClientLevelMixin.java
+===================================================
+package fishcute.celestial.mixin.api;
+
+import fishcute.celestial.Vector;
+import fishcute.celestialmain.api.minecraft.IMcVector;
+import fishcute.celestialmain.api.minecraft.wrappers.ILevelWrapper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+
+@Mixin(ClientLevel.class)
+public class ClientLevelMixin implements ILevelWrapper {
+    @Shadow @Final private ClientLevel.ClientLevelData clientLevelData;
+
+    @Override
+    public IMcVector celestial$getSkyColor(float tickDelta) {
+        ClientLevel level = (ClientLevel)(Object) this;
+        return Vector.fromVec(level.getSkyColor(Minecraft.getInstance().gameRenderer.getMainCamera().getBlockPosition(), tickDelta));
+    }
+
+    @Override
+    public float[] celestial$getSunriseColor(float tickDelta) {
+        ClientLevel self = (ClientLevel)(Object) this;
+        return Minecraft.getInstance().level.effects().getSunriseColor(self.getTimeOfDay(tickDelta), tickDelta);
+    }
+
+    @Override
+    public float celestial$getTimeOfDay(float tickDelta) {
+        ClientLevel self = (ClientLevel)(Object) this;
+        return self.getTimeOfDay(tickDelta);
+    }
+
+    @Override
+    public float celestial$getSunAngle(float tickDelta) {
+        ClientLevel self = (ClientLevel)(Object) this;
+        return self.getSunAngle(tickDelta);
+    }
+
+    @Override
+    public double celestial$getHorizonHeight() {
+        ClientLevel self = (ClientLevel)(Object) this;
+        return self.getLevelData().getHorizonHeight();
+    }
+
+    @Override
+    public boolean celestial$hasGround() {
+        ClientLevel self = (ClientLevel)(Object) this;
+        return self.effects().hasGround();
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\api\PoseStackMixin.java
+===================================================
+package fishcute.celestial.mixin.api;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Matrix3f;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
+import fishcute.celestial.VMath;
+import fishcute.celestial.access.AccessibleMatrix3f;
+import fishcute.celestial.access.AccessibleMatrix4f;
+import fishcute.celestial.mixin.PoseMixin;
+import fishcute.celestialmain.api.minecraft.wrappers.IPoseStackWrapper;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+
+@Mixin(PoseStack.class)
+public class PoseStackMixin implements IPoseStackWrapper {
+
+    @Override
+    public Object celestial$lastPose() {
+        PoseStack self = ((PoseStack)(Object) this);
+        return self.last().pose();
+    }
+
+    @Override
+    public void celestial$pushPose() {
+        PoseStack self = ((PoseStack)(Object) this);
+        self.pushPose();
+    }
+
+    @Override
+    public void celestial$popPose() {
+        PoseStack self = ((PoseStack)(Object) this);
+        self.popPose();
+    }
+
+    @Override
+    public void celestial$translate(double x, double y, double z) {
+        PoseStack self = ((PoseStack)(Object) this);
+        self.translate((float) x, (float) y, (float) z);
+    }
+
+    @Unique
+    private final static Matrix4f celestial$int4 = new Matrix4f();
+    @Unique
+    private final static Matrix3f celestial$int3 = new Matrix3f();
+
+    @Unique
+    private static final Vector3f celestial$XN = new Vector3f(1.0F, 0.0F, 0.0F);
+    @Unique
+    private static final Vector3f celestial$YN = new Vector3f(0.0F, 1.0F, 0.0F);
+    @Unique
+    private static final Vector3f celestial$ZN = new Vector3f(0.0F, 0.0F, 1.0F);
+
+    @Override
+    public void celestial$mulPose(Axis a, float rot) {
+        switch (a) {
+            case X:
+                VMath.matrix3fSetAxisAngle((AccessibleMatrix3f)(Object) celestial$int3, celestial$XN, rot);
+                this.celestial$mulPose((Object) celestial$int3, (Object) celestial$int4);
+                break;
+            case Y:
+                VMath.matrix3fSetAxisAngle((AccessibleMatrix3f)(Object) celestial$int3, celestial$YN, rot);
+                this.celestial$mulPose((Object) celestial$int3, (Object) celestial$int4);
+                break;
+            case Z:
+                VMath.matrix3fSetAxisAngle((AccessibleMatrix3f)(Object) celestial$int3, celestial$ZN, rot);
+                this.celestial$mulPose((Object) celestial$int3, (Object) celestial$int4);
+                break;
+        }
+    }
+
+    @Override
+    public void celestial$mulPose(Object quaternion) {
+        this.celestial$mulPose(quaternion, (Object) celestial$int4, (Object) celestial$int3);
+    }
+
+    @Override
+    public void celestial$mulPose(Object quaternion, Object intermediate4, Object intermediate3) {
+        PoseStack.Pose pose = ((PoseStack)(Object) this).last();
+        VMath.matrix3fCopyQuaternion(((AccessibleMatrix3f) intermediate3), quaternion);
+        VMath.matrix4fCopyMatrix3f(((AccessibleMatrix4f) intermediate4), (AccessibleMatrix3f) intermediate3);
+
+        ((PoseMixin)(Object) pose).getPose().multiply((Matrix4f) intermediate4);
+        ((PoseMixin)(Object) pose).getNormal().mul((Matrix3f) intermediate3);
+    }
+
+    @Override
+    public void celestial$mulPose(Object matrix3f, Object intermediate4) {
+        PoseStack self = ((PoseStack)(Object) this);
+        PoseStack.Pose pose = self.last();
+        VMath.matrix4fCopyMatrix3f(((AccessibleMatrix4f) intermediate4), (AccessibleMatrix3f) matrix3f);
+        ((PoseMixin)(Object) pose).getPose().multiply((Matrix4f) intermediate4);
+        ((PoseMixin)(Object) pose).getNormal().mul((Matrix3f) matrix3f);
+    }
+
+    @Override
+    public Object celestial$rotate(float i, float j, float k) {
+        this.celestial$pushPose();
+
+        if (i != 0) {
+            this.celestial$mulPose(Axis.X, i);
+        }
+        if (j != 0) {
+            this.celestial$mulPose(Axis.Y, j);
+        }
+        if (k != 0) {
+            this.celestial$mulPose(Axis.Z, k);
+        }
+
+        Object matrix4f = this.celestial$lastPose();
+        this.celestial$popPose();
+
+        return matrix4f;
+    }
+
+    @Override
+    public Object celestial$rotateThenTranslate(float i, float j, float k, float x, float y, float z) {
+        this.celestial$pushPose();
+
+        if (i != 0) {
+            this.celestial$mulPose(Axis.X, i);
+        }
+        if (j != 0) {
+            this.celestial$mulPose(Axis.Y, j);
+        }
+        if (k != 0) {
+            this.celestial$mulPose(Axis.Z, k);
+        }
+
+        this.celestial$translate(x, y, z);
+
+        Object matrix4f = this.celestial$lastPose();
+        this.celestial$popPose();
+
+        return matrix4f;
+    }
+
+    @Override
+    public Object celestial$translateThenRotate(float i, float j, float k, float x, float y, float z) {
+        this.celestial$pushPose();
+
+        this.celestial$translate(x, y, z);
+
+        if (i != 0) {
+            this.celestial$mulPose(Axis.X, i);
+        }
+        if (j != 0) {
+            this.celestial$mulPose(Axis.Y, j);
+        }
+        if (k != 0) {
+            this.celestial$mulPose(Axis.Z, k);
+        }
+
+        Object matrix4f = this.celestial$lastPose();
+        this.celestial$popPose();
+
+        return matrix4f;
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\api\ProgramMixin.java
+===================================================
+package fishcute.celestial.mixin.api;
+
+import com.mojang.blaze3d.shaders.Program;
+import fishcute.celestialmain.api.minecraft.wrappers.IShaderInstanceWrapper;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(Program.class)
+public class ProgramMixin implements IShaderInstanceWrapper {
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\api\ResourceLocationMixin.java
+===================================================
+package fishcute.celestial.mixin.api;
+
+import fishcute.celestialmain.api.minecraft.wrappers.IResourceLocationWrapper;
+import net.minecraft.resources.ResourceLocation;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(ResourceLocation.class)
+public class ResourceLocationMixin implements IResourceLocationWrapper {
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\java\fishcute\celestial\mixin\api\VertexBufferMixin.java
+===================================================
+package fishcute.celestial.mixin.api;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import com.mojang.math.Matrix4f;
+import fishcute.celestialmain.api.math.DrawMode;
+import fishcute.celestialmain.api.minecraft.wrappers.IShaderInstanceWrapper;
+import fishcute.celestialmain.api.minecraft.wrappers.IVertexBufferWrapper;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(VertexBuffer.class)
+public class VertexBufferMixin implements IVertexBufferWrapper {
+    @Override
+    public void celestial$bind() {
+        ((VertexBuffer)(Object) this).bind();
+    }
+
+    //TODO: I Have no clue if this will work
+    @Override
+    public void celestial$drawWithShader(Object matrix, Object projectionMatrix, IShaderInstanceWrapper shader) {
+        VertexBuffer self = ((VertexBuffer)(Object) this);
+
+        self.draw(((Matrix4f) matrix), 7);
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\common\src\main\resources\celestial-common.mixins.json
+===================================================
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "fishcute.celestial.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "BiomeMixin",
+    "ClientLevelMixin",
+    "DimensionSpecialEffectsMixin",
+    "FogRendererMixin",
+    "LevelRendererMixin",
+    "MinecraftMixin",
+    "PoseMixin",
+    "PoseStackMixin",
+    "api.BufferBuilderMixin",
+    "api.CameraMixin",
+    "api.PoseStackMixin",
+    "api.VertexBufferMixin",
+    "TextureManagerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "Matrix3fMixin",
+    "Matrix4fMixin",
+    "api.ClientLevelMixin",
+    "api.ResourceLocationMixin"
+  ]
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\fabric\build.gradle
+===================================================
+plugins {
+    id "com.github.johnrengelman.shadow" version "7.1.2"
+}
+
+architectury {
+    platformSetupLoomIde()
+    fabric()
+}
+
+configurations {
+    common
+    shadowCommon // Don't use shadow from the shadow plugin since it *excludes* files.
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentFabric.extendsFrom common
+}
+
+configurations.configureEach {
+    resolutionStrategy {
+        force("net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}")
+    }
+}
+
+dependencies {
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
+
+    common(project(path: ":common", configuration: "namedElements")) { transitive false }
+    shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
+
+    shadowCommon(implementation(project(":CelestialExpressions")))
+    shadowCommon(implementation(project(":CelestialMain")))
+}
+
+repositories {
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+shadowJar {
+    configurations = [project.configurations.shadowCommon]
+    archiveClassifier = "dev-shadow"
+}
+
+remapJar {
+    injectAccessWidener = true
+    inputFile.set(shadowJar.archiveFile)
+    dependsOn shadowJar
+    archiveClassifier = null
+}
+
+jar {
+    archiveClassifier.set("dev")
+}
+
+sourcesJar {
+    def commonSources = project(":common").sourcesJar
+    dependsOn commonSources
+    from commonSources.archiveFile.map { zipTree(it) }
+}
+
+components.java {
+    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+        skip()
+    }
+}
+
+publishing {
+    publications {
+        mavenFabric(MavenPublication) {
+            artifactId = rootProject.archives_base_name + "-" + project.name
+            from components.java
+        }
+    }
+
+    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+    repositories {
+        // Add repositories to publish to here.
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\fabric\src\main\java\fishcute\celestial\fabric\CelestialFabric.java
+===================================================
+package fishcute.celestial.fabric;
+
+
+import com.mojang.blaze3d.platform.InputConstants;
+import fishcute.celestial.Celestial;
+import fishcute.celestialmain.util.ClientTick;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.ResourceManager;
+
+public class CelestialFabric implements ModInitializer {
+
+    public static KeyMapping reloadSky;
+    @Override
+    public void onInitialize() {
+        Celestial.init();
+
+        reloadSky = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+                "key.reload_sky",
+                InputConstants.getKey("key.keyboard.f10").getValue(),
+                "key.categories.misc"
+        ));
+
+        ClientTickEvents.END_CLIENT_TICK.register((endTick -> {
+            while (reloadSky.consumeClick()) {
+                ClientTick.onReloadKey();
+            }
+        }));
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\fabric\src\main\resources\fabric.mod.json
+===================================================
+{
+  "schemaVersion": 1,
+  "id": "celestial",
+  "version": "${version}",
+
+  "name": "Celestial",
+  "description": "A Minecraft mod for Fabric and Forge that allows you to customize the sky.",
+  "authors": [
+    "fishcute",
+    "block36_"
+  ],
+  "contact": {
+    "repo": "https://github.com/fishcute/Celestial",
+    "sources": "https://github.com/fishcute/Celestial1.18.2",
+    "issues": "https://github.com/fishcute/Celestial/issues"
+  },
+
+  "license": "MIT",
+  "icon": "icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "fishcute.celestial.fabric.CelestialFabric"
+    ]
+  },
+  "mixins": [
+    "celestial-common.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.7",
+    "minecraft": ">=1.16.5"
+  }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\forge\build.gradle
+===================================================
+plugins {
+    id "com.github.johnrengelman.shadow" version "7.1.2"
+}
+
+
+
+loom {
+    forge {
+        mixinConfig "celestial-common.mixins.json"
+    }
+}
+architectury {
+    platformSetupLoomIde()
+    forge()
+}
+
+configurations {
+    common
+    shadowCommon // Don't use shadow from the shadow plugin since it *excludes* files.
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentForge.extendsFrom common
+}
+
+dependencies {
+    forge "net.minecraftforge:forge:${rootProject.forge_version}"
+
+    common(project(path: ":common", configuration: "namedElements")) { transitive false }
+    shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive = false }
+
+    shadowCommon(implementation(project(":CelestialExpressions")))
+    shadowCommon(implementation(project(":CelestialMain")))
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("META-INF/mods.toml") {
+        expand "version": project.version
+    }
+}
+
+shadowJar {
+    exclude "fabric.mod.json"
+
+    configurations = [project.configurations.shadowCommon]
+    archiveClassifier = "dev-shadow"
+}
+
+remapJar {
+    inputFile.set(shadowJar.archiveFile)
+    dependsOn shadowJar
+    archiveClassifier.set(null)
+}
+
+jar {
+    archiveClassifier.set("dev")
+}
+
+sourcesJar {
+    def commonSources = project(":common").sourcesJar
+    dependsOn commonSources
+    from commonSources.archiveFile.map { zipTree(it) }
+}
+
+components.java {
+    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+        skip()
+    }
+}
+
+publishing {
+    publications {
+        mavenForge(MavenPublication) {
+            artifactId = rootProject.archives_base_name + "-" + project.name
+            from components.java
+        }
+    }
+
+    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+    repositories {
+        // Add repositories to publish to here.
+    }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\forge\gradle.properties
+===================================================
+loom.platform=forge
+
+
+===================================================
+FILE: Celestial1.16.5-main\forge\src\main\java\fishcute\celestial\forge\CelestialForge.java
+===================================================
+package fishcute.celestial.forge;
+
+
+import com.mojang.blaze3d.platform.InputConstants;
+import fishcute.celestial.Celestial;
+import fishcute.celestialmain.util.ClientTick;
+import net.minecraft.client.KeyMapping;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.Mod;
+
+@Mod(Celestial.MOD_ID)
+public class CelestialForge {
+    private static KeyMapping reloadSky = new KeyMapping(
+            "key.reload_sky",
+            InputConstants.getKey("key.keyboard.f10").getValue(),
+            "key.categories.misc"
+    );
+
+    @SubscribeEvent
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
+            while (reloadSky.consumeClick()) {
+                ClientTick.onReload();
+            }
+        }
+    }
+    public CelestialForge() {
+        Celestial.init();
+        ClientRegistry.registerKeyBinding(reloadSky);
+        MinecraftForge.EVENT_BUS.register(CelestialForge.class);
+    }
+}
+
+
+===================================================
+FILE: Celestial1.16.5-main\forge\src\main\resources\pack.mcmeta
+===================================================
+{
+  "pack": {
+    "description": "Celestial1.16.5 resources",
+    "pack_format": 6,
+    "_comment": "A pack_format of 6 requires json lang files and some texture changes from 1.16.2. Note: we require v6 pack meta for all mods."
+  }
+}
+
+
+
+===================================================
+FILE: Celestial1.16.5-main\forge\src\main\resources\META-INF\mods.toml
+===================================================
+modLoader="javafml"
+loaderVersion="[36,)"
+license="MIT"
+issueTrackerURL="https://github.com/fishcute/Celestial/issues"
+[[mods]]
+modId="celestial"
+version="${version}"
+displayName="Celestial"
+displayURL="https://github.com/fishcute/Celestial"
+logoFile="icon.png"
+authors="fishcute, block36_"
+description='''
+A Minecraft mod for Fabric and Forge that allows you to customize the sky.
+'''
+
+[[dependencies.celestial]]
+   modId="forge"
+   mandatory=true
+   versionRange="[36,)"
+   ordering="NONE"
+   side="BOTH"
+
+[[dependencies.celestial]]
+   modId="minecraft"
+   mandatory=true
+   versionRange="[1.16.5,1.17)"
+   ordering="NONE"
+   side="BOTH"
+
+
+===================================================
+FILE: Celestial1.16.5-main\gradle\wrapper\gradle-wrapper.properties
+===================================================
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.6-bin.zip
+networkTimeout=10000
+validateDistributionUrl=true
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+
+
+
