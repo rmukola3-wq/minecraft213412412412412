@@ -1,0 +1,6260 @@
+devvv4 найди прочиайт полностью нужно что бы ты все прчоитал и мы пропдложиди на том чем закончили мой файл текщий это morzh_fork4 сусры сразу читай devv3 тоже но галвное devvv4 мы уже там доделаи почти все но у мя лиммит выскочил
+
+Analysis
+Ищу devvv4, devv3 и morzh_fork4 в репозиториях.Проверяю размеры файлов и соседние материалы.Читаю devvv4 полностью, начиная с начала.Продолжаю devvv4: реализация KillAura и последующие исправления.Дочитываю диагностику OnlyCriticals и итоговые версии файлов.Продолжаю донорский фикс тайминга и результаты тестов.Дочитываю ShieldBreaker, Movement Assist и компиляционные исправления.Дочитываю финальный полный KillAura и место остановки.Завершаю devvv4: последние методы, тест и незакрытая задача.Читаю последние строки devvv4 без пропусков.Перехожу к devvvvvvv3, читая его полностью.Продолжаю devvvvvvv3: перенос GUI и исправления сборки.Продолжаю devvvvvvv3: TargetStrafe и интеграция с KillAura.Индексирую все решения devvvvvvv3, чтобы не пропустить этапы.Сверяю текущий morzh_fork4 с финалом переписки.Читаю актуальные KillAura, крит-контроллер и TargetStrafe целиком.Дочитываю актуальный контроллер критов и проверяю его состояние.Проверяю точную незавершённую часть: Grim reach-профили.
+
+Прочитал полностью devvvv4, devvvvvvv3 и актуальные боевые классы из morzh_fork4.txt.
+
+Остановились на реворке дальности KillAura:
+
+    убрать примитивные лимиты Grim1/Grim2 в 3 блока;
+    добавить Reach Mode: Normal / BackTrack / PositionSpoof;
+    Grim1 — packet rotation, sprint reset, строгий raycast;
+    Grim2 — packet rotation и BackTrack;
+    PositionSpoof — последовательность Rasty: позиция ближе → удар → возврат;
+    сохранить готовые криты, мгновенный ShieldBreaker и Movement Assist.
+
+
+Контекст полностью восстановлен. Следующим сообщением могу дать полный обновлённый KillAura.java частями, как договаривались.
+
+прочитай все сурсы grim al source rhuner tusk expensive и тд будем пастить или хотяб смотерт ьидеи и реализцию что б не с нуля делать
+
+Analysis
+Индексирую Grim, Thunder, Tusk, Expensive и остальных доноров.Определяю полные боевые классы и их зависимости.Индексирую Aura, Reach, BackTrack, ротации и щиты.Нахожу скрытые или переименованные боевые реализации доноров.Читаю Thunder Aura, ротации, BackTrack и Reach полностью.Дочитываю Thunder: крит-условия, щит, hitbox и packet-order.Читаю Rasty Aura, MXReach, крит-предиктор и ShieldBreaker.Выделяю точную последовательность Rasty MXReach и возврата позиции.Читаю Grim Reach и очередь обработки атак сервером.Дочитываю расчёт hitbox, look-vector и допустимой дистанции Grim.Читаю Tusk AttackAura, BackTrack, крит-условия и смену оружия.Выделяю рабочие методы Tusk без остального дампа.Дочитываю Tusk: фактический удар, спринт, щит и cooldown.Дочитываю полный fallback критов Tusk.Читаю Expensive Aura, StrikeManager, adaptive critical и shield-break.Читаю Wild Aura, Smart Criticals, movement correction и ShieldBreaker.Читаю Rockstar KillAura, Reach и TargetStrafe как старые референсы.Проверяю Celestial и прочие доноры на дополнительные идеи.Читаю современный LiquidBounce: KillAura, range, крит-предиктор и sprint-reset.Нахожу центральный ModuleKillAura и его последовательность атаки.Читаю ModuleKillAura целиком и фиксирую переносимые компоненты.Дочитываю LiquidBounce: canAttackNow и выбор критического окна.Читаю LiquidBounce CriticalsSelectionMode и симуляцию будущего крита.Читаю LiquidBounce Smart-ожидание и симуляцию прыжка.Читаю Tusk BackTrack и сравниваю с Thunder resolver.
+
+Прочитал и проиндексировал все боевые реализации и зависимости: GrimAC, ThunderHack, Rasty, Tusk, Expensive, Wild, LiquidBounce и Rockstar.
+
+Главные доноры:
+
+    Rasty — MXReach: позиция ближе → атака → возврат; packet ShieldBreaker; POST-атака; предсказание критического окна.
+    ThunderHack — Grim packet-rotation, hitbox scanning, BackTrack resolver, sprint reset и мгновенный ShieldBreaker.
+    LiquidBounce — лучшая архитектура: повторная проверка прямо перед атакой, Smart/Always/Ignore criticals, симуляция будущих тиков, точный raycast.
+    GrimAC — источник истины: сохраняет координаты в момент attack-пакета, затем проверяет reach и прошлые yaw/pitch на следующем movement/look-пакете.
+    Tusk — хорошие fallback-условия для воды, паутины, лестницы, потолка и полёта.
+    Expensive — отдельные AttackHandler, ClickScheduler и SprintManager; хорошая модель Adaptive Critical.
+    Wild — полезный instant ShieldBreaker и packet sprint control, но дамп повреждён декомпиляцией.
+    Rockstar — устаревший; годится только для отдельных идей, не как основа боя.
+
+
+Важный вывод: PositionSpoof из Rasty нельзя считать гарантированным Grim bypass. Grim запоминает координаты атаки, но отдельно может поймать сам скачок movement-проверками. Для Grim надёжнее BackTrack по реальным серверным позициям цели.
+
+Следующий реворк строим не с нуля:
+
+    Reach Mode: Normal / BackTrack / PositionSpoof
+    Grim1 — Thunder packet-rotation + raycast + sprint-order.
+    Grim2 — Thunder BackTrack + логика проверки Grim.
+    PositionSpoof — точная последовательность Rasty.
+    Criticals — LiquidBounce simulation + Tusk fallback.
+    ShieldBreaker — Rasty/Thunder instant swap.
+    Перед отправкой атаки — повторная проверка цели, cooldown, hitbox и ротации.
+
+
+Текущие ограничения Grim1=3.0 и Grim2=2.95 уберём. Контекст доноров готов; дальше дам полный код файлов, без мелких фрагментов.
+
+пока что отложим быстренько накидай мне target esp у мя уже есть но я хчоу из  всех читво по несокльо взять идзацйнов тарет есп и сделай рпеключаель просто бери из каждог очита тарет есп они все красивіе я все хочу
+
+Analysis
+Ищу текущий Target ESP и донорские дизайны.Читаю текущий TargetESP и доступный рендер API.Проверяю доступные 3D-примитивы перед полной заменой.Читаю сигнатуры Renderer3D и ShapeMode.Читаю геометрию Target ESP каждого донора.
+
+Полностью замени:
+
+src/main/java/meteordevelopment/meteorclient/systems/modules/render/TargetESP.java
+
+Добавлены переключаемые дизайны Expensive, Rasty, Rockstar, ThunderHack и Wild.
+
+java
+
+package meteordevelopment.meteorclient.systems.modules.render;
+
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.modules.Categories;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.combat.KillAura;
+import meteordevelopment.meteorclient.utils.render.color.Color;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.orbit.EventHandler;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+
+public class TargetESP extends Module {
+    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgAppearance = settings.createGroup("Appearance");
+
+    private final Setting<EspMode> mode = sgGeneral.add(
+        new EnumSetting.Builder<EspMode>()
+            .name("mode")
+            .description("Target ESP design.")
+            .defaultValue(EspMode.RastyRhomb)
+            .build()
+    );
+
+    private final Setting<SettingColor> primaryColor = sgAppearance.add(
+        new ColorSetting.Builder()
+            .name("primary-color")
+            .description("Primary ESP color.")
+            .defaultValue(new SettingColor(154, 92, 224, 220))
+            .build()
+    );
+
+    private final Setting<SettingColor> secondaryColor = sgAppearance.add(
+        new ColorSetting.Builder()
+            .name("secondary-color")
+            .description("Secondary gradient color.")
+            .defaultValue(new SettingColor(70, 170, 255, 180))
+            .build()
+    );
+
+    private final Setting<Double> size = sgAppearance.add(
+        new DoubleSetting.Builder()
+            .name("size")
+            .description("ESP size multiplier.")
+            .defaultValue(1.0)
+            .range(0.2, 3.0)
+            .sliderRange(0.2, 2.0)
+            .decimalPlaces(2)
+            .build()
+    );
+
+    private final Setting<Double> animationSpeed = sgAppearance.add(
+        new DoubleSetting.Builder()
+            .name("animation-speed")
+            .description("Animation speed.")
+            .defaultValue(1.0)
+            .range(0.0, 5.0)
+            .sliderRange(0.0, 3.0)
+            .decimalPlaces(2)
+            .build()
+    );
+
+    private final Setting<Integer> segments = sgAppearance.add(
+        new IntSetting.Builder()
+            .name("segments")
+            .description("Circle and trail detail.")
+            .defaultValue(48)
+            .range(16, 120)
+            .sliderRange(16, 80)
+            .build()
+    );
+
+    private final Setting<Boolean> fade = sgAppearance.add(
+        new BoolSetting.Builder()
+            .name("fade")
+            .description("Smooth target appearance and disappearance.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Boolean> hurtColor = sgAppearance.add(
+        new BoolSetting.Builder()
+            .name("hurt-color")
+            .description("Flashes red when the target takes damage.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private Entity lastTarget;
+    private Vec3d smoothPosition;
+
+    private double targetWidth = 0.6;
+    private double targetHeight = 1.8;
+
+    private float alpha;
+    private float hurtProgress;
+    private double animationTime;
+    private long lastFrameTime;
+
+    public TargetESP() {
+        super(
+            Categories.Render,
+            "target-esp",
+            "Multiple Target ESP designs from popular clients."
+        );
+    }
+
+    @Override
+    public void onActivate() {
+        lastTarget = null;
+        smoothPosition = null;
+
+        alpha = 0;
+        hurtProgress = 0;
+        animationTime = 0;
+        lastFrameTime = System.nanoTime();
+    }
+
+    @Override
+    public void onDeactivate() {
+        lastTarget = null;
+        smoothPosition = null;
+    }
+
+    @EventHandler
+    private void onRender3D(Render3DEvent event) {
+        if (mc.player == null || mc.world == null) return;
+
+        KillAura aura = Modules.get().get(KillAura.class);
+
+        Entity target =
+            aura != null && aura.isActive()
+                ? aura.getTarget()
+                : null;
+
+        double delta = updateTime();
+
+        updateTarget(
+            event,
+            target,
+            delta
+        );
+
+        if (
+            smoothPosition == null
+                || alpha <= 0.01f
+        ) {
+            return;
+        }
+
+        float hurt = hurtColor.get()
+            ? hurtProgress
+            : 0.0f;
+
+        Color primary = createColor(
+            primaryColor.get(),
+            alpha,
+            hurt
+        );
+
+        Color secondary = createColor(
+            secondaryColor.get(),
+            alpha,
+            hurt
+        );
+
+        switch (mode.get()) {
+            case Expensive ->
+                renderExpensive(
+                    event,
+                    primary,
+                    secondary
+                );
+
+            case RastyRhomb ->
+                renderRastyRhomb(
+                    event,
+                    primary,
+                    secondary
+                );
+
+            case RastyChain ->
+                renderRastyChain(
+                    event,
+                    primary,
+                    secondary
+                );
+
+            case RastyCrystals ->
+                renderRastyCrystals(
+                    event,
+                    primary,
+                    secondary
+                );
+
+            case RastyCircle ->
+                renderRastyCircle(
+                    event,
+                    primary,
+                    secondary
+                );
+
+            case RockstarJello ->
+                renderRockstarJello(
+                    event,
+                    primary,
+                    secondary
+                );
+
+            case RockstarSims ->
+                renderRockstarSims(
+                    event,
+                    primary,
+                    secondary
+                );
+
+            case Thunder ->
+                renderThunder(
+                    event,
+                    primary,
+                    secondary
+                );
+
+            case ThunderGhosts ->
+                renderThunderGhosts(
+                    event,
+                    primary,
+                    secondary
+                );
+
+            case ThunderCelka ->
+                renderThunderCelka(
+                    event,
+                    primary,
+                    secondary
+                );
+
+            case WildFire ->
+                renderWildFire(
+                    event,
+                    primary,
+                    secondary
+                );
+        }
+    }
+
+    private double updateTime() {
+        long now = System.nanoTime();
+
+        double delta =
+            lastFrameTime == 0
+                ? 1.0 / 60.0
+                : (now - lastFrameTime)
+                    / 1_000_000_000.0;
+
+        lastFrameTime = now;
+
+        delta = MathHelper.clamp(
+            delta,
+            0.0,
+            0.05
+        );
+
+        animationTime +=
+            delta
+                * animationSpeed.get();
+
+        return delta;
+    }
+
+    private void updateTarget(
+        Render3DEvent event,
+        Entity target,
+        double delta
+    ) {
+        float wantedAlpha =
+            target == null ? 0.0f : 1.0f;
+
+        if (fade.get()) {
+            float factor = Math.min(
+                1.0f,
+                (float) delta * 9.0f
+            );
+
+            alpha +=
+                (wantedAlpha - alpha)
+                    * factor;
+        } else {
+            alpha = wantedAlpha;
+        }
+
+        if (target != null) {
+            Vec3d wantedPosition = new Vec3d(
+                MathHelper.lerp(
+                    event.tickDelta,
+                    target.lastRenderX,
+                    target.getX()
+                ),
+                MathHelper.lerp(
+                    event.tickDelta,
+                    target.lastRenderY,
+                    target.getY()
+                ),
+                MathHelper.lerp(
+                    event.tickDelta,
+                    target.lastRenderZ,
+                    target.getZ()
+                )
+            );
+
+            if (
+                lastTarget != target
+                    || smoothPosition == null
+            ) {
+                smoothPosition = wantedPosition;
+            } else {
+                double factor = Math.min(
+                    1.0,
+                    delta * 14.0
+                );
+
+                smoothPosition = new Vec3d(
+                    MathHelper.lerp(
+                        factor,
+                        smoothPosition.x,
+                        wantedPosition.x
+                    ),
+                    MathHelper.lerp(
+                        factor,
+                        smoothPosition.y,
+                        wantedPosition.y
+                    ),
+                    MathHelper.lerp(
+                        factor,
+                        smoothPosition.z,
+                        wantedPosition.z
+                    )
+                );
+            }
+
+            targetWidth = target.getWidth();
+            targetHeight = target.getHeight();
+            lastTarget = target;
+
+            if (
+                target instanceof LivingEntity living
+                    && living.hurtTime > 0
+            ) {
+                hurtProgress = Math.max(
+                    hurtProgress,
+                    living.hurtTime / 10.0f
+                );
+            }
+        }
+
+        hurtProgress = Math.max(
+            0.0f,
+            hurtProgress
+                - (float) delta * 3.5f
+        );
+
+        if (target == null && alpha <= 0.01f) {
+            lastTarget = null;
+            smoothPosition = null;
+        }
+    }
+
+    private void renderExpensive(
+        Render3DEvent event,
+        Color primary,
+        Color secondary
+    ) {
+        double scale = size.get();
+        double y =
+            smoothPosition.y
+                + targetHeight * 0.5;
+
+        drawDiamond(
+            event,
+            smoothPosition.x,
+            y,
+            smoothPosition.z,
+            0.45 * scale,
+            0.60 * scale,
+            animationTime * 2.0,
+            primary,
+            secondary
+        );
+
+        drawRing(
+            event,
+            smoothPosition.x,
+            y,
+            smoothPosition.z,
+            0.52 * scale,
+            animationTime,
+            primary
+        );
+    }
+
+    private void renderRastyRhomb(
+        Render3DEvent event,
+        Color primary,
+        Color secondary
+    ) {
+        double scale = size.get();
+        double pulse =
+            1.0
+                + Math.sin(animationTime * 3.0)
+                * 0.08;
+
+        drawDiamond(
+            event,
+            smoothPosition.x,
+            smoothPosition.y
+                + targetHeight * 0.52,
+            smoothPosition.z,
+            0.52 * scale * pulse,
+            0.72 * scale * pulse,
+            animationTime * 2.5,
+            primary,
+            secondary
+        );
+    }
+
+    private void renderRastyChain(
+        Render3DEvent event,
+        Color primary,
+        Color secondary
+    ) {
+        int count = segments.get();
+        double radius =
+            Math.max(
+                targetWidth * 0.85,
+                0.45
+            ) * size.get();
+
+        for (int chain = 0; chain < 2; chain++) {
+            double phase =
+                animationTime * 2.2
+                    + chain * Math.PI;
+
+            for (int i = 0; i < count; i++) {
+                double progress1 =
+                    i / (double) count;
+
+                double progress2 =
+                    (i + 1.0) / count;
+
+                double angle1 =
+                    phase
+                        + progress1
+                        * Math.PI
+                        * 4.0;
+
+                double angle2 =
+                    phase
+                        + progress2
+                        * Math.PI
+                        * 4.0;
+
+                double x1 =
+                    smoothPosition.x
+                        + Math.cos(angle1)
+                        * radius;
+
+                double z1 =
+                    smoothPosition.z
+                        + Math.sin(angle1)
+                        * radius;
+
+                double x2 =
+                    smoothPosition.x
+                        + Math.cos(angle2)
+                        * radius;
+
+                double z2 =
+                    smoothPosition.z
+                        + Math.sin(angle2)
+                        * radius;
+
+                double y1 =
+                    smoothPosition.y
+                        + progress1
+                        * targetHeight;
+
+                double y2 =
+                    smoothPosition.y
+                        + progress2
+                        * targetHeight;
+
+                Color color = mixColor(
+                    primary,
+                    secondary,
+                    (float) progress1
+                );
+
+                event.renderer.line(
+                    x1,
+                    y1,
+                    z1,
+                    x2,
+                    y2,
+                    z2,
+                    color
+                );
+
+                if (i % 4 == 0) {
+                    event.renderer.line(
+                        x1,
+                        y1 - 0.07,
+                        z1,
+                        x1,
+                        y1 + 0.07,
+                        z1,
+                        color
+                    );
+                }
+            }
+        }
+    }
+
+    private void renderRastyCrystals(
+        Render3DEvent event,
+        Color primary,
+        Color secondary
+    ) {
+        double scale = size.get();
+        double radius =
+            Math.max(
+                targetWidth,
+                0.65
+            ) * scale;
+
+        for (int i = 0; i < 5; i++) {
+            double angle =
+                animationTime * 1.8
+                    + i
+                    * Math.PI
+                    * 2.0
+                    / 5.0;
+
+            double x =
+                smoothPosition.x
+                    + Math.cos(angle)
+                    * radius;
+
+            double z =
+                smoothPosition.z
+                    + Math.sin(angle)
+                    * radius;
+
+            double y =
+                smoothPosition.y
+                    + targetHeight * 0.5
+                    + Math.sin(
+                    animationTime * 2.5 + i
+                ) * 0.28;
+
+            drawDiamond(
+                event,
+                x,
+                y,
+                z,
+                0.14 * scale,
+                0.25 * scale,
+                -angle,
+                primary,
+                secondary
+            );
+        }
+    }
+
+    private void renderRastyCircle(
+        Render3DEvent event,
+        Color primary,
+        Color secondary
+    ) {
+        double progress =
+            0.5
+                + Math.sin(animationTime * 2.2)
+                * 0.5;
+
+        double y =
+            smoothPosition.y
+                + progress
+                * targetHeight;
+
+        double direction =
+            Math.cos(animationTime * 2.2);
+
+        double tail =
+            direction > 0
+                ? -0.32
+                : 0.32;
+
+        double radius =
+            Math.max(
+                targetWidth * 0.8,
+                0.38
+            ) * size.get();
+
+        drawGradientRing(
+            event,
+            y,
+            y + tail,
+            radius,
+            animationTime,
+            primary,
+            secondary
+        );
+    }
+
+    private void renderRockstarJello(
+        Render3DEvent event,
+        Color primary,
+        Color secondary
+    ) {
+        double wave =
+            0.5
+                + Math.sin(animationTime * 1.8)
+                * 0.5;
+
+        double y =
+            smoothPosition.y
+                + targetHeight
+                * wave;
+
+        double direction =
+            Math.cos(animationTime * 1.8);
+
+        double tail =
+            direction > 0
+                ? -targetHeight * 0.18
+                : targetHeight * 0.18;
+
+        double radius =
+            Math.max(
+                targetWidth * 0.75,
+                0.42
+            ) * size.get();
+
+        drawGradientRing(
+            event,
+            y,
+            y + tail,
+            radius,
+            0,
+            primary,
+            secondary
+        );
+
+        drawRing(
+            event,
+            smoothPosition.x,
+            y,
+            smoothPosition.z,
+            radius,
+            0,
+            primary
+        );
+    }
+
+    private void renderRockstarSims(
+        Render3DEvent event,
+        Color primary,
+        Color secondary
+    ) {
+        double scale = size.get();
+        double bob =
+            0.18
+                + Math.sin(animationTime * 2.6)
+                * 0.10;
+
+        double x = smoothPosition.x;
+        double y =
+            smoothPosition.y
+                + targetHeight
+                + 0.35
+                + bob;
+
+        double z = smoothPosition.z;
+
+        double radius = 0.22 * scale;
+        double halfHeight = 0.38 * scale;
+
+        drawDiamond(
+            event,
+            x,
+            y,
+            z,
+            radius,
+            halfHeight,
+            animationTime * 1.2,
+            primary,
+            secondary
+        );
+
+        drawRing(
+            event,
+            x,
+            y,
+            z,
+            radius * 0.75,
+            animationTime,
+            secondary
+        );
+    }
+
+    private void renderThunder(
+        Render3DEvent event,
+        Color primary,
+        Color secondary
+    ) {
+        double scale = size.get();
+        double radius =
+            Math.max(
+                targetWidth * 0.85,
+                0.48
+            ) * scale;
+
+        for (int ring = 0; ring < 3; ring++) {
+            double y =
+                smoothPosition.y
+                    + targetHeight
+                    * (0.22 + ring * 0.28);
+
+            double phase =
+                animationTime
+                    * (ring % 2 == 0 ? 1.8 : -1.8)
+                    + ring;
+
+            drawRing(
+                event,
+                smoothPosition.x,
+                y,
+                smoothPosition.z,
+                radius
+                    * (1.0 - ring * 0.08),
+                phase,
+                ring % 2 == 0
+                    ? primary
+                    : secondary
+            );
+        }
+
+        int count = 8;
+
+        for (int i = 0; i < count; i++) {
+            double angle =
+                animationTime * 1.8
+                    + i
+                    * Math.PI
+                    * 2.0
+                    / count;
+
+            double x =
+                smoothPosition.x
+                    + Math.cos(angle)
+                    * radius;
+
+            double z =
+                smoothPosition.z
+                    + Math.sin(angle)
+                    * radius;
+
+            event.renderer.line(
+                x,
+                smoothPosition.y
+                    + targetHeight * 0.2,
+                z,
+                smoothPosition.x
+                    + Math.cos(angle + 0.8)
+                    * radius * 0.8,
+                smoothPosition.y
+                    + targetHeight * 0.8,
+                smoothPosition.z
+                    + Math.sin(angle + 0.8)
+                    * radius * 0.8,
+                mixColor(
+                    primary,
+                    secondary,
+                    i / (float) count
+                )
+            );
+        }
+    }
+
+    private void renderThunderGhosts(
+        Render3DEvent event,
+        Color primary,
+        Color secondary
+    ) {
+        int trails = 4;
+        int length = Math.max(
+            10,
+            segments.get() / 2
+        );
+
+        double radius =
+            Math.max(
+                targetWidth,
+                0.6
+            ) * size.get();
+
+        for (int trail = 0; trail < trails; trail++) {
+            double basePhase =
+                trail
+                    * Math.PI
+                    * 2.0
+                    / trails;
+
+            for (int i = 0; i < length; i++) {
+                double progress1 =
+                    i / (double) length;
+
+                double progress2 =
+                    (i + 1.0) / length;
+
+                double angle1 =
+                    animationTime * 2.6
+                        + basePhase
+                        - progress1 * 1.8;
+
+                double angle2 =
+                    animationTime * 2.6
+                        + basePhase
+                        - progress2 * 1.8;
+
+                double x1 =
+                    smoothPosition.x
+                        + Math.cos(angle1)
+                        * radius;
+
+                double z1 =
+                    smoothPosition.z
+                        + Math.sin(angle1)
+                        * radius;
+
+                double x2 =
+                    smoothPosition.x
+                        + Math.cos(angle2)
+                        * radius;
+
+                double z2 =
+                    smoothPosition.z
+                        + Math.sin(angle2)
+                        * radius;
+
+                double y1 =
+                    smoothPosition.y
+                        + targetHeight * 0.5
+                        + Math.sin(
+                        angle1 * 1.5
+                    ) * targetHeight * 0.35;
+
+                double y2 =
+                    smoothPosition.y
+                        + targetHeight * 0.5
+                        + Math.sin(
+                        angle2 * 1.5
+                    ) * targetHeight * 0.35;
+
+                Color trailColor = createFadedColor(
+                    mixColor(
+                        primary,
+                        secondary,
+                        trail / (float) trails
+                    ),
+                    1.0f - (float) progress1
+                );
+
+                event.renderer.line(
+                    x1,
+                    y1,
+                    z1,
+                    x2,
+                    y2,
+                    z2,
+                    trailColor
+                );
+            }
+        }
+    }
+
+    private void renderThunderCelka(
+        Render3DEvent event,
+        Color primary,
+        Color secondary
+    ) {
+        double scale = size.get();
+
+        double progress =
+            0.5
+                + Math.sin(animationTime * 2.0)
+                * 0.5;
+
+        double y =
+            smoothPosition.y
+                + targetHeight * progress;
+
+        double radius =
+            Math.max(
+                targetWidth * 0.9,
+                0.45
+            ) * scale;
+
+        drawRing(
+            event,
+            smoothPosition.x,
+            y,
+            smoothPosition.z,
+            radius,
+            animationTime * 1.5,
+            primary
+        );
+
+        drawRing(
+            event,
+            smoothPosition.x,
+            y + 0.04,
+            smoothPosition.z,
+            radius * 0.88,
+            -animationTime * 1.5,
+            secondary
+        );
+
+        drawGradientRing(
+            event,
+            y,
+            y - 0.22,
+            radius,
+            animationTime,
+            primary,
+            secondary
+        );
+    }
+
+    private void renderWildFire(
+        Render3DEvent event,
+        Color primary,
+        Color secondary
+    ) {
+        int trailLength = Math.max(
+            12,
+            segments.get() / 3
+        );
+
+        double radius =
+            Math.max(
+                targetWidth * 0.8,
+                0.45
+            ) * size.get();
+
+        for (int flame = 0; flame < 3; flame++) {
+            double flamePhase =
+                flame
+                    * Math.PI
+                    * 2.0
+                    / 3.0;
+
+            for (int i = 0; i < trailLength; i++) {
+                double progress1 =
+                    i / (double) trailLength;
+
+                double progress2 =
+                    (i + 1.0)
+                        / trailLength;
+
+                double angle1 =
+                    animationTime * 3.5
+                        + flamePhase
+                        - progress1 * 2.2;
+
+                double angle2 =
+                    animationTime * 3.5
+                        + flamePhase
+                        - progress2 * 2.2;
+
+                double flameRadius1 =
+                    radius
+                        * (1.0 - progress1 * 0.55);
+
+                double flameRadius2 =
+                    radius
+                        * (1.0 - progress2 * 0.55);
+
+                double x1 =
+                    smoothPosition.x
+                        + Math.cos(angle1)
+                        * flameRadius1;
+
+                double z1 =
+                    smoothPosition.z
+                        + Math.sin(angle1)
+                        * flameRadius1;
+
+                double x2 =
+                    smoothPosition.x
+                        + Math.cos(angle2)
+                        * flameRadius2;
+
+                double z2 =
+                    smoothPosition.z
+                        + Math.sin(angle2)
+                        * flameRadius2;
+
+                double y1 =
+                    smoothPosition.y
+                        + 0.15
+                        + progress1
+                        * targetHeight
+                        * 0.95;
+
+                double y2 =
+                    smoothPosition.y
+                        + 0.15
+                        + progress2
+                        * targetHeight
+                        * 0.95;
+
+                Color flameColor = createFadedColor(
+                    mixColor(
+                        primary,
+                        secondary,
+                        (float) progress1
+                    ),
+                    1.0f - (float) progress1
+                );
+
+                event.renderer.line(
+                    x1,
+                    y1,
+                    z1,
+                    x2,
+                    y2,
+                    z2,
+                    flameColor
+                );
+
+                if (i % 3 == 0) {
+                    event.renderer.line(
+                        x1,
+                        y1,
+                        z1,
+                        x1,
+                        y1 + 0.12,
+                        z1,
+                        createFadedColor(
+                            flameColor,
+                            0.45f
+                        )
+                    );
+                }
+            }
+        }
+    }
+
+    private void drawDiamond(
+        Render3DEvent event,
+        double x,
+        double y,
+        double z,
+        double radius,
+        double halfHeight,
+        double phase,
+        Color primary,
+        Color secondary
+    ) {
+        double topY = y + halfHeight;
+        double bottomY = y - halfHeight;
+
+        double[] px = new double[4];
+        double[] pz = new double[4];
+
+        for (int i = 0; i < 4; i++) {
+            double angle =
+                phase
+                    + i
+                    * Math.PI
+                    * 0.5;
+
+            px[i] =
+                x + Math.cos(angle) * radius;
+
+            pz[i] =
+                z + Math.sin(angle) * radius;
+        }
+
+        Color sidePrimary =
+            createFadedColor(primary, 0.30f);
+
+        Color sideSecondary =
+            createFadedColor(secondary, 0.20f);
+
+        for (int i = 0; i < 4; i++) {
+            int next = (i + 1) % 4;
+
+            event.renderer.line(
+                px[i],
+                y,
+                pz[i],
+                x,
+                topY,
+                z,
+                primary
+            );
+
+            event.renderer.line(
+                px[i],
+                y,
+                pz[i],
+                x,
+                bottomY,
+                z,
+                secondary
+            );
+
+            event.renderer.line(
+                px[i],
+                y,
+                pz[i],
+                px[next],
+                y,
+                pz[next],
+                mixColor(
+                    primary,
+                    secondary,
+                    i / 3.0f
+                )
+            );
+
+            event.renderer.quad(
+                px[i],
+                y,
+                pz[i],
+                x,
+                topY,
+                z,
+                px[next],
+                y,
+                pz[next],
+                px[i],
+                y,
+                pz[i],
+                sidePrimary
+            );
+
+            event.renderer.quad(
+                px[i],
+                y,
+                pz[i],
+                px[next],
+                y,
+                pz[next],
+                x,
+                bottomY,
+                z,
+                px[i],
+                y,
+                pz[i],
+                sideSecondary
+            );
+        }
+    }
+
+    private void drawRing(
+        Render3DEvent event,
+        double x,
+        double y,
+        double z,
+        double radius,
+        double phase,
+        Color color
+    ) {
+        int count = segments.get();
+
+        for (int i = 0; i < count; i++) {
+            double angle1 =
+                phase
+                    + i
+                    * Math.PI
+                    * 2.0
+                    / count;
+
+            double angle2 =
+                phase
+                    + (i + 1.0)
+                    * Math.PI
+                    * 2.0
+                    / count;
+
+            event.renderer.line(
+                x + Math.cos(angle1) * radius,
+                y,
+                z + Math.sin(angle1) * radius,
+                x + Math.cos(angle2) * radius,
+                y,
+                z + Math.sin(angle2) * radius,
+                color
+            );
+        }
+    }
+
+    private void drawGradientRing(
+        Render3DEvent event,
+        double y1,
+        double y2,
+        double radius,
+        double phase,
+        Color solid,
+        Color gradient
+    ) {
+        int count = segments.get();
+
+        Color transparent =
+            createFadedColor(
+                gradient,
+                0.02f
+            );
+
+        for (int i = 0; i < count; i++) {
+            double angle1 =
+                phase
+                    + i
+                    * Math.PI
+                    * 2.0
+                    / count;
+
+            double angle2 =
+                phase
+                    + (i + 1.0)
+                    * Math.PI
+                    * 2.0
+                    / count;
+
+            double x1 =
+                smoothPosition.x
+                    + Math.cos(angle1)
+                    * radius;
+
+            double z1 =
+                smoothPosition.z
+                    + Math.sin(angle1)
+                    * radius;
+
+            double x2 =
+                smoothPosition.x
+                    + Math.cos(angle2)
+                    * radius;
+
+            double z2 =
+                smoothPosition.z
+                    + Math.sin(angle2)
+                    * radius;
+
+            event.renderer.quad(
+                x1,
+                y1,
+                z1,
+                x1,
+                y2,
+                z1,
+                x2,
+                y2,
+                z2,
+                x2,
+                y1,
+                z2,
+                solid,
+                transparent,
+                transparent,
+                solid
+            );
+        }
+    }
+
+    private Color createColor(
+        SettingColor source,
+        float alphaMultiplier,
+        float hurt
+    ) {
+        int red = (int) MathHelper.lerp(
+            hurt,
+            source.r,
+            255
+        );
+
+        int green = (int) MathHelper.lerp(
+            hurt,
+            source.g,
+            50
+        );
+
+        int blue = (int) MathHelper.lerp(
+            hurt,
+            source.b,
+            50
+        );
+
+        int colorAlpha = MathHelper.clamp(
+            (int) (
+                source.a
+                    * alphaMultiplier
+            ),
+            0,
+            255
+        );
+
+        return new Color(
+            red,
+            green,
+            blue,
+            colorAlpha
+        );
+    }
+
+    private Color createFadedColor(
+        Color color,
+        float multiplier
+    ) {
+        return new Color(
+            color.r,
+            color.g,
+            color.b,
+            MathHelper.clamp(
+                (int) (
+                    color.a * multiplier
+                ),
+                0,
+                255
+            )
+        );
+    }
+
+    private Color mixColor(
+        Color first,
+        Color second,
+        float progress
+    ) {
+        progress = MathHelper.clamp(
+            progress,
+            0.0f,
+            1.0f
+        );
+
+        return new Color(
+            (int) MathHelper.lerp(
+                progress,
+                first.r,
+                second.r
+            ),
+            (int) MathHelper.lerp(
+                progress,
+                first.g,
+                second.g
+            ),
+            (int) MathHelper.lerp(
+                progress,
+                first.b,
+                second.b
+            ),
+            (int) MathHelper.lerp(
+                progress,
+                first.a,
+                second.a
+            )
+        );
+    }
+
+    public enum EspMode {
+        Expensive,
+        RastyRhomb,
+        RastyChain,
+        RastyCrystals,
+        RastyCircle,
+        RockstarJello,
+        RockstarSims,
+        Thunder,
+        ThunderGhosts,
+        ThunderCelka,
+        WildFire
+    }
+}
+
+
+Переключатель Mode даст 11 дизайнов. Начни с RastyCrystals, ThunderGhosts, RockstarJello и WildFire.
+
+оно как то не рпиавльно рабаоет ну типо мне кажетсян ужно еще чето для переноса оно блять вобещ не так там же тьипо так криасов летает вкору а тут че незнаю скжаи мне что не так
+
+Analysis
+Проверяю отсутствующие текстуры, шейдеры и render-pipeline зависимости.Проверяю точный namespace ресурсов Morzh.Уточняю идентификатор клиента для будущих текстур.
+
+Да, ты прав. Моя ошибка: я не перенёс оригинальные ESP, а приблизительно повторил их обычными линиями.
+
+Что отсутствует:
+
+    Rasty использует cube.png, chain.png, billboard-квады и специальные render pipelines.
+    Wild Fire использует fire.png, additive blending и спрайты, всегда повёрнутые к камере.
+    Thunder Ghosts использует текстуры, прозрачные шлейфы, glow и отдельное обновление анимации.
+    Rockstar Jello использует настоящий градиентный цилиндр.
+    В моём варианте Ghost и Fire — простые линии.
+    В drawDiamond() ещё есть вырожденные quad-полигоны с повторяющейся вершиной.
+
+
+Поэтому оно физически не может выглядеть как в донорах.
+
+Для правильного переноса нужны:
+
+    Полный TargetESP.java.
+    Отдельный текстурный 3D-рендерер с billboard, additive blend и depth control.
+    Ресурсы:
+
+
+text
+
+src/main/resources/assets/meteor-client/textures/target-esp/cube.png
+src/main/resources/assets/meteor-client/textures/target-esp/chain.png
+src/main/resources/assets/meteor-client/textures/target-esp/fire.png
+src/main/resources/assets/meteor-client/textures/target-esp/ghost.png
+src/main/resources/assets/meteor-client/textures/target-esp/marker1.png
+
+
+В текстовых дампах есть код, но самих PNG нет. Для точного вида нужны оригинальные папки ресурсов Rasty/Wild/Thunder. Без них можно сделать собственные похожие текстуры, но это снова будет не точная копия.
+
+Текущую версию лучше пока не использовать. Следующий вариант нужно делать полноценным текстурным портом, а не через Renderer3D.line().
+
+напаиши все нужныке навазния во всех клиентах спсико прям я их вытащу все и зщакину
+
+Analysis
+Собираю точные пути текстур и зависимых классов.Нахожу точные имена ThunderHack и Rasty текстур.Проверяю имена служебных классов Rasty и Wild.Уточняю полный путь Wild-ресурсов и мод-id.Ищу Target ESP внутри Tusk и дополнительные ресурсы.Уточняю все Tusk-режимы, файлы и текстуры.Нахожу файл настроек Tusk TargetEsp.Проверяю вторую часть Tusk на отсутствующий модуль.Уточняю Expensive renderer-зависимости для marker и bloom.Нахожу Expensive bloom shader и ресурсные пути.Уточняю Rockstar-файлы для Jello и Sims.Проверяю точное расположение OutBack и таймера Rasty.Фиксирую версии репозиториев для открываемых ссылок.
+
+Да, вытаскивай с сохранением исходных папок и не переименовывай.
+
+Tusk / Nuclear — обязательно
+
+Лучше целиком:
+
+text
+
+src/main/java/nuclear/control/handler/impl/
+src/main/java/nuclear/module/impl/render/
+src/main/java/nuclear/utils/anim/
+src/main/java/nuclear/utils/render/
+src/main/java/nuclear/utils/math/
+src/main/resources/assets/nuclear/images/targetesp/
+
+
+Особенно нужны:
+
+text
+
+TargetESPHandler.java
+TargetEsp.java
+AnimationUtil.java
+ColorUtil.java
+ColorUtils.java
+Easings.java
+Easing.java
+TimeAnim.java
+MathUtil.java
+
+
+Текстуры:
+
+text
+
+glow.png
+target1.png
+target2.png
+target3.png
+target4.png
+
+
+У Tusk есть: Ромб, несколько Призраков, Кольцо и Кристаллы.
+
+Rasty
+
+Код:
+
+text
+
+src/main/java/rasty/modules/impl/render/TargetESP.java
+src/main/java/rasty/util/render/Render3D.java
+src/main/java/rasty/util/render/сliemtpipeline/ClientPipelines.java
+src/main/java/rasty/util/animations/Animation.java
+src/main/java/rasty/util/animations/Direction.java
+src/main/java/rasty/util/animations/OutBack.java
+src/main/java/rasty/util/timer/StopWatch.java
+
+
+Важно: в названии сliemtpipeline первая буква может быть кириллической. Не переименовывай.
+
+Ресурсы:
+
+text
+
+src/main/resources/assets/rasty/images/world/chain.png
+src/main/resources/assets/rasty/images/world/cube.png
+src/main/resources/assets/rasty/images/particle/ghost-glow.png
+
+
+У Rasty есть: Rhomb, Ghost, Chain, Crystals, Circle.
+
+ThunderHack
+
+Код:
+
+text
+
+src/main/java/thunder/hack/utility/render/Render3DEngine.java
+src/main/java/thunder/hack/utility/render/Render2DEngine.java
+src/main/java/thunder/hack/utility/render/TextureStorage.java
+src/main/java/thunder/hack/utility/render/animation/CaptureMark.java
+src/main/java/thunder/hack/features/modules/combat/Aura.java
+src/main/java/thunder/hack/features/modules/client/HudEditor.java
+
+
+Ресурсы:
+
+text
+
+src/main/resources/assets/thunderhack/textures/particles/firefly.png
+src/main/resources/assets/thunderhack/textures/hud/elements/capture.png
+
+
+У Thunder есть: основной тройной ESP, CelkaPasta, CaptureMark и Ghosts.
+
+Wild
+
+Код:
+
+text
+
+src/main/java/dev/client/util/aura/esp/EspMode.java
+src/main/java/dev/client/util/aura/esp/impl/CircleMode.java
+src/main/java/dev/client/util/aura/esp/impl/DefaultMode.java
+src/main/java/dev/client/util/aura/esp/impl/FireMode.java
+src/main/java/dev/client/util/IUtil.java
+src/main/java/dev/client/modules/impl/combat/Aura.java
+
+
+Ресурсы — лучше всю папку:
+
+text
+
+src/main/resources/assets/wild/images/targetesps/
+
+
+В ней должны быть:
+
+text
+
+fire.png
+targetesp1.jpg
+targetesp2.jpg
+targetesp3.png
+targetesp4.png
+
+
+Expensive
+
+Код:
+
+text
+
+src/main/java/ru/expensive/core/client/implement/features/modules/render/TargetESPModule.java
+src/main/java/ru/expensive/core/client/api/system/shape/Shape.java
+src/main/java/ru/expensive/core/client/api/system/shape/ShapeProperties.java
+src/main/java/ru/expensive/core/client/api/system/shape/ShapeRenderer.java
+src/main/java/ru/expensive/core/client/api/system/shape/implement/Image.java
+src/main/java/ru/expensive/core/client/api/system/shader/ShadersPool.java
+src/main/java/ru/expensive/core/client/api/system/shader/implement/BloomShader.java
+
+
+Ресурсы:
+
+text
+
+src/main/resources/assets/extra/images/render/marker.png
+src/main/resources/assets/minecraft/shaders/core/bloom.fsh
+src/main/resources/assets/minecraft/shaders/core/bloom.vsh
+src/main/resources/assets/minecraft/shaders/core/bloom.json
+
+
+Rockstar
+
+Текстур нет, нужны классы:
+
+text
+
+api/utils/render/AnimationHelper.java
+api/utils/render/ClientHelper.java
+api/utils/render/DrawHelper.java
+client/features/impl/visuals/TargetESP.java
+
+
+Там находятся Jello и Sims.
+
+Удобнее всего закинуть архивами целые папки render, targetesp и textures каждого клиента. Тогда зависимости и изображения точно не потеряются.
+
+куда перекинуть текстры эти
+
+Все текстуры складывай в текущий проект сюда:
+
+text
+
+src/main/resources/assets/meteor-client/textures/target-esp/
+
+
+Имена сохрани:
+
+text
+
+marker.png
+chain.png
+cube.png
+ghost-glow.png
+firefly.png
+capture.png
+fire.png
+target1.png
+target2.png
+target3.png
+target4.png
+
+
+Пока можешь просто собрать все PNG/JPG в эту одну папку. В коде затем подключим их как:
+
+java
+
+MeteorClient.identifier("textures/target-esp/имя.png")
+
+
+Если совпадают имена, добавляй префикс клиента:
+
+text
+
+rasty-cube.png
+tusk-glow.png
+wild-fire.png
+thunder-firefly.png
+expensive-marker.png
+
+kawase_up.fsh такие тоже нужно? я нашел шейдеры и пнгшки
+
+kawase_up.fsh для Target ESP не нужен. Это шейдер размытия интерфейса.
+
+Для ESP бери:
+
+text
+
+bloom.fsh
+bloom.vsh
+bloom.json
+
+
+И все найденные PNG/JPG из папок targetesp, particles, world.
+
+Если сомневаешься — закинь всю найденную папку shaders: лишние файлы не помешают, позже выберем нужные.
+
+сделал other_esp1.png
+other_esp2.png
+other_esp3.png
+other_esp4.png
+other_esp5.png
+other_esp6.png
+other_esp7.png
+other_esp8.png
+other_esp9.png
+other_esp10.png
+
+rasty_esp1.png
+rasty_esp2.png
+rasty_esp3.png
+rasty_esp4.png
+rasty_esp5.png
+rasty_esp6.png
+
+rockstar_esp1.png
+
+thunderhack_esp1.png
+thunderhack_esp2.png
+thunderhack_esp3.png
+thunderhack_esp4.png
+thunderhack_esp5.png
+
+wild_esp1.png
+wild_esp2.jpg
+wild_esp3.jpg
+wild_esp4.png
+wild_esp5.png
+wild_esp6.png
+wild_esp7.png
+wild_esp8.jpg
+wild_esp9.jpg
+wild_esp10.jpg
+wild_esp11.png
+wild_esp12.jpg
+wild_esp13.jpg
+wild_esp14.png
+wild_esp15.png
+
+Analysis
+Проверяю, появились ли новые ESP-текстуры в репозитории.
+
+Отлично. Оставь их здесь:
+
+text
+
+src/main/resources/assets/meteor-client/textures/target-esp/
+
+
+Но по названиям непонятно, где ромб, огонь, призрак или цепь. Новые файлы пока не появились в подключённом репозитории.
+
+Загрузи обновлённый проект/архив с этими текстурами. Я просмотрю каждую и составлю правильное соответствие режимов. JPG пока не конвертируй — для них можно использовать additive blending.
+
+C:\dev\meteor-fork\texture сюда полдожил
+
+Сейчас папка неправильная. Перенеси текстуры сюда:
+
+text
+
+C:\dev\meteor-fork\src\main\resources\assets\meteor-client\textures\target-esp\
+
+
+Папки target-esp создай, если её нет. В C:\dev\meteor-fork\texture Minecraft ресурсы не увидит.
+
+давай сделаем так как есть вчем проебмла зачем именно туда
+
+Проблема в сборке: Gradle кладёт в JAR только содержимое src/main/resources. Папка C:\dev\meteor-fork\texture в JAR не попадёт, и Minecraft её не найдёт через Identifier.
+
+Можно оставить там, но тогда придётся писать отдельный загрузчик файлов с диска; после переноса JAR на другой компьютер ESP пропадёт.
+
+Правильный и простой путь:
+
+text
+
+src\main\resources\assets\meteor-client\textures\target-esp\
+
+
+Тогда текстуры автоматически попадут в JAR и будут работать везде.
+
+C:\dev\meteor-fork\src\main\resources\assets\meteor-client\textures target-esp
+
+Да, правильная папка:
+
+C:\dev\meteor-fork\src\main\resources\assets\meteor-client\textures\target-esp\
+
+Закинь туда все other_esp, rasty_esp, rockstar_esp, thunderhack_esp, wild_esp. kawase_up.fsh пока не клади.
+
+закинул кидай теперь код что бі все сделалось
+
+Analysis
+Проверяю текущий TargetESP и доступные рендер-API.Извлекаю модуль и реализацию текстурных примитивов.Проверяю матрицы камеры и сигнатуры рендера 1.21.4.Уточняю готовый шейдер и формат текстурного меша.Читаю реализацию меша перед подготовкой совместимого файла.Проверяю, принимает ли текстурный шейдер координату Z.Проверяю создание Render3DEvent и преобразование камеры.Читаю точный порядок мирового рендера.Проверяю названия Quaternion API и настроек перед кодом.
+
+Замени полностью файл:
+
+src/main/java/meteordevelopment/meteorclient/systems/modules/render/TargetESP.java
+
+java
+
+package meteordevelopment.meteorclient.systems.modules.render;
+
+import com.mojang.blaze3d.platform.GlStateManager;
+import meteordevelopment.meteorclient.MeteorClient;
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.renderer.DrawMode;
+import meteordevelopment.meteorclient.renderer.Mesh;
+import meteordevelopment.meteorclient.renderer.ShaderMesh;
+import meteordevelopment.meteorclient.renderer.Shaders;
+import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.modules.Categories;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.combat.KillAura;
+import meteordevelopment.meteorclient.utils.render.color.Color;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.orbit.EventHandler;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+
+import static org.lwjgl.opengl.GL11.*;
+
+public class TargetESP extends Module {
+    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgAnimation = settings.createGroup("Animation");
+    private final SettingGroup sgRender = settings.createGroup("Render");
+
+    private final Setting<TargetTexture> texture = sgGeneral.add(
+        new EnumSetting.Builder<TargetTexture>()
+            .name("texture")
+            .description("Target ESP texture.")
+            .defaultValue(TargetTexture.ThunderHack1)
+            .build()
+    );
+
+    private final Setting<Animation> animation = sgGeneral.add(
+        new EnumSetting.Builder<Animation>()
+            .name("animation")
+            .description("Texture movement style.")
+            .defaultValue(Animation.Ghosts)
+            .build()
+    );
+
+    private final Setting<SettingColor> color = sgGeneral.add(
+        new ColorSetting.Builder()
+            .name("color")
+            .description("Texture color. White preserves original colors.")
+            .defaultValue(new SettingColor(255, 255, 255, 255))
+            .build()
+    );
+
+    private final Setting<Double> size = sgGeneral.add(
+        new DoubleSetting.Builder()
+            .name("size")
+            .description("Texture size.")
+            .defaultValue(0.38)
+            .min(0.05)
+            .sliderMax(2.0)
+            .build()
+    );
+
+    private final Setting<Double> radius = sgAnimation.add(
+        new DoubleSetting.Builder()
+            .name("radius")
+            .description("Orbit radius.")
+            .defaultValue(0.72)
+            .min(0)
+            .sliderMax(3)
+            .build()
+    );
+
+    private final Setting<Double> height = sgAnimation.add(
+        new DoubleSetting.Builder()
+            .name("height")
+            .description("Vertical animation amplitude.")
+            .defaultValue(0.45)
+            .min(0)
+            .sliderMax(2)
+            .build()
+    );
+
+    private final Setting<Double> speed = sgAnimation.add(
+        new DoubleSetting.Builder()
+            .name("speed")
+            .description("Animation speed.")
+            .defaultValue(2.4)
+            .min(-10)
+            .sliderMin(-10)
+            .sliderMax(10)
+            .build()
+    );
+
+    private final Setting<Double> spinSpeed = sgAnimation.add(
+        new DoubleSetting.Builder()
+            .name("spin-speed")
+            .description("Texture rotation speed.")
+            .defaultValue(90)
+            .min(-720)
+            .sliderMin(-720)
+            .sliderMax(720)
+            .build()
+    );
+
+    private final Setting<Integer> count = sgAnimation.add(
+        new IntSetting.Builder()
+            .name("count")
+            .description("Amount of particles.")
+            .defaultValue(3)
+            .min(1)
+            .sliderMax(12)
+            .build()
+    );
+
+    private final Setting<Integer> trails = sgAnimation.add(
+        new IntSetting.Builder()
+            .name("trails")
+            .description("Ghost trail length.")
+            .defaultValue(5)
+            .min(1)
+            .sliderMax(12)
+            .visible(() -> animation.get() == Animation.Ghosts)
+            .build()
+    );
+
+    private final Setting<Double> trailDistance = sgAnimation.add(
+        new DoubleSetting.Builder()
+            .name("trail-distance")
+            .description("Distance between ghost copies.")
+            .defaultValue(0.13)
+            .min(0.01)
+            .sliderMax(0.6)
+            .visible(() -> animation.get() == Animation.Ghosts)
+            .build()
+    );
+
+    private final Setting<Double> pulseSpeed = sgAnimation.add(
+        new DoubleSetting.Builder()
+            .name("pulse-speed")
+            .description("Pulsing speed.")
+            .defaultValue(2.0)
+            .min(0)
+            .sliderMax(10)
+            .build()
+    );
+
+    private final Setting<Boolean> additive = sgRender.add(
+        new BoolSetting.Builder()
+            .name("additive")
+            .description("Makes transparent textures glow.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Boolean> throughWalls = sgRender.add(
+        new BoolSetting.Builder()
+            .name("through-walls")
+            .description("Renders ESP through blocks.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Boolean> fade = sgRender.add(
+        new BoolSetting.Builder()
+            .name("fade")
+            .description("Smooth appearance and disappearance.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private TexturedMesh mesh;
+
+    private Entity lastTarget;
+    private Vec3d renderPosition;
+
+    private double time;
+    private float alpha;
+
+    public TargetESP() {
+        super(
+            Categories.Render,
+            "target-esp",
+            "Renders animated textured ESP around KillAura target."
+        );
+    }
+
+    @Override
+    public void onActivate() {
+        lastTarget = null;
+        renderPosition = null;
+        time = 0;
+        alpha = 0;
+    }
+
+    @EventHandler
+    private void onRender3D(Render3DEvent event) {
+        if (mc.world == null || mc.player == null) return;
+
+        if (mesh == null) {
+            mesh = new TexturedMesh();
+        }
+
+        KillAura aura = Modules.get().get(KillAura.class);
+        Entity target = aura != null && aura.isActive() ? aura.getTarget() : null;
+
+        updateAlpha(target, event.frameTime);
+
+        if (target != null) {
+            lastTarget = target;
+            renderPosition = interpolatedPosition(target, event.tickDelta);
+        }
+
+        if (renderPosition == null || lastTarget == null || alpha <= 0.005f) {
+            return;
+        }
+
+        time += event.frameTime * speed.get();
+
+        mesh.texture = texture.get().identifier;
+        mesh.additive = additive.get();
+        mesh.depthTest = !throughWalls.get();
+
+        mesh.begin();
+
+        switch (animation.get()) {
+            case Ghosts -> renderGhosts(lastTarget);
+            case Orbit -> renderOrbit(lastTarget, false);
+            case DoubleOrbit -> renderOrbit(lastTarget, true);
+            case Helix -> renderHelix(lastTarget);
+            case Halo -> renderHalo(lastTarget);
+            case AboveHead -> renderAboveHead(lastTarget);
+            case BodyMarker -> renderBody(lastTarget);
+            case Pulse -> renderPulse(lastTarget);
+        }
+
+        mesh.render(event.matrices);
+
+        if (target == null && alpha <= 0.005f) {
+            lastTarget = null;
+            renderPosition = null;
+        }
+    }
+
+    private Vec3d interpolatedPosition(Entity entity, float tickDelta) {
+        return new Vec3d(
+            MathHelper.lerp(tickDelta, entity.lastRenderX, entity.getX()),
+            MathHelper.lerp(tickDelta, entity.lastRenderY, entity.getY()),
+            MathHelper.lerp(tickDelta, entity.lastRenderZ, entity.getZ())
+        );
+    }
+
+    private void updateAlpha(Entity target, double delta) {
+        float destination = target != null ? 1f : 0f;
+
+        if (!fade.get()) {
+            alpha = destination;
+            return;
+        }
+
+        float factor = (float) Math.min(1, delta * 8);
+        alpha = MathHelper.lerp(factor, alpha, destination);
+
+        if (Math.abs(alpha - destination) < 0.005f) {
+            alpha = destination;
+        }
+    }
+
+    private void renderGhosts(Entity entity) {
+        int particles = count.get();
+        int trailCount = trails.get();
+
+        for (int particle = 0; particle < particles; particle++) {
+            double offset = Math.PI * 2 * particle / particles;
+
+            for (int trail = trailCount - 1; trail >= 0; trail--) {
+                double delayedTime = time - trail * trailDistance.get();
+                double angle = delayedTime + offset;
+
+                double x = renderPosition.x + Math.cos(angle) * radius.get();
+                double z = renderPosition.z + Math.sin(angle) * radius.get();
+
+                double wave = Math.sin(delayedTime * 1.7 + offset);
+                double y = renderPosition.y
+                    + entity.getHeight() * 0.5
+                    + wave * height.get();
+
+                float trailAlpha = (float) (1.0 - trail / (double) trailCount);
+                trailAlpha *= trailAlpha;
+
+                double scale = size.get() * (0.65 + trailAlpha * 0.35);
+                double rotation = Math.toDegrees(-angle) + time * spinSpeed.get();
+
+                addSprite(x, y, z, scale, rotation, trailAlpha);
+            }
+        }
+    }
+
+    private void renderOrbit(Entity entity, boolean doubleOrbit) {
+        int particles = count.get();
+
+        for (int i = 0; i < particles; i++) {
+            double offset = Math.PI * 2 * i / particles;
+            double angle = time + offset;
+
+            addOrbitSprite(entity, angle, 1, i);
+
+            if (doubleOrbit) {
+                addOrbitSprite(entity, -angle, -1, i);
+            }
+        }
+    }
+
+    private void addOrbitSprite(Entity entity, double angle, int direction, int index) {
+        double x = renderPosition.x + Math.cos(angle) * radius.get();
+        double z = renderPosition.z + Math.sin(angle) * radius.get();
+
+        double y = renderPosition.y
+            + entity.getHeight() * 0.5
+            + Math.sin(angle * 2 + index) * height.get();
+
+        double rotation = time * spinSpeed.get() * direction;
+
+        addSprite(x, y, z, size.get(), rotation, 1);
+    }
+
+    private void renderHelix(Entity entity) {
+        int particles = Math.max(2, count.get());
+
+        for (int i = 0; i < particles; i++) {
+            double progress = i / (double) particles;
+            double angle = time + progress * Math.PI * 4;
+
+            double x = renderPosition.x + Math.cos(angle) * radius.get();
+            double z = renderPosition.z + Math.sin(angle) * radius.get();
+
+            double normalized = (Math.sin(angle * 0.5) + 1) * 0.5;
+            double y = renderPosition.y + normalized * entity.getHeight();
+
+            addSprite(
+                x,
+                y,
+                z,
+                size.get(),
+                Math.toDegrees(-angle) + time * spinSpeed.get(),
+                1
+            );
+        }
+    }
+
+    private void renderHalo(Entity entity) {
+        int particles = Math.max(3, count.get());
+
+        for (int i = 0; i < particles; i++) {
+            double angle = time + Math.PI * 2 * i / particles;
+
+            double x = renderPosition.x + Math.cos(angle) * radius.get();
+            double z = renderPosition.z + Math.sin(angle) * radius.get();
+            double y = renderPosition.y + entity.getHeight() + height.get();
+
+            addSprite(
+                x,
+                y,
+                z,
+                size.get(),
+                Math.toDegrees(-angle) + 90,
+                1
+            );
+        }
+    }
+
+    private void renderAboveHead(Entity entity) {
+        double pulse = 1 + Math.sin(time * pulseSpeed.get()) * 0.12;
+
+        addSprite(
+            renderPosition.x,
+            renderPosition.y + entity.getHeight() + height.get(),
+            renderPosition.z,
+            size.get() * pulse,
+            time * spinSpeed.get(),
+            1
+        );
+    }
+
+    private void renderBody(Entity entity) {
+        double pulse = 1 + Math.sin(time * pulseSpeed.get()) * 0.05;
+
+        addSprite(
+            renderPosition.x,
+            renderPosition.y + entity.getHeight() * 0.52,
+            renderPosition.z,
+            size.get() * 2.5 * pulse,
+            time * spinSpeed.get(),
+            1
+        );
+    }
+
+    private void renderPulse(Entity entity) {
+        double pulse = 0.72
+            + (Math.sin(time * pulseSpeed.get()) + 1) * 0.28;
+
+        addSprite(
+            renderPosition.x,
+            renderPosition.y + entity.getHeight() * 0.52,
+            renderPosition.z,
+            size.get() * 2.2 * pulse,
+            time * spinSpeed.get(),
+            (float) (0.55 + pulse * 0.45)
+        );
+    }
+
+    private void addSprite(
+        double x,
+        double y,
+        double z,
+        double spriteSize,
+        double rotation,
+        float alphaMultiplier
+    ) {
+        Color source = color.get();
+
+        int finalAlpha = (int) (
+            source.a
+                * alpha
+                * MathHelper.clamp(alphaMultiplier, 0, 1)
+        );
+
+        if (finalAlpha <= 0) return;
+
+        Color spriteColor = new Color(
+            source.r,
+            source.g,
+            source.b,
+            finalAlpha
+        );
+
+        float yaw = (float) Math.toRadians(
+            mc.gameRenderer.getCamera().getYaw()
+        );
+
+        float pitch = (float) Math.toRadians(
+            mc.gameRenderer.getCamera().getPitch()
+        );
+
+        double sinYaw = Math.sin(yaw);
+        double cosYaw = Math.cos(yaw);
+        double sinPitch = Math.sin(pitch);
+        double cosPitch = Math.cos(pitch);
+
+        Vec3d right = new Vec3d(
+            cosYaw,
+            0,
+            sinYaw
+        );
+
+        Vec3d up = new Vec3d(
+            -sinYaw * sinPitch,
+            cosPitch,
+            cosYaw * sinPitch
+        );
+
+        double radians = Math.toRadians(rotation);
+        double cos = Math.cos(radians);
+        double sin = Math.sin(radians);
+
+        Vec3d rotatedRight = right.multiply(cos).add(up.multiply(sin));
+        Vec3d rotatedUp = up.multiply(cos).subtract(right.multiply(sin));
+
+        Vec3d horizontal = rotatedRight.multiply(spriteSize);
+        Vec3d vertical = rotatedUp.multiply(spriteSize);
+        Vec3d center = new Vec3d(x, y, z);
+
+        Vec3d topLeft = center.subtract(horizontal).add(vertical);
+        Vec3d bottomLeft = center.subtract(horizontal).subtract(vertical);
+        Vec3d bottomRight = center.add(horizontal).subtract(vertical);
+        Vec3d topRight = center.add(horizontal).add(vertical);
+
+        int i1 = mesh.vec3(topLeft.x, topLeft.y, topLeft.z)
+            .vec2(0, 0)
+            .color(spriteColor)
+            .next();
+
+        int i2 = mesh.vec3(bottomLeft.x, bottomLeft.y, bottomLeft.z)
+            .vec2(0, 1)
+            .color(spriteColor)
+            .next();
+
+        int i3 = mesh.vec3(bottomRight.x, bottomRight.y, bottomRight.z)
+            .vec2(1, 1)
+            .color(spriteColor)
+            .next();
+
+        int i4 = mesh.vec3(topRight.x, topRight.y, topRight.z)
+            .vec2(1, 0)
+            .color(spriteColor)
+            .next();
+
+        mesh.quad(i1, i2, i3, i4);
+    }
+
+    private static class TexturedMesh extends ShaderMesh {
+        private Identifier texture;
+        private boolean additive;
+
+        private TexturedMesh() {
+            super(
+                Shaders.POS_TEX_COLOR,
+                DrawMode.Triangles,
+                Mesh.Attrib.Vec3,
+                Mesh.Attrib.Vec2,
+                Mesh.Attrib.Color
+            );
+        }
+
+        @Override
+        protected void beforeRender() {
+            super.beforeRender();
+
+            mc.getTextureManager().bindTexture(texture);
+
+            if (additive) {
+                GlStateManager._blendFunc(GL_SRC_ALPHA, GL_ONE);
+            } else {
+                GlStateManager._blendFunc(
+                    GL_SRC_ALPHA,
+                    GL_ONE_MINUS_SRC_ALPHA
+                );
+            }
+        }
+    }
+
+    public enum Animation {
+        Ghosts,
+        Orbit,
+        DoubleOrbit,
+        Helix,
+        Halo,
+        AboveHead,
+        BodyMarker,
+        Pulse
+    }
+
+    public enum TargetTexture {
+        Other1("Other 1", "other_esp1.png"),
+        Other2("Other 2", "other_esp2.png"),
+        Other3("Other 3", "other_esp3.png"),
+        Other4("Other 4", "other_esp4.png"),
+        Other5("Other 5", "other_esp5.png"),
+        Other6("Other 6", "other_esp6.png"),
+        Other7("Other 7", "other_esp7.png"),
+        Other8("Other 8", "other_esp8.png"),
+        Other9("Other 9", "other_esp9.png"),
+        Other10("Other 10", "other_esp10.png"),
+
+        Rasty1("Rasty 1", "rasty_esp1.png"),
+        Rasty2("Rasty 2", "rasty_esp2.png"),
+        Rasty3("Rasty 3", "rasty_esp3.png"),
+        Rasty4("Rasty 4", "rasty_esp4.png"),
+        Rasty5("Rasty 5", "rasty_esp5.png"),
+        Rasty6("Rasty 6", "rasty_esp6.png"),
+
+        Rockstar1("Rockstar 1", "rockstar_esp1.png"),
+
+        ThunderHack1("ThunderHack 1", "thunderhack_esp1.png"),
+        ThunderHack2("ThunderHack 2", "thunderhack_esp2.png"),
+        ThunderHack3("ThunderHack 3", "thunderhack_esp3.png"),
+        ThunderHack4("ThunderHack 4", "thunderhack_esp4.png"),
+        ThunderHack5("ThunderHack 5", "thunderhack_esp5.png"),
+
+        Wild1("Wild 1", "wild_esp1.png"),
+        Wild2("Wild 2", "wild_esp2.jpg"),
+        Wild3("Wild 3", "wild_esp3.jpg"),
+        Wild4("Wild 4", "wild_esp4.png"),
+        Wild5("Wild 5", "wild_esp5.png"),
+        Wild6("Wild 6", "wild_esp6.png"),
+        Wild7("Wild 7", "wild_esp7.png"),
+        Wild8("Wild 8", "wild_esp8.jpg"),
+        Wild9("Wild 9", "wild_esp9.jpg"),
+        Wild10("Wild 10", "wild_esp10.jpg"),
+        Wild11("Wild 11", "wild_esp11.png"),
+        Wild12("Wild 12", "wild_esp12.jpg"),
+        Wild13("Wild 13", "wild_esp13.jpg"),
+        Wild14("Wild 14", "wild_esp14.png"),
+        Wild15("Wild 15", "wild_esp15.png");
+
+        private final String title;
+        private final Identifier identifier;
+
+        TargetTexture(String title, String file) {
+            this.title = title;
+            this.identifier = MeteorClient.identifier(
+                "textures/target-esp/" + file
+            );
+        }
+
+        @Override
+        public String toString() {
+            return title;
+        }
+    }
+}
+
+
+Шейдеры добавлять не нужно: здесь используется уже существующий текстурный шейдер Meteor. После вставки запускай сборку и пришли первую ошибку целиком, если появится.
+
+nder thread/INFO] (Minecraft) [System] [CHAT] [Meteor] [Aura Debug] state=CriticalWindow, ground=false, vanillaFall=0,0000, trackedFall=0,2278, velocityY=-0,2277, cooldown=1,000, ready=true
+[13:53:12] [Render thread/INFO] (Minecraft) [System] [CHAT] [Meteor] [Aura Debug] ATTACK critical: vanillaFall=0,0000, trackedFall=0,2278, velocityY=-0,2277
+[13:53:12] [Render thread/INFO] (Minecraft) [System] [CHAT] [Meteor] [Aura Debug] state=Recovery, ground=false, vanillaFall=0,0000, trackedFall=0,2278, velocityY=-0,2277, cooldown=0,040, ready=true
+[13:53:12] [Render thread/INFO] (Minecraft) [System] [CHAT] [Meteor] [Aura Debug] state=WaitingFall, ground=false, vanillaFall=0,0000, trackedFall=0,4555, velocityY=-0,3015, cooldown=0,120, ready=false
+
+
+    :[13:53:12] [Render thread/INFO] (Minecraft) [System] [CHAT] [Meteor] [Aura Debug] state=Ground, ground=true, vanillaFall=0,0000, trackedFall=0,0000, velocityY=-0,0784, cooldown=0,360, ready=false]
+    [13:53:12] [Render thread/INFO] (Minecraft) [System] [CHAT] [Meteor] [Aura Debug] state=WaitingFall, ground=true, vanillaFall=0,0000, trackedFall=0,0000, velocityY=0,4200, cooldown=0,360, ready=false
+    [13:53:14] [Render thread/INFO] (Minecraft) [System] [CHAT] [Meteor] Toggled Flight ┬зaon.
+    <==[13:53:18] [Render thread/INFO] (Minecraft) [System] [CHAT] [Meteor] Toggled Flight ┬зcoff.
+    <==[13:53:19] [Render thread/INFO] (Minecraft) [System] [CHAT] [Meteor] Toggled Flight ┬зaon.
+    <==[13:53:20] [Render thread/INFO] (Minecraft) [System] [CHAT] [Meteor] Toggled Flight ┬зcoff.
+    <==[13:57:19] [Render thread/INFO] (Minecraft) Stopping!
+    <==[13:57:19] [Render thread/INFO] (Meteor Client) Saving
+    [13:57:19] [Render thread/INFO] (Meteor Client) Saved in 34 milliseconds.
+    :[13:57:19] [Thread-7/INFO] (Meteor Client) Saving
+    <============-> 92% EXECUTING [6m 56s]
+    [Incubating] Problems report is available at: file:///C:/dev/meteor-fork/build/reports/problems/problems-report.html
+
+
+BUILD SUCCESSFUL in 6m 57s
+9 actionable tasks: 2 executed, 7 up-to-date
+Configuration cache entry reused.
+PS C:\dev\meteor-fork>
+PS C:\dev\meteor-fork> .\gradlew runclient
+Reusing configuration cache.
+
+
+    Task :compileJava
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\modules\render\TargetESP.java:519: error: non-static variable mc cannot be referenced from a static context
+    mc.getTextureManager().bindTexture(texture);
+    ^
+    C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\modules\render\TargetESP.java:519: error: cannot find symbol
+    mc.getTextureManager().bindTexture(texture);
+    ^
+    symbol:   method bindTexture(Identifier)
+    location: class TextureManager
+    Note: Some input files use or override a deprecated API.
+    Note: Recompile with -Xlint:deprecation for details.
+    Note: Some input files use unchecked or unsafe operations.
+    Note: Recompile with -Xlint:unchecked for details.
+    2 errors
+    3 warnings
+
+
+
+    Task :compileJava FAILED
+
+
+[Incubating] Problems report is available at: file:///C:/dev/meteor-fork/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+    What went wrong: Execution failed for task ':compileJava'.
+
+
+
+    Compilation failed; see the compiler output below.
+    Note: Recompile with -Xlint:deprecation for details.Note: Recompile with -Xlint:unchecked for details.Note: Some input files use unchecked or unsafe operations.C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\modules\render\TargetESP.java:519: error: cannot find symbol
+    mc.getTextureManager().bindTexture(texture);
+    ^
+    symbol:   method bindTexture(Identifier)
+    location: class TextureManagerNote: Some input files use or override a deprecated API.C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\modules\render\TargetESP.java:519: error: non-static variable mc cannot be referenced from a static context
+    mc.getTextureManager().bindTexture(texture);
+    ^warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    2 errors
+    3 warnings
+
+
+    Try:
+
+
+
+    Check your code and dependencies to fix the compilation error(s)
+    Run with --scan to get full insights.
+
+
+BUILD FAILED in 5s
+8 actionable tasks: 2 executed, 6 up-to-date
+Configuration cache entry reused.
+PS C:\dev\meteor-fork>
+
+Ошибка только в привязке текстуры. В TargetESP.java замени строку 519:
+
+java
+
+mc.getTextureManager().bindTexture(texture);
+
+
+на:
+
+java
+
+meteordevelopment.meteorclient.renderer.GL.bindTexture(texture);
+
+
+Остальное не меняй. Предупреждения Level.FULL не мешают сборке. Затем снова:
+
+powershell
+
+.\gradlew runClient
+
+навернео тсоит персобрать пнгшки что бы кажлое был опопдисать жто гост не гост так далее да сделать мне?
+
+Да. Нужно увидеть каждую картинку, чтобы определить: Ghost, Marker, Fire, Chain, Glow, Circle и т. д.
+
+Поставь в проводнике «Крупные значки» и пришли несколько скриншотов, чтобы одновременно были видны превью и названия файлов. Пока ничего не переименовывай — после просмотра я составлю точное соответствие и привяжу каждой текстуре подходящую анимацию.
+
+capture_thunderhack.png
+chain_rasty.png
+circle_other.png
+circle_other_2.png
+circle_other_3.png
+circle_other_4.png
+circle_other_5.png
+circle_other_6.png
+circle_other_7.png
+circle_rasty.png
+circle_thunderhack.png
+container_rasty.png
+end_crystal2_thunderhack.png
+end_crystal2_thunderhack_2.png
+esp_rockstar.png
+fire_wild.png
+
+firefly_thunderhack.png
+ghost_wild.png
+ghost2_wild.png
+ghost-glow_rasty.png
+ghost-triangle_rasty.png
+glow_other.png
+glow_rasty.png
+target_other.png
+target2_other.png
+targetesp1_wild.jpg
+targetesp2_wild.jpg
+targetesp3_wild.png
+targetesp4_wild.png
+type1_wild.jpg
+type2_wild.jpg
+type3_wild.jpg
+
+wild_targetesps_fire_other.png
+wild_targetesps_targetesp1_other.jpg
+wild_targetesps_targetesp2_other.jpg
+wild_targetesps_targetesp3_other.png
+wild_targetesps_targetesp4_other.png
+
+сделал скинь полностью передланый код
+
+Полностью замени файл:
+
+src/main/java/meteordevelopment/meteorclient/systems/modules/render/TargetESP.java
+
+java
+
+package meteordevelopment.meteorclient.systems.modules.render;
+
+import com.mojang.blaze3d.platform.GlStateManager;
+import meteordevelopment.meteorclient.MeteorClient;
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.renderer.DrawMode;
+import meteordevelopment.meteorclient.renderer.GL;
+import meteordevelopment.meteorclient.renderer.Mesh;
+import meteordevelopment.meteorclient.renderer.ShaderMesh;
+import meteordevelopment.meteorclient.renderer.Shaders;
+import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.modules.Categories;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.combat.KillAura;
+import meteordevelopment.meteorclient.utils.render.color.Color;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.orbit.EventHandler;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+
+import static org.lwjgl.opengl.GL11.*;
+
+public class TargetESP extends Module {
+    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgAnimation = settings.createGroup("Animation");
+    private final SettingGroup sgRender = settings.createGroup("Render");
+
+    private final Setting<TargetTexture> texture = sgGeneral.add(
+        new EnumSetting.Builder<TargetTexture>()
+            .name("texture")
+            .description("Target ESP texture.")
+            .defaultValue(TargetTexture.GhostGlowRasty)
+            .build()
+    );
+
+    private final Setting<Effect> effect = sgGeneral.add(
+        new EnumSetting.Builder<Effect>()
+            .name("effect")
+            .description("Auto selects the recommended animation.")
+            .defaultValue(Effect.Auto)
+            .build()
+    );
+
+    private final Setting<SettingColor> color = sgGeneral.add(
+        new ColorSetting.Builder()
+            .name("color")
+            .description("White preserves the original texture color.")
+            .defaultValue(new SettingColor(255, 255, 255, 255))
+            .build()
+    );
+
+    private final Setting<Double> size = sgGeneral.add(
+        new DoubleSetting.Builder()
+            .name("size")
+            .description("ESP size.")
+            .defaultValue(0.42)
+            .min(0.05)
+            .sliderMax(3)
+            .build()
+    );
+
+    private final Setting<Double> radius = sgAnimation.add(
+        new DoubleSetting.Builder()
+            .name("radius")
+            .description("Orbit radius.")
+            .defaultValue(0.72)
+            .min(0)
+            .sliderMax(3)
+            .build()
+    );
+
+    private final Setting<Double> height = sgAnimation.add(
+        new DoubleSetting.Builder()
+            .name("height")
+            .description("Animation height.")
+            .defaultValue(0.45)
+            .min(0)
+            .sliderMax(2)
+            .build()
+    );
+
+    private final Setting<Double> yOffset = sgAnimation.add(
+        new DoubleSetting.Builder()
+            .name("y-offset")
+            .description("Additional vertical offset.")
+            .defaultValue(0.04)
+            .sliderMin(-1)
+            .sliderMax(2)
+            .build()
+    );
+
+    private final Setting<Double> speed = sgAnimation.add(
+        new DoubleSetting.Builder()
+            .name("speed")
+            .description("Animation speed.")
+            .defaultValue(2.4)
+            .sliderMin(-10)
+            .sliderMax(10)
+            .build()
+    );
+
+    private final Setting<Double> spinSpeed = sgAnimation.add(
+        new DoubleSetting.Builder()
+            .name("spin-speed")
+            .description("Texture rotation speed.")
+            .defaultValue(90)
+            .sliderMin(-720)
+            .sliderMax(720)
+            .build()
+    );
+
+    private final Setting<Integer> count = sgAnimation.add(
+        new IntSetting.Builder()
+            .name("count")
+            .description("Particle amount.")
+            .defaultValue(3)
+            .min(1)
+            .sliderMax(16)
+            .build()
+    );
+
+    private final Setting<Integer> trails = sgAnimation.add(
+        new IntSetting.Builder()
+            .name("trails")
+            .description("Ghost trail length.")
+            .defaultValue(6)
+            .min(1)
+            .sliderMax(16)
+            .build()
+    );
+
+    private final Setting<Double> trailDistance = sgAnimation.add(
+        new DoubleSetting.Builder()
+            .name("trail-distance")
+            .description("Distance between ghost copies.")
+            .defaultValue(0.13)
+            .min(0.01)
+            .sliderMax(0.8)
+            .build()
+    );
+
+    private final Setting<Boolean> additive = sgRender.add(
+        new BoolSetting.Builder()
+            .name("additive")
+            .description("Enables glowing blending.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Boolean> throughWalls = sgRender.add(
+        new BoolSetting.Builder()
+            .name("through-walls")
+            .description("Renders through blocks.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Boolean> fade = sgRender.add(
+        new BoolSetting.Builder()
+            .name("fade")
+            .description("Smooth appearance and disappearance.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private TexturedMesh mesh;
+
+    private Entity lastTarget;
+    private Vec3d renderPosition;
+
+    private double time;
+    private float alpha;
+
+    public TargetESP() {
+        super(
+            Categories.Render,
+            "target-esp",
+            "Renders animated textured ESP around KillAura target."
+        );
+    }
+
+    @Override
+    public void onActivate() {
+        lastTarget = null;
+        renderPosition = null;
+        time = 0;
+        alpha = 0;
+    }
+
+    @EventHandler
+    private void onRender3D(Render3DEvent event) {
+        if (mc.world == null || mc.player == null) return;
+
+        if (mesh == null) {
+            mesh = new TexturedMesh();
+        }
+
+        KillAura aura = Modules.get().get(KillAura.class);
+        Entity target = aura != null && aura.isActive()
+            ? aura.getTarget()
+            : null;
+
+        updateAlpha(target, event.frameTime);
+
+        if (target != null) {
+            lastTarget = target;
+            renderPosition = getInterpolatedPosition(target, event.tickDelta);
+        }
+
+        if (lastTarget == null
+            || renderPosition == null
+            || alpha <= 0.005f) {
+            return;
+        }
+
+        time += event.frameTime * speed.get();
+
+        mesh.texture = texture.get().identifier;
+        mesh.additive = additive.get();
+        mesh.depthTest = !throughWalls.get();
+
+        mesh.begin();
+
+        Effect selectedEffect = effect.get() == Effect.Auto
+            ? texture.get().recommendedEffect
+            : effect.get();
+
+        switch (selectedEffect) {
+            case Auto -> {
+            }
+
+            case Ghosts -> renderGhosts(lastTarget);
+            case Orbit -> renderOrbit(lastTarget, false);
+            case DoubleOrbit -> renderOrbit(lastTarget, true);
+            case Helix -> renderHelix(lastTarget);
+            case Circle -> renderCircle(lastTarget);
+            case DoubleCircle -> renderDoubleCircle(lastTarget);
+            case Fire -> renderFire(lastTarget);
+            case Fireflies -> renderFireflies(lastTarget);
+            case AboveHead -> renderAboveHead(lastTarget);
+            case BodyMarker -> renderBodyMarker(lastTarget);
+            case Pulse -> renderPulse(lastTarget);
+            case Crystal -> renderCrystal(lastTarget);
+        }
+
+        mesh.render(event.matrices);
+
+        if (target == null && alpha <= 0.005f) {
+            lastTarget = null;
+            renderPosition = null;
+        }
+    }
+
+    private Vec3d getInterpolatedPosition(Entity entity, float tickDelta) {
+        return new Vec3d(
+            MathHelper.lerp(
+                tickDelta,
+                entity.lastRenderX,
+                entity.getX()
+            ),
+            MathHelper.lerp(
+                tickDelta,
+                entity.lastRenderY,
+                entity.getY()
+            ),
+            MathHelper.lerp(
+                tickDelta,
+                entity.lastRenderZ,
+                entity.getZ()
+            )
+        );
+    }
+
+    private void updateAlpha(Entity target, double frameTime) {
+        float destination = target != null ? 1f : 0f;
+
+        if (!fade.get()) {
+            alpha = destination;
+            return;
+        }
+
+        float factor = (float) Math.min(1, frameTime * 8);
+        alpha = MathHelper.lerp(factor, alpha, destination);
+
+        if (Math.abs(alpha - destination) < 0.005f) {
+            alpha = destination;
+        }
+    }
+
+    private void renderGhosts(Entity entity) {
+        int particles = Math.max(1, count.get());
+        int trailCount = Math.max(1, trails.get());
+
+        for (int particle = 0; particle < particles; particle++) {
+            double offset = Math.PI * 2 * particle / particles;
+
+            for (int trail = trailCount - 1; trail >= 0; trail--) {
+                double delayed = time - trail * trailDistance.get();
+                double angle = delayed + offset;
+
+                double x = renderPosition.x
+                    + Math.cos(angle) * radius.get();
+
+                double z = renderPosition.z
+                    + Math.sin(angle) * radius.get();
+
+                double y = renderPosition.y
+                    + entity.getHeight() * 0.5
+                    + Math.sin(delayed * 1.7 + offset) * height.get()
+                    + yOffset.get();
+
+                float trailAlpha =
+                    1f - trail / (float) trailCount;
+
+                trailAlpha *= trailAlpha;
+
+                double trailSize = size.get()
+                    * (0.55 + trailAlpha * 0.45);
+
+                addBillboard(
+                    x,
+                    y,
+                    z,
+                    trailSize,
+                    Math.toDegrees(-angle)
+                        + time * spinSpeed.get(),
+                    trailAlpha
+                );
+            }
+        }
+    }
+
+    private void renderOrbit(Entity entity, boolean doubleOrbit) {
+        int particles = Math.max(1, count.get());
+
+        for (int i = 0; i < particles; i++) {
+            double offset = Math.PI * 2 * i / particles;
+            double angle = time + offset;
+
+            addOrbitParticle(entity, angle, 1, i);
+
+            if (doubleOrbit) {
+                addOrbitParticle(entity, -angle, -1, i);
+            }
+        }
+    }
+
+    private void addOrbitParticle(
+        Entity entity,
+        double angle,
+        int direction,
+        int index
+    ) {
+        double x = renderPosition.x
+            + Math.cos(angle) * radius.get();
+
+        double z = renderPosition.z
+            + Math.sin(angle) * radius.get();
+
+        double y = renderPosition.y
+            + entity.getHeight() * 0.5
+            + Math.sin(angle * 2 + index) * height.get()
+            + yOffset.get();
+
+        addBillboard(
+            x,
+            y,
+            z,
+            size.get(),
+            time * spinSpeed.get() * direction,
+            1
+        );
+    }
+
+    private void renderHelix(Entity entity) {
+        int particles = Math.max(3, count.get());
+
+        for (int i = 0; i < particles; i++) {
+            double progress = i / (double) particles;
+            double angle = time + progress * Math.PI * 4;
+
+            double x = renderPosition.x
+                + Math.cos(angle) * radius.get();
+
+            double z = renderPosition.z
+                + Math.sin(angle) * radius.get();
+
+            double normalized =
+                (Math.sin(angle * 0.5) + 1) * 0.5;
+
+            double y = renderPosition.y
+                + normalized * entity.getHeight()
+                + yOffset.get();
+
+            addBillboard(
+                x,
+                y,
+                z,
+                size.get(),
+                Math.toDegrees(-angle)
+                    + time * spinSpeed.get(),
+                1
+            );
+        }
+    }
+
+    private void renderCircle(Entity entity) {
+        double pulse = 1
+            + Math.sin(time * 2) * 0.04;
+
+        double circleSize = Math.max(
+            entity.getWidth() * 1.15,
+            size.get() * 2
+        ) * pulse;
+
+        addHorizontal(
+            renderPosition.x,
+            renderPosition.y + yOffset.get(),
+            renderPosition.z,
+            circleSize,
+            time * spinSpeed.get(),
+            1
+        );
+    }
+
+    private void renderDoubleCircle(Entity entity) {
+        double firstSize = Math.max(
+            entity.getWidth() * 1.15,
+            size.get() * 2
+        );
+
+        addHorizontal(
+            renderPosition.x,
+            renderPosition.y + yOffset.get(),
+            renderPosition.z,
+            firstSize,
+            time * spinSpeed.get(),
+            1
+        );
+
+        addHorizontal(
+            renderPosition.x,
+            renderPosition.y
+                + entity.getHeight()
+                + yOffset.get(),
+            renderPosition.z,
+            firstSize * 0.82,
+            -time * spinSpeed.get(),
+            0.75f
+        );
+    }
+
+    private void renderFire(Entity entity) {
+        int particles = Math.max(4, count.get() * 2);
+
+        for (int i = 0; i < particles; i++) {
+            double offset = Math.PI * 2 * i / particles;
+            double angle = time * 0.35 + offset;
+
+            double randomRadius =
+                radius.get() * (0.55 + (i % 3) * 0.16);
+
+            double x = renderPosition.x
+                + Math.cos(angle) * randomRadius;
+
+            double z = renderPosition.z
+                + Math.sin(angle) * randomRadius;
+
+            double wave = (
+                Math.sin(time * 3 + i * 1.7) + 1
+            ) * 0.5;
+
+            double y = renderPosition.y
+                + wave * entity.getHeight() * 0.7
+                + yOffset.get();
+
+            double fireSize = size.get()
+                * (0.7 + wave * 0.65);
+
+            addBillboard(
+                x,
+                y,
+                z,
+                fireSize,
+                Math.sin(time + i) * 12,
+                (float) (0.55 + wave * 0.45)
+            );
+        }
+    }
+
+    private void renderFireflies(Entity entity) {
+        int particles = Math.max(4, count.get() * 2);
+
+        for (int i = 0; i < particles; i++) {
+            double offset = Math.PI * 2 * i / particles;
+            double angle = time * (0.65 + i % 3 * 0.12) + offset;
+
+            double localRadius = radius.get()
+                * (0.55 + (i % 4) * 0.16);
+
+            double x = renderPosition.x
+                + Math.cos(angle) * localRadius;
+
+            double z = renderPosition.z
+                + Math.sin(angle) * localRadius;
+
+            double y = renderPosition.y
+                + entity.getHeight() * 0.5
+                + Math.sin(time * 1.8 + i * 1.35)
+                    * height.get()
+                + yOffset.get();
+
+            double pulse =
+                0.7 + (Math.sin(time * 4 + i) + 1) * 0.15;
+
+            addBillboard(
+                x,
+                y,
+                z,
+                size.get() * pulse,
+                time * spinSpeed.get(),
+                (float) pulse
+            );
+        }
+    }
+
+    private void renderAboveHead(Entity entity) {
+        double pulse =
+            1 + Math.sin(time * 2.5) * 0.1;
+
+        addBillboard(
+            renderPosition.x,
+            renderPosition.y
+                + entity.getHeight()
+                + height.get()
+                + yOffset.get(),
+            renderPosition.z,
+            size.get() * pulse,
+            time * spinSpeed.get(),
+            1
+        );
+    }
+
+    private void renderBodyMarker(Entity entity) {
+        double pulse =
+            1 + Math.sin(time * 2) * 0.05;
+
+        addBillboard(
+            renderPosition.x,
+            renderPosition.y
+                + entity.getHeight() * 0.5
+                + yOffset.get(),
+            renderPosition.z,
+            size.get() * 2.25 * pulse,
+            time * spinSpeed.get(),
+            1
+        );
+    }
+
+    private void renderPulse(Entity entity) {
+        double pulse =
+            0.75 + (Math.sin(time * 2.5) + 1) * 0.25;
+
+        addBillboard(
+            renderPosition.x,
+            renderPosition.y
+                + entity.getHeight() * 0.5
+                + yOffset.get(),
+            renderPosition.z,
+            size.get() * 2.2 * pulse,
+            time * spinSpeed.get(),
+            (float) (0.55 + pulse * 0.45)
+        );
+    }
+
+    private void renderCrystal(Entity entity) {
+        int crystals = Math.max(2, count.get());
+
+        for (int i = 0; i < crystals; i++) {
+            double offset = Math.PI * 2 * i / crystals;
+            double angle = -time + offset;
+
+            double x = renderPosition.x
+                + Math.cos(angle) * radius.get();
+
+            double z = renderPosition.z
+                + Math.sin(angle) * radius.get();
+
+            double y = renderPosition.y
+                + entity.getHeight() * 0.5
+                + Math.sin(time * 2 + offset) * height.get()
+                + yOffset.get();
+
+            double pulse =
+                0.85 + Math.sin(time * 3 + offset) * 0.12;
+
+            addBillboard(
+                x,
+                y,
+                z,
+                size.get() * pulse,
+                time * spinSpeed.get()
+                    + Math.toDegrees(offset),
+                1
+            );
+        }
+    }
+
+    private void addBillboard(
+        double x,
+        double y,
+        double z,
+        double spriteSize,
+        double rotation,
+        float alphaMultiplier
+    ) {
+        Color spriteColor = getColor(alphaMultiplier);
+        if (spriteColor.a <= 0) return;
+
+        float yaw = (float) Math.toRadians(
+            mc.gameRenderer.getCamera().getYaw()
+        );
+
+        float pitch = (float) Math.toRadians(
+            mc.gameRenderer.getCamera().getPitch()
+        );
+
+        double sinYaw = Math.sin(yaw);
+        double cosYaw = Math.cos(yaw);
+        double sinPitch = Math.sin(pitch);
+        double cosPitch = Math.cos(pitch);
+
+        Vec3d right = new Vec3d(
+            cosYaw,
+            0,
+            sinYaw
+        );
+
+        Vec3d up = new Vec3d(
+            -sinYaw * sinPitch,
+            cosPitch,
+            cosYaw * sinPitch
+        );
+
+        double radians = Math.toRadians(rotation);
+        double cos = Math.cos(radians);
+        double sin = Math.sin(radians);
+
+        Vec3d rotatedRight = right
+            .multiply(cos)
+            .add(up.multiply(sin));
+
+        Vec3d rotatedUp = up
+            .multiply(cos)
+            .subtract(right.multiply(sin));
+
+        Vec3d horizontal =
+            rotatedRight.multiply(spriteSize);
+
+        Vec3d vertical =
+            rotatedUp.multiply(spriteSize);
+
+        Vec3d center = new Vec3d(x, y, z);
+
+        Vec3d topLeft =
+            center.subtract(horizontal).add(vertical);
+
+        Vec3d bottomLeft =
+            center.subtract(horizontal).subtract(vertical);
+
+        Vec3d bottomRight =
+            center.add(horizontal).subtract(vertical);
+
+        Vec3d topRight =
+            center.add(horizontal).add(vertical);
+
+        addQuad(
+            topLeft,
+            bottomLeft,
+            bottomRight,
+            topRight,
+            spriteColor
+        );
+    }
+
+    private void addHorizontal(
+        double x,
+        double y,
+        double z,
+        double spriteSize,
+        double rotation,
+        float alphaMultiplier
+    ) {
+        Color spriteColor = getColor(alphaMultiplier);
+        if (spriteColor.a <= 0) return;
+
+        double radians = Math.toRadians(rotation);
+        double cos = Math.cos(radians);
+        double sin = Math.sin(radians);
+
+        Vec3d local1 = rotateHorizontal(
+            -spriteSize,
+            -spriteSize,
+            cos,
+            sin
+        );
+
+        Vec3d local2 = rotateHorizontal(
+            -spriteSize,
+            spriteSize,
+            cos,
+            sin
+        );
+
+        Vec3d local3 = rotateHorizontal(
+            spriteSize,
+            spriteSize,
+            cos,
+            sin
+        );
+
+        Vec3d local4 = rotateHorizontal(
+            spriteSize,
+            -spriteSize,
+            cos,
+            sin
+        );
+
+        Vec3d center = new Vec3d(x, y, z);
+
+        addQuad(
+            center.add(local1),
+            center.add(local2),
+            center.add(local3),
+            center.add(local4),
+            spriteColor
+        );
+    }
+
+    private Vec3d rotateHorizontal(
+        double x,
+        double z,
+        double cos,
+        double sin
+    ) {
+        return new Vec3d(
+            x * cos - z * sin,
+            0,
+            x * sin + z * cos
+        );
+    }
+
+    private Color getColor(float alphaMultiplier) {
+        Color source = color.get();
+
+        int finalAlpha = (int) (
+            source.a
+                * alpha
+                * MathHelper.clamp(alphaMultiplier, 0, 1)
+        );
+
+        return new Color(
+            source.r,
+            source.g,
+            source.b,
+            MathHelper.clamp(finalAlpha, 0, 255)
+        );
+    }
+
+    private void addQuad(
+        Vec3d topLeft,
+        Vec3d bottomLeft,
+        Vec3d bottomRight,
+        Vec3d topRight,
+        Color color
+    ) {
+        int i1 = mesh
+            .vec3(topLeft.x, topLeft.y, topLeft.z)
+            .vec2(0, 0)
+            .color(color)
+            .next();
+
+        int i2 = mesh
+            .vec3(bottomLeft.x, bottomLeft.y, bottomLeft.z)
+            .vec2(0, 1)
+            .color(color)
+            .next();
+
+        int i3 = mesh
+            .vec3(bottomRight.x, bottomRight.y, bottomRight.z)
+            .vec2(1, 1)
+            .color(color)
+            .next();
+
+        int i4 = mesh
+            .vec3(topRight.x, topRight.y, topRight.z)
+            .vec2(1, 0)
+            .color(color)
+            .next();
+
+        mesh.quad(i1, i2, i3, i4);
+    }
+
+    private static class TexturedMesh extends ShaderMesh {
+        private Identifier texture;
+        private boolean additive;
+
+        private TexturedMesh() {
+            super(
+                Shaders.POS_TEX_COLOR,
+                DrawMode.Triangles,
+                Mesh.Attrib.Vec3,
+                Mesh.Attrib.Vec2,
+                Mesh.Attrib.Color
+            );
+        }
+
+        @Override
+        protected void beforeRender() {
+            super.beforeRender();
+
+            GL.bindTexture(texture);
+
+            if (additive) {
+                GlStateManager._blendFunc(
+                    GL_SRC_ALPHA,
+                    GL_ONE
+                );
+            } else {
+                GlStateManager._blendFunc(
+                    GL_SRC_ALPHA,
+                    GL_ONE_MINUS_SRC_ALPHA
+                );
+            }
+        }
+    }
+
+    public enum Effect {
+        Auto,
+        Ghosts,
+        Orbit,
+        DoubleOrbit,
+        Helix,
+        Circle,
+        DoubleCircle,
+        Fire,
+        Fireflies,
+        AboveHead,
+        BodyMarker,
+        Pulse,
+        Crystal
+    }
+
+    public enum TargetTexture {
+        CaptureThunderHack(
+            "Capture ThunderHack",
+            "capture_thunderhack.png",
+            Effect.AboveHead
+        ),
+
+        ChainRasty(
+            "Chain Rasty",
+            "chain_rasty.png",
+            Effect.DoubleOrbit
+        ),
+
+        CircleOther1(
+            "Circle Other 1",
+            "circle_other.png",
+            Effect.Circle
+        ),
+
+        CircleOther2(
+            "Circle Other 2",
+            "circle_other_2.png",
+            Effect.Circle
+        ),
+
+        CircleOther3(
+            "Circle Other 3",
+            "circle_other_3.png",
+            Effect.Circle
+        ),
+
+        CircleOther4(
+            "Circle Other 4",
+            "circle_other_4.png",
+            Effect.Circle
+        ),
+
+        CircleOther5(
+            "Circle Other 5",
+            "circle_other_5.png",
+            Effect.Circle
+        ),
+
+        CircleOther6(
+            "Circle Other 6",
+            "circle_other_6.png",
+            Effect.Circle
+        ),
+
+        CircleOther7(
+            "Circle Other 7",
+            "circle_other_7.png",
+            Effect.Circle
+        ),
+
+        CircleRasty(
+            "Circle Rasty",
+            "circle_rasty.png",
+            Effect.DoubleCircle
+        ),
+
+        CircleThunderHack(
+            "Circle ThunderHack",
+            "circle_thunderhack.png",
+            Effect.Circle
+        ),
+
+        ContainerRasty(
+            "Container Rasty",
+            "container_rasty.png",
+            Effect.Crystal
+        ),
+
+        EndCrystalThunderHack1(
+            "End Crystal ThunderHack 1",
+            "end_crystal2_thunderhack.png",
+            Effect.Crystal
+        ),
+
+        EndCrystalThunderHack2(
+            "End Crystal ThunderHack 2",
+            "end_crystal2_thunderhack_2.png",
+            Effect.Crystal
+        ),
+
+        EspRockstar(
+            "ESP Rockstar",
+            "esp_rockstar.png",
+            Effect.AboveHead
+        ),
+
+        FireWild(
+            "Fire Wild",
+            "fire_wild.png",
+            Effect.Fire
+        ),
+
+        FireflyThunderHack(
+            "Firefly ThunderHack",
+            "firefly_thunderhack.png",
+            Effect.Fireflies
+        ),
+
+        GhostWild(
+            "Ghost Wild",
+            "ghost_wild.png",
+            Effect.Ghosts
+        ),
+
+        Ghost2Wild(
+            "Ghost 2 Wild",
+            "ghost2_wild.png",
+            Effect.Ghosts
+        ),
+
+        GhostGlowRasty(
+            "Ghost Glow Rasty",
+            "ghost-glow_rasty.png",
+            Effect.Ghosts
+        ),
+
+        GhostTriangleRasty(
+            "Ghost Triangle Rasty",
+            "ghost-triangle_rasty.png",
+            Effect.Ghosts
+        ),
+
+        GlowOther(
+            "Glow Other",
+            "glow_other.png",
+            Effect.Fireflies
+        ),
+
+        GlowRasty(
+            "Glow Rasty",
+            "glow_rasty.png",
+            Effect.Orbit
+        ),
+
+        TargetOther1(
+            "Target Other 1",
+            "target_other.png",
+            Effect.BodyMarker
+        ),
+
+        TargetOther2(
+            "Target Other 2",
+            "target2_other.png",
+            Effect.Pulse
+        ),
+
+        TargetEspWild1(
+            "Target ESP Wild 1",
+            "targetesp1_wild.jpg",
+            Effect.BodyMarker
+        ),
+
+        TargetEspWild2(
+            "Target ESP Wild 2",
+            "targetesp2_wild.jpg",
+            Effect.BodyMarker
+        ),
+
+        TargetEspWild3(
+            "Target ESP Wild 3",
+            "targetesp3_wild.png",
+            Effect.BodyMarker
+        ),
+
+        TargetEspWild4(
+            "Target ESP Wild 4",
+            "targetesp4_wild.png",
+            Effect.BodyMarker
+        ),
+
+        TypeWild1(
+            "Type Wild 1",
+            "type1_wild.jpg",
+            Effect.Pulse
+        ),
+
+        TypeWild2(
+            "Type Wild 2",
+            "type2_wild.jpg",
+            Effect.Pulse
+        ),
+
+        TypeWild3(
+            "Type Wild 3",
+            "type3_wild.jpg",
+            Effect.Pulse
+        ),
+
+        WildFireOther(
+            "Wild Fire Other",
+            "wild_targetesps_fire_other.png",
+            Effect.Fire
+        ),
+
+        WildTargetEspOther1(
+            "Wild Target ESP Other 1",
+            "wild_targetesps_targetesp1_other.jpg",
+            Effect.BodyMarker
+        ),
+
+        WildTargetEspOther2(
+            "Wild Target ESP Other 2",
+            "wild_targetesps_targetesp2_other.jpg",
+            Effect.BodyMarker
+        ),
+
+        WildTargetEspOther3(
+            "Wild Target ESP Other 3",
+            "wild_targetesps_targetesp3_other.png",
+            Effect.BodyMarker
+        ),
+
+        WildTargetEspOther4(
+            "Wild Target ESP Other 4",
+            "wild_targetesps_targetesp4_other.png",
+            Effect.BodyMarker
+        );
+
+        private final String title;
+        private final Identifier identifier;
+        private final Effect recommendedEffect;
+
+        TargetTexture(
+            String title,
+            String file,
+            Effect recommendedEffect
+        ) {
+            this.title = title;
+            this.identifier = MeteorClient.identifier(
+                "textures/target-esp/" + file
+            );
+            this.recommendedEffect = recommendedEffect;
+        }
+
+        @Override
+        public String toString() {
+            return title;
+        }
+    }
+}
+
+
+Теперь Auto сам выбирает движение: круги лежат горизонтально, Ghost летает со шлейфом, Fire окружает цель огнём, Rockstar/Capture висят над головой.
+
+заебись, теперь вернемся к ауре
+
+Analysis
+Возвращаюсь к KillAura и восстанавливаю последнюю незавершённую часть.Сверяю сохранённые заметки devvv4 с текущей аурой.Нахожу точку остановки в конце devvv4.
+
+Вернулись. Остановились на переделке reach-байпасов Aura:
+
+    убрать фиктивные лимиты Grim1 3.0 и Grim2 2.95;
+    добавить Reach Mode: Normal / BackTrack / PositionSpoof;
+    Grim1 — packet rotation, raycast и sprint reset;
+    Grim2 — rotation плюс история серверных позиций цели;
+    PositionSpoof — временная позиция ближе к цели, удар и возврат.
+
+
+Криты уже работают: лог подтверждает CriticalWindow → ATTACK critical. Следующим делаем полный reach-rework.
+
+да сделай пожалуйста
+
+Analysis
+Разбираю текущую Aura и доступные сетевые пакеты.Читаю выбор цели, raycast и последовательность удара.Уточняю API серверных координат сущностей 1.21.4.Сверяю донорский PositionSpoof и безопасный возврат позиции.Нахожу точное имя дампа Rasty.Ищу донорский Rasty среди подключённых репозиториев.Читаю точную последовательность MXReach.Оцениваю объём полного файла и точки интеграции.Проверяю пакет sprint-reset и Full-конструктор в проекте.Проверяю существующий sprint-reset контроллера критов.Проверяю AimPointResolver для совместимости с историческим хитбоксом.Читаю настоящий AuraAimPointResolver.
+
+Код большой, делаем в 2 части. Сначала создай файл:
+
+src/main/java/meteordevelopment/meteorclient/systems/modules/combat/aura/AuraReachController.java
+
+java
+
+package meteordevelopment.meteorclient.systems.modules.combat.aura;
+
+import meteordevelopment.meteorclient.utils.player.Rotations;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
+
+public final class AuraReachController {
+    private final Map<Integer, ArrayDeque<Snapshot>> history =
+        new HashMap<>();
+
+    private long currentTick;
+
+    private int selectedEntityId = -1;
+    private Box selectedBox;
+
+    public void reset() {
+        history.clear();
+
+        currentTick = 0;
+        selectedEntityId = -1;
+        selectedBox = null;
+    }
+
+    public void tick() {
+        currentTick++;
+
+        Iterator<Map.Entry<Integer, ArrayDeque<Snapshot>>> iterator =
+            history.entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            Map.Entry<Integer, ArrayDeque<Snapshot>> entry =
+                iterator.next();
+
+            ArrayDeque<Snapshot> snapshots = entry.getValue();
+
+            while (
+                !snapshots.isEmpty()
+                    && currentTick - snapshots.getFirst().tick > 60
+            ) {
+                snapshots.removeFirst();
+            }
+
+            if (snapshots.isEmpty()) {
+                iterator.remove();
+            }
+        }
+    }
+
+    public void record(Entity entity, int maximumTicks) {
+        if (entity == null || !entity.isAlive()) return;
+
+        int limit = MathHelper.clamp(maximumTicks + 3, 4, 64);
+
+        ArrayDeque<Snapshot> snapshots =
+            history.computeIfAbsent(
+                entity.getId(),
+                ignored -> new ArrayDeque<>()
+            );
+
+        snapshots.addLast(
+            new Snapshot(
+                currentTick,
+                entity.getBoundingBox()
+            )
+        );
+
+        while (snapshots.size() > limit) {
+            snapshots.removeFirst();
+        }
+    }
+
+    public Vec3d resolveBacktrackPoint(
+        ClientPlayerEntity player,
+        Entity target,
+        int maximumTicks,
+        double attackRange
+    ) {
+        clearSelectedBox();
+
+        if (
+            player == null
+                || target == null
+                || attackRange <= 0
+        ) {
+            return null;
+        }
+
+        Vec3d eyes = player.getEyePos();
+
+        Box bestBox = null;
+        Vec3d bestPoint = null;
+        double bestDistance = Double.MAX_VALUE;
+
+        ArrayDeque<Snapshot> snapshots =
+            history.get(target.getId());
+
+        if (snapshots != null) {
+            Iterator<Snapshot> iterator =
+                snapshots.descendingIterator();
+
+            while (iterator.hasNext()) {
+                Snapshot snapshot = iterator.next();
+
+                long age = currentTick - snapshot.tick;
+
+                if (age < 0 || age > maximumTicks) {
+                    continue;
+                }
+
+                Vec3d point = closestPoint(
+                    eyes,
+                    snapshot.box
+                );
+
+                double distance =
+                    eyes.squaredDistanceTo(point);
+
+                if (
+                    distance <= attackRange * attackRange
+                        && distance < bestDistance
+                ) {
+                    bestDistance = distance;
+                    bestPoint = point;
+                    bestBox = snapshot.box;
+                }
+            }
+        }
+
+        Box currentBox = target.getBoundingBox();
+        Vec3d currentPoint = closestPoint(eyes, currentBox);
+        double currentDistance =
+            eyes.squaredDistanceTo(currentPoint);
+
+        if (
+            currentDistance <= attackRange * attackRange
+                && currentDistance < bestDistance
+        ) {
+            bestPoint = currentPoint;
+            bestBox = currentBox;
+        }
+
+        if (bestBox != null) {
+            selectedEntityId = target.getId();
+            selectedBox = bestBox;
+        }
+
+        return bestPoint;
+    }
+
+    public Box getCombatBox(Entity target) {
+        if (
+            target != null
+                && target.getId() == selectedEntityId
+                && selectedBox != null
+        ) {
+            return selectedBox;
+        }
+
+        return target == null
+            ? null
+            : target.getBoundingBox();
+    }
+
+    public void clearSelectedBox() {
+        selectedEntityId = -1;
+        selectedBox = null;
+    }
+
+    public boolean isLookingAt(
+        ClientPlayerEntity player,
+        Entity target,
+        float yaw,
+        float pitch,
+        double range
+    ) {
+        if (
+            player == null
+                || target == null
+                || range <= 0
+        ) {
+            return false;
+        }
+
+        Vec3d eyes = player.getEyePos();
+        Vec3d direction = rotationVector(yaw, pitch);
+        Vec3d end = eyes.add(direction.multiply(range));
+
+        Box box = getCombatBox(target);
+
+        return box != null
+            && (
+            box.contains(eyes)
+                || box.raycast(eyes, end).isPresent()
+        );
+    }
+
+    public SpoofSession beginPositionSpoof(
+        ClientPlayerEntity player,
+        Vec3d targetPoint,
+        double safeRange,
+        double maximumStep,
+        double jitter
+    ) {
+        if (
+            player == null
+                || player.networkHandler == null
+                || targetPoint == null
+                || safeRange <= 0
+                || maximumStep < 0
+        ) {
+            return null;
+        }
+
+        Vec3d originalPosition = player.getPos();
+        Vec3d originalEyes = player.getEyePos();
+
+        double targetDistance =
+            originalEyes.distanceTo(targetPoint);
+
+        if (targetDistance <= safeRange) {
+            Rotation rotation = rotationTo(
+                originalEyes,
+                targetPoint
+            );
+
+            sendLookPacket(
+                player,
+                rotation.yaw,
+                rotation.pitch
+            );
+
+            return new SpoofSession(
+                originalPosition,
+                originalPosition,
+                rotation.yaw,
+                rotation.pitch,
+                false
+            );
+        }
+
+        Vec3d direction =
+            targetPoint.subtract(originalEyes);
+
+        if (direction.lengthSquared() < 1.0E-7) {
+            return null;
+        }
+
+        direction = direction.normalize();
+
+        Vec3d desiredEyes = targetPoint.subtract(
+            direction.multiply(safeRange)
+        );
+
+        double eyeOffset =
+            player.getEyeY() - player.getY();
+
+        Vec3d spoofPosition = desiredEyes.subtract(
+            0,
+            eyeOffset,
+            0
+        );
+
+        double requiredStep =
+            originalPosition.distanceTo(spoofPosition);
+
+        if (requiredStep > maximumStep) {
+            return null;
+        }
+
+        double safeJitter = Math.max(0, jitter);
+
+        if (safeJitter > 0) {
+            ThreadLocalRandom random =
+                ThreadLocalRandom.current();
+
+            spoofPosition = spoofPosition.add(
+                random.nextDouble(
+                    -safeJitter,
+                    safeJitter
+                ),
+                0,
+                random.nextDouble(
+                    -safeJitter,
+                    safeJitter
+                )
+            );
+        }
+
+        Vec3d spoofEyes = spoofPosition.add(
+            0,
+            eyeOffset,
+            0
+        );
+
+        Rotation rotation = rotationTo(
+            spoofEyes,
+            targetPoint
+        );
+
+        player.networkHandler.sendPacket(
+            new PlayerMoveC2SPacket.Full(
+                spoofPosition.x,
+                spoofPosition.y,
+                spoofPosition.z,
+                rotation.yaw,
+                rotation.pitch,
+                player.isOnGround(),
+                player.horizontalCollision
+            )
+        );
+
+        return new SpoofSession(
+            originalPosition,
+            spoofPosition,
+            rotation.yaw,
+            rotation.pitch,
+            true
+        );
+    }
+
+    public void finishPositionSpoof(
+        ClientPlayerEntity player,
+        SpoofSession session
+    ) {
+        if (
+            player == null
+                || player.networkHandler == null
+                || session == null
+                || !session.moved
+        ) {
+            return;
+        }
+
+        player.networkHandler.sendPacket(
+            new PlayerMoveC2SPacket.Full(
+                session.originalPosition.x,
+                session.originalPosition.y,
+                session.originalPosition.z,
+                Rotations.serverYaw,
+                Rotations.serverPitch,
+                player.isOnGround(),
+                player.horizontalCollision
+            )
+        );
+    }
+
+    public SprintSession stopSprint(
+        ClientPlayerEntity player,
+        boolean enabled
+    ) {
+        if (
+            !enabled
+                || player == null
+                || player.networkHandler == null
+                || !player.isSprinting()
+        ) {
+            return SprintSession.NONE;
+        }
+
+        player.setSprinting(false);
+
+        player.networkHandler.sendPacket(
+            new ClientCommandC2SPacket(
+                player,
+                ClientCommandC2SPacket.Mode.STOP_SPRINTING
+            )
+        );
+
+        return new SprintSession(true);
+    }
+
+    public void restoreSprint(
+        ClientPlayerEntity player,
+        SprintSession session
+    ) {
+        if (
+            player == null
+                || player.networkHandler == null
+                || session == null
+                || !session.restore
+        ) {
+            return;
+        }
+
+        player.setSprinting(true);
+
+        player.networkHandler.sendPacket(
+            new ClientCommandC2SPacket(
+                player,
+                ClientCommandC2SPacket.Mode.START_SPRINTING
+            )
+        );
+    }
+
+    public void sendLookPacket(
+        ClientPlayerEntity player,
+        Vec3d point
+    ) {
+        if (player == null || point == null) return;
+
+        Rotation rotation = rotationTo(
+            player.getEyePos(),
+            point
+        );
+
+        sendLookPacket(
+            player,
+            rotation.yaw,
+            rotation.pitch
+        );
+    }
+
+    private void sendLookPacket(
+        ClientPlayerEntity player,
+        float yaw,
+        float pitch
+    ) {
+        if (
+            player == null
+                || player.networkHandler == null
+        ) {
+            return;
+        }
+
+        player.networkHandler.sendPacket(
+            new PlayerMoveC2SPacket.LookAndOnGround(
+                yaw,
+                pitch,
+                player.isOnGround(),
+                player.horizontalCollision
+            )
+        );
+    }
+
+    private Vec3d closestPoint(
+        Vec3d eyes,
+        Box box
+    ) {
+        double minimumY = box.minY + 0.03;
+        double maximumY = box.maxY - 0.03;
+
+        if (maximumY < minimumY) {
+            minimumY = box.minY;
+            maximumY = box.maxY;
+        }
+
+        return new Vec3d(
+            MathHelper.clamp(
+                eyes.x,
+                box.minX,
+                box.maxX
+            ),
+            MathHelper.clamp(
+                eyes.y,
+                minimumY,
+                maximumY
+            ),
+            MathHelper.clamp(
+                eyes.z,
+                box.minZ,
+                box.maxZ
+            )
+        );
+    }
+
+    private Rotation rotationTo(
+        Vec3d origin,
+        Vec3d target
+    ) {
+        double differenceX = target.x - origin.x;
+        double differenceY = target.y - origin.y;
+        double differenceZ = target.z - origin.z;
+
+        double horizontalDistance = Math.sqrt(
+            differenceX * differenceX
+                + differenceZ * differenceZ
+        );
+
+        float yaw = (float) (
+            Math.toDegrees(
+                Math.atan2(
+                    differenceZ,
+                    differenceX
+                )
+            ) - 90
+        );
+
+        float pitch = MathHelper.clamp(
+            (float) -Math.toDegrees(
+                Math.atan2(
+                    differenceY,
+                    horizontalDistance
+                )
+            ),
+            -90,
+            90
+        );
+
+        return new Rotation(yaw, pitch);
+    }
+
+    private Vec3d rotationVector(
+        float yaw,
+        float pitch
+    ) {
+        float yawRadians =
+            -yaw * 0.017453292F;
+
+        float pitchRadians =
+            pitch * 0.017453292F;
+
+        float yawCos =
+            MathHelper.cos(yawRadians);
+
+        float yawSin =
+            MathHelper.sin(yawRadians);
+
+        float pitchCos =
+            MathHelper.cos(pitchRadians);
+
+        float pitchSin =
+            MathHelper.sin(pitchRadians);
+
+        return new Vec3d(
+            yawSin * pitchCos,
+            -pitchSin,
+            yawCos * pitchCos
+        );
+    }
+
+    private record Snapshot(
+        long tick,
+        Box box
+    ) {
+    }
+
+    private record Rotation(
+        float yaw,
+        float pitch
+    ) {
+    }
+
+    public record SpoofSession(
+        Vec3d originalPosition,
+        Vec3d spoofPosition,
+        float yaw,
+        float pitch,
+        boolean moved
+    ) {
+    }
+
+    public record SprintSession(
+        boolean restore
+    ) {
+        private static final SprintSession NONE =
+            new SprintSession(false);
+    }
+
+    public enum Mode {
+        Normal,
+        BackTrack,
+        PositionSpoof
+    }
+}
+
+
+Напиши сделал — отправлю вторую часть: полностью переделанный KillAura.java с настройками и подключением этого контроллера.
+
+сделал , мен интерсно токльо у нас есть дполинтельные классы для ауры? зачем мы делам отедльынм классом рич контроль? ну мне всренаво я сдлела давай сразу дальше код кидай слейдший не тратим всремя
+
+Да, дополнительные классы уже есть: AuraAimPointResolver и AuraCriticalController. Reach вынесен отдельно, чтобы не раздувать KillAura ещё сильнее.
+
+Полностью замени:
+
+src/main/java/meteordevelopment/meteorclient/systems/modules/combat/KillAura.java
+
+java
+
+package meteordevelopment.meteorclient.systems.modules.combat;
+
+import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.mixininterface.IVec3d;
+import meteordevelopment.meteorclient.pathing.PathManagers;
+import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friends;
+import meteordevelopment.meteorclient.systems.modules.Categories;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.combat.aura.AuraAimPointResolver;
+import meteordevelopment.meteorclient.systems.modules.combat.aura.AuraCriticalController;
+import meteordevelopment.meteorclient.systems.modules.combat.aura.AuraReachController;
+import meteordevelopment.meteorclient.systems.modules.movement.TargetStrafe;
+import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.entity.SortPriority;
+import meteordevelopment.meteorclient.utils.entity.TargetUtils;
+import meteordevelopment.meteorclient.utils.player.FindItemResult;
+import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.meteorclient.utils.player.PlayerUtils;
+import meteordevelopment.meteorclient.utils.player.Rotations;
+import meteordevelopment.meteorclient.utils.world.TickRate;
+import meteordevelopment.orbit.EventHandler;
+import meteordevelopment.orbit.EventPriority;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MovementType;
+import net.minecraft.entity.Tameable;
+import net.minecraft.entity.mob.EndermanEntity;
+import net.minecraft.entity.mob.ZombifiedPiglinEntity;
+import net.minecraft.entity.passive.WolfEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.*;
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameMode;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+public class KillAura extends Module {
+    private static final int ROTATION_PRIORITY = 50;
+
+    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgTargeting = settings.createGroup("Targeting");
+    private final SettingGroup sgTiming = settings.createGroup("Timing");
+    private final SettingGroup sgCriticals = settings.createGroup("Criticals");
+    private final SettingGroup sgBypass = settings.createGroup("Bypass");
+    private final SettingGroup sgMovement = settings.createGroup("Movement Assist");
+
+    private final Setting<Weapon> weapon = sgGeneral.add(
+        new EnumSetting.Builder<Weapon>()
+            .name("weapon")
+            .description("Weapon used for normal attacks.")
+            .defaultValue(Weapon.Any)
+            .build()
+    );
+
+    private final Setting<RotationMode> rotation = sgGeneral.add(
+        new EnumSetting.Builder<RotationMode>()
+            .name("rotation-mode")
+            .description("Controls attack rotations.")
+            .defaultValue(RotationMode.Always)
+            .build()
+    );
+
+    private final Setting<Boolean> autoSwitch = sgGeneral.add(
+        new BoolSetting.Builder()
+            .name("auto-switch")
+            .description("Selects the configured weapon.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<Boolean> swapBack = sgGeneral.add(
+        new BoolSetting.Builder()
+            .name("swap-back")
+            .description("Returns the previous weapon slot.")
+            .defaultValue(true)
+            .visible(autoSwitch::get)
+            .build()
+    );
+
+    private final Setting<Boolean> onlyOnClick = sgGeneral.add(
+        new BoolSetting.Builder()
+            .name("only-on-click")
+            .description("Works only while attack is held.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<Boolean> onlyOnLook = sgGeneral.add(
+        new BoolSetting.Builder()
+            .name("only-on-look")
+            .description("Uses the crosshair target.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<Boolean> pauseBaritone = sgGeneral.add(
+        new BoolSetting.Builder()
+            .name("pause-baritone")
+            .description("Pauses Baritone while fighting.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<ShieldMode> shieldMode = sgGeneral.add(
+        new EnumSetting.Builder<ShieldMode>()
+            .name("shield-mode")
+            .description("Controls attacks against shields.")
+            .defaultValue(ShieldMode.None)
+            .build()
+    );
+
+    private final Setting<Integer> shieldBreakDelay = sgGeneral.add(
+        new IntSetting.Builder()
+            .name("shield-break-delay")
+            .description("Ticks between shield breaks.")
+            .defaultValue(10)
+            .range(1, 40)
+            .sliderRange(1, 20)
+            .visible(() -> shieldMode.get() == ShieldMode.Break)
+            .build()
+    );
+
+    private final Setting<Set<EntityType<?>>> entities = sgTargeting.add(
+        new EntityTypeListSetting.Builder()
+            .name("entities")
+            .description("Entity types to attack.")
+            .onlyAttackable()
+            .defaultValue(EntityType.PLAYER)
+            .build()
+    );
+
+    private final Setting<SortPriority> priority = sgTargeting.add(
+        new EnumSetting.Builder<SortPriority>()
+            .name("priority")
+            .description("Target selection priority.")
+            .defaultValue(SortPriority.ClosestAngle)
+            .build()
+    );
+
+    private final Setting<Boolean> targetLock = sgTargeting.add(
+        new BoolSetting.Builder()
+            .name("target-lock")
+            .description("Keeps the current valid target.")
+            .defaultValue(true)
+            .visible(() -> !onlyOnLook.get())
+            .build()
+    );
+
+    private final Setting<Integer> maxTargets = sgTargeting.add(
+        new IntSetting.Builder()
+            .name("max-targets")
+            .description("Maximum target candidates.")
+            .defaultValue(1)
+            .range(1, 5)
+            .sliderRange(1, 5)
+            .visible(() -> !onlyOnLook.get() && !targetLock.get())
+            .build()
+    );
+
+    private final Setting<Double> range = sgTargeting.add(
+        new DoubleSetting.Builder()
+            .name("attack-range")
+            .description("Target search and attack range.")
+            .defaultValue(4.5)
+            .range(0, 8)
+            .sliderRange(0, 8)
+            .build()
+    );
+
+    private final Setting<Double> wallsRange = sgTargeting.add(
+        new DoubleSetting.Builder()
+            .name("walls-range")
+            .description("Attack distance through blocks.")
+            .defaultValue(3.0)
+            .range(0, 8)
+            .sliderRange(0, 8)
+            .build()
+    );
+
+    private final Setting<Boolean> ignoreNamed = sgTargeting.add(
+        new BoolSetting.Builder()
+            .name("ignore-named")
+            .description("Ignores named entities.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<Boolean> ignorePassive = sgTargeting.add(
+        new BoolSetting.Builder()
+            .name("ignore-passive")
+            .description("Ignores passive neutral entities.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Boolean> ignoreTamed = sgTargeting.add(
+        new BoolSetting.Builder()
+            .name("ignore-tamed")
+            .description("Ignores your tamed entities.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Boolean> pauseOnLag = sgTiming.add(
+        new BoolSetting.Builder()
+            .name("pause-on-lag")
+            .description("Pauses during server lag.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<Boolean> pauseOnUse = sgTiming.add(
+        new BoolSetting.Builder()
+            .name("pause-on-use")
+            .description("Pauses while using or breaking.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<Boolean> pauseOnCA = sgTiming.add(
+        new BoolSetting.Builder()
+            .name("pause-on-crystal-aura")
+            .description("Pauses for Crystal Aura.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<Boolean> tpsSync = sgTiming.add(
+        new BoolSetting.Builder()
+            .name("tps-sync")
+            .description("Synchronizes custom delay with TPS.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<Boolean> customDelay = sgTiming.add(
+        new BoolSetting.Builder()
+            .name("custom-delay")
+            .description("Uses a custom attack delay.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<Integer> hitDelay = sgTiming.add(
+        new IntSetting.Builder()
+            .name("hit-delay")
+            .description("Custom attack delay in ticks.")
+            .defaultValue(11)
+            .range(0, 60)
+            .sliderRange(0, 60)
+            .visible(customDelay::get)
+            .build()
+    );
+
+    private final Setting<Double> cooldownThreshold = sgTiming.add(
+        new DoubleSetting.Builder()
+            .name("cooldown-threshold")
+            .description("Required vanilla cooldown.")
+            .defaultValue(0.90)
+            .range(0.5, 1.0)
+            .sliderRange(0.5, 1.0)
+            .decimalPlaces(2)
+            .build()
+    );
+
+    private final Setting<Integer> switchDelay = sgTiming.add(
+        new IntSetting.Builder()
+            .name("switch-delay")
+            .description("Delay after hotbar changes.")
+            .defaultValue(0)
+            .range(0, 10)
+            .sliderRange(0, 10)
+            .build()
+    );
+
+    private final Setting<AuraCriticalController.Mode> criticalMode =
+        sgCriticals.add(
+            new EnumSetting.Builder<AuraCriticalController.Mode>()
+                .name("critical-mode")
+                .description("Controls critical scheduling.")
+                .defaultValue(AuraCriticalController.Mode.Smart)
+                .build()
+        );
+
+    private final Setting<Boolean> autoCriticalJump = sgCriticals.add(
+        new BoolSetting.Builder()
+            .name("auto-critical-jump")
+            .description("Jumps for timed criticals.")
+            .defaultValue(true)
+            .visible(() ->
+                criticalMode.get() != AuraCriticalController.Mode.Off
+            )
+            .build()
+    );
+
+    private final Setting<Double> jumpAtProgress = sgCriticals.add(
+        new DoubleSetting.Builder()
+            .name("jump-at-progress")
+            .description("Cooldown progress for jumping.")
+            .defaultValue(0.35)
+            .range(0, 1)
+            .sliderRange(0, 1)
+            .decimalPlaces(2)
+            .visible(() ->
+                criticalMode.get() != AuraCriticalController.Mode.Off
+                    && autoCriticalJump.get()
+            )
+            .build()
+    );
+
+    private final Setting<Double> minimumFallDistance = sgCriticals.add(
+        new DoubleSetting.Builder()
+            .name("minimum-fall-distance")
+            .description("Required critical fall distance.")
+            .defaultValue(0.0)
+            .range(0, 1)
+            .sliderRange(0, 0.5)
+            .decimalPlaces(3)
+            .visible(() ->
+                criticalMode.get() != AuraCriticalController.Mode.Off
+            )
+            .build()
+    );
+
+    private final Setting<Boolean> applyWorkingPreset = sgCriticals.add(
+        new BoolSetting.Builder()
+            .name("apply-working-preset")
+            .description("Applies the safe Smart preset.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<BypassMode> bypassMode = sgBypass.add(
+        new EnumSetting.Builder<BypassMode>()
+            .name("bypass-mode")
+            .description("Anti-cheat attack profile.")
+            .defaultValue(BypassMode.Standard)
+            .build()
+    );
+
+    private final Setting<AuraReachController.Mode> reachMode = sgBypass.add(
+        new EnumSetting.Builder<AuraReachController.Mode>()
+            .name("reach-mode")
+            .description("Normal, historical hitbox or position spoof reach.")
+            .defaultValue(AuraReachController.Mode.Normal)
+            .build()
+    );
+
+    private final Setting<Boolean> strictRaycast = sgBypass.add(
+        new BoolSetting.Builder()
+            .name("strict-raycast")
+            .description("Requires server rotation raycast.")
+            .defaultValue(true)
+            .visible(() ->
+                reachMode.get() != AuraReachController.Mode.PositionSpoof
+            )
+            .build()
+    );
+
+    private final Setting<Integer> backtrackTicks = sgBypass.add(
+        new IntSetting.Builder()
+            .name("backtrack-ticks")
+            .description("Maximum historical hitbox age.")
+            .defaultValue(8)
+            .range(1, 40)
+            .sliderRange(1, 20)
+            .visible(() ->
+                reachMode.get() == AuraReachController.Mode.BackTrack
+            )
+            .build()
+    );
+
+    private final Setting<Double> spoofSafeRange = sgBypass.add(
+        new DoubleSetting.Builder()
+            .name("spoof-safe-range")
+            .description("Distance retained between spoof position and target.")
+            .defaultValue(2.85)
+            .range(2.0, 3.0)
+            .sliderRange(2.0, 3.0)
+            .decimalPlaces(2)
+            .visible(() ->
+                reachMode.get() == AuraReachController.Mode.PositionSpoof
+            )
+            .build()
+    );
+
+    private final Setting<Double> spoofMaxStep = sgBypass.add(
+        new DoubleSetting.Builder()
+            .name("spoof-max-step")
+            .description("Maximum temporary position displacement.")
+            .defaultValue(4.0)
+            .range(0.1, 8.0)
+            .sliderRange(0.1, 6.0)
+            .decimalPlaces(2)
+            .visible(() ->
+                reachMode.get() == AuraReachController.Mode.PositionSpoof
+            )
+            .build()
+    );
+
+    private final Setting<Double> spoofJitter = sgBypass.add(
+        new DoubleSetting.Builder()
+            .name("spoof-jitter")
+            .description("Small randomized spoof position offset.")
+            .defaultValue(0.015)
+            .range(0, 0.1)
+            .sliderRange(0, 0.05)
+            .decimalPlaces(3)
+            .visible(() ->
+                reachMode.get() == AuraReachController.Mode.PositionSpoof
+            )
+            .build()
+    );
+
+    private final Setting<Boolean> sprintReset = sgBypass.add(
+        new BoolSetting.Builder()
+            .name("sprint-reset")
+            .description("Stops sprinting directly before the attack.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<MovementAssistMode> movementAssist = sgMovement.add(
+        new EnumSetting.Builder<MovementAssistMode>()
+            .name("movement-assist")
+            .description("Soft movement assistance.")
+            .defaultValue(MovementAssistMode.None)
+            .build()
+    );
+
+    private final Setting<Double> assistStrength = sgMovement.add(
+        new DoubleSetting.Builder()
+            .name("assist-strength")
+            .description("Movement correction strength.")
+            .defaultValue(0.25)
+            .range(0.05, 0.80)
+            .sliderRange(0.05, 0.80)
+            .decimalPlaces(2)
+            .visible(() ->
+                movementAssist.get() != MovementAssistMode.None
+            )
+            .build()
+    );
+
+    private final Setting<Double> assistDistance = sgMovement.add(
+        new DoubleSetting.Builder()
+            .name("assist-distance")
+            .description("Preferred target distance.")
+            .defaultValue(2.5)
+            .range(1.0, 5.0)
+            .sliderRange(1.0, 4.0)
+            .decimalPlaces(2)
+            .visible(() ->
+                movementAssist.get() == MovementAssistMode.Focused
+                    || movementAssist.get() == MovementAssistMode.OrbitAssist
+            )
+            .build()
+    );
+
+    private final AuraAimPointResolver aimPointResolver =
+        new AuraAimPointResolver();
+
+    private final AuraCriticalController criticalController =
+        new AuraCriticalController();
+
+    private final AuraReachController reachController =
+        new AuraReachController();
+
+    private final List<Entity> targets = new ArrayList<>();
+
+    private Entity lockedTarget;
+    private Entity preparedTarget;
+    private Vec3d currentAimPoint;
+
+    private int switchTimer;
+    private int hitTimer;
+    private int shieldBreakCooldown;
+    private int grimRotationTicks;
+
+    private boolean combatPrepared;
+    private boolean wasPathing;
+    private boolean assistClockwise = true;
+
+    public boolean attacking;
+    public boolean swapped;
+
+    public static int previousSlot = -1;
+
+    public KillAura() {
+        super(
+            Categories.Combat,
+            "kill-aura",
+            "KillAura with critical sync, reach profiles and ShieldBreaker."
+        );
+    }
+
+    @Override
+    public void onActivate() {
+        targets.clear();
+
+        lockedTarget = null;
+        preparedTarget = null;
+        currentAimPoint = null;
+
+        switchTimer = 0;
+        hitTimer = 100;
+        shieldBreakCooldown = 0;
+        grimRotationTicks = 0;
+
+        combatPrepared = false;
+        wasPathing = false;
+        assistClockwise = true;
+
+        attacking = false;
+        swapped = false;
+        previousSlot = -1;
+
+        aimPointResolver.reset();
+        criticalController.reset(mc.player);
+        reachController.reset();
+    }
+
+    @Override
+    public void onDeactivate() {
+        clearCombat();
+        reachController.reset();
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    private void onTickPre(TickEvent.Pre event) {
+        if (applyWorkingPreset.get()) {
+            applyWorkingPreset.set(false);
+            applyWorkingPreset();
+        }
+
+        criticalController.tick(mc.player);
+        reachController.tick();
+
+        combatPrepared = false;
+        preparedTarget = null;
+        attacking = false;
+
+        if (switchTimer > 0) switchTimer--;
+        if (shieldBreakCooldown > 0) shieldBreakCooldown--;
+        if (hitTimer < Integer.MAX_VALUE) hitTimer++;
+
+        if (!basicCheck()) {
+            clearCombat();
+            return;
+        }
+
+        updateTargets();
+
+        if (targets.isEmpty()) {
+            clearCombat();
+            return;
+        }
+
+        Entity primary = targets.getFirst();
+
+        reachController.record(primary, backtrackTicks.get());
+
+        currentAimPoint = resolveAimPoint(primary);
+
+        if (currentAimPoint == null) {
+            invalidateTarget(primary);
+            return;
+        }
+
+        if (
+            requiresVisiblePoint()
+                && !aimPointResolver.isVisible(
+                    mc,
+                    mc.player.getEyePos(),
+                    currentAimPoint
+                )
+        ) {
+            invalidateTarget(primary);
+            return;
+        }
+
+        if (!prepareNormalWeapon() || !normalItemInHand()) {
+            stopAttacking();
+            return;
+        }
+
+        pausePathing();
+
+        if (bypassMode.get() == BypassMode.Grim2) {
+            if (
+                isServerLookingAt(
+                    primary,
+                    getEffectiveRange() + 0.05
+                )
+            ) {
+                grimRotationTicks++;
+            } else {
+                grimRotationTicks = 0;
+            }
+        } else {
+            grimRotationTicks = 0;
+        }
+
+        boolean cooldownReady =
+            isCooldownReady(getCooldownProgress());
+
+        if (
+            shouldRotateAlways()
+                || (
+                rotation.get() == RotationMode.OnHit
+                    && cooldownReady
+            )
+        ) {
+            rotate(currentAimPoint);
+        }
+
+        preparedTarget = primary;
+        combatPrepared = true;
+        attacking = true;
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    private void onTickPost(TickEvent.Post event) {
+        if (
+            !combatPrepared
+                || preparedTarget == null
+                || currentAimPoint == null
+                || !basicCheck()
+        ) {
+            return;
+        }
+
+        Entity target = preparedTarget;
+
+        if (
+            !target.isAlive()
+                || !entityCheck(target)
+                || !normalItemInHand()
+        ) {
+            return;
+        }
+
+        Vec3d confirmedPoint = resolveAimPoint(target);
+
+        if (confirmedPoint == null) return;
+
+        if (
+            requiresVisiblePoint()
+                && !aimPointResolver.isVisible(
+                    mc,
+                    mc.player.getEyePos(),
+                    confirmedPoint
+                )
+        ) {
+            return;
+        }
+
+        currentAimPoint = confirmedPoint;
+
+        float cooldownProgress = getCooldownProgress();
+        boolean cooldownReady =
+            isCooldownReady(cooldownProgress);
+
+        boolean shieldActive =
+            shieldMode.get() == ShieldMode.Break
+                && isTargetBlockingShield(target);
+
+        if (shieldActive) {
+            if (
+                shieldBreakCooldown > 0
+                    || !cooldownReady
+                    || !profileAllowsAttack(target)
+            ) {
+                return;
+            }
+
+            performInstantShieldBreak(target);
+            return;
+        }
+
+        AuraCriticalController.Decision decision =
+            criticalController.update(
+                mc.player,
+                getEffectiveCriticalMode(),
+                cooldownReady,
+                cooldownProgress,
+                autoCriticalJump.get(),
+                jumpAtProgress.get(),
+                minimumFallDistance.get()
+            );
+
+        if (decision == AuraCriticalController.Decision.Wait) {
+            return;
+        }
+
+        if (!profileAllowsAttack(target)) {
+            return;
+        }
+
+        criticalController.beforeAttack(mc.player, decision);
+        attackNormally(target);
+    }
+
+    @EventHandler
+    private void onSendPacket(PacketEvent.Send event) {
+        if (event.packet instanceof UpdateSelectedSlotC2SPacket) {
+            switchTimer = getEffectiveSwitchDelay();
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST - 200)
+    private void onMove(PlayerMoveEvent event) {
+        if (
+            movementAssist.get() == MovementAssistMode.None
+                || mc.player == null
+                || mc.world == null
+                || event.type != MovementType.SELF
+                || Modules.get().isActive(TargetStrafe.class)
+        ) {
+            return;
+        }
+
+        Entity entity = getTarget();
+
+        if (!(entity instanceof LivingEntity target)) return;
+
+        if (
+            mc.player.input.movementForward == 0
+                && mc.player.input.movementSideways == 0
+        ) {
+            return;
+        }
+
+        if (movementAssist.get() == MovementAssistMode.Free) {
+            return;
+        }
+
+        double currentX = event.movement.x;
+        double currentZ = event.movement.z;
+        double movementSpeed = Math.hypot(currentX, currentZ);
+
+        if (movementSpeed < 0.001) return;
+
+        if (mc.options.leftKey.isPressed()) {
+            assistClockwise = false;
+        } else if (mc.options.rightKey.isPressed()) {
+            assistClockwise = true;
+        }
+
+        if (mc.player.horizontalCollision) {
+            assistClockwise = !assistClockwise;
+        }
+
+        double differenceX =
+            mc.player.getX() - target.getX();
+
+        double differenceZ =
+            mc.player.getZ() - target.getZ();
+
+        double distance = Math.max(
+            0.001,
+            Math.hypot(differenceX, differenceZ)
+        );
+
+        double radialX = differenceX / distance;
+        double radialZ = differenceZ / distance;
+
+        double tangentX = assistClockwise
+            ? -radialZ
+            : radialZ;
+
+        double tangentZ = assistClockwise
+            ? radialX
+            : -radialX;
+
+        double distanceError =
+            distance - assistDistance.get();
+
+        double inwardAmount = MathHelper.clamp(
+            distanceError * 0.45,
+            -0.75,
+            0.75
+        );
+
+        double desiredX;
+        double desiredZ;
+
+        if (movementAssist.get() == MovementAssistMode.Focused) {
+            desiredX =
+                currentX / movementSpeed
+                    - radialX * inwardAmount;
+
+            desiredZ =
+                currentZ / movementSpeed
+                    - radialZ * inwardAmount;
+        } else {
+            desiredX =
+                tangentX - radialX * inwardAmount;
+
+            desiredZ =
+                tangentZ - radialZ * inwardAmount;
+        }
+
+        double desiredLength = Math.max(
+            0.001,
+            Math.hypot(desiredX, desiredZ)
+        );
+
+        desiredX = desiredX / desiredLength * movementSpeed;
+        desiredZ = desiredZ / desiredLength * movementSpeed;
+
+        double resultX = MathHelper.lerp(
+            assistStrength.get(),
+            currentX,
+            desiredX
+        );
+
+        double resultZ = MathHelper.lerp(
+            assistStrength.get(),
+            currentZ,
+            desiredZ
+        );
+
+        ((IVec3d) event.movement).meteor$setXZ(
+            resultX,
+            resultZ
+        );
+    }
+
+    private Vec3d resolveAimPoint(Entity target) {
+        if (
+            reachMode.get() == AuraReachController.Mode.BackTrack
+        ) {
+            Vec3d backtrackPoint =
+                reachController.resolveBacktrackPoint(
+                    mc.player,
+                    target,
+                    backtrackTicks.get(),
+                    getEffectiveRange()
+                );
+
+            if (backtrackPoint != null) {
+                return backtrackPoint;
+            }
+        } else {
+            reachController.clearSelectedBox();
+        }
+
+        return aimPointResolver.resolve(
+            mc,
+            target,
+            getEffectiveRange(),
+            getEffectiveWallsRange()
+        );
+    }
+
+    private boolean basicCheck() {
+        if (
+            mc.player == null
+                || mc.world == null
+                || mc.interactionManager == null
+        ) {
+            return false;
+        }
+
+        if (
+            !mc.player.isAlive()
+                || PlayerUtils.getGameMode() == GameMode.SPECTATOR
+        ) {
+            return false;
+        }
+
+        if (
+            pauseOnUse.get()
+                && (
+                mc.player.isUsingItem()
+                    || mc.interactionManager.isBreakingBlock()
+            )
+        ) {
+            return false;
+        }
+
+        if (
+            onlyOnClick.get()
+                && !mc.options.attackKey.isPressed()
+        ) {
+            return false;
+        }
+
+        if (
+            pauseOnLag.get()
+                && TickRate.INSTANCE.getTimeSinceLastTick() >= 1.0f
+        ) {
+            return false;
+        }
+
+        CrystalAura crystalAura =
+            Modules.get().get(CrystalAura.class);
+
+        return !pauseOnCA.get()
+            || crystalAura == null
+            || !crystalAura.isActive()
+            || crystalAura.kaTimer <= 0;
+    }
+
+    private void updateTargets() {
+        targets.clear();
+
+        if (onlyOnLook.get()) {
+            lockedTarget = null;
+
+            if (
+                mc.targetedEntity != null
+                    && entityCheck(mc.targetedEntity)
+            ) {
+                targets.add(mc.targetedEntity);
+            }
+
+            return;
+        }
+
+        if (
+            targetLock.get()
+                && lockedTarget != null
+                && entityCheck(lockedTarget)
+        ) {
+            targets.add(lockedTarget);
+            return;
+        }
+
+        lockedTarget = null;
+        aimPointResolver.reset();
+        reachController.clearSelectedBox();
+
+        TargetUtils.getList(
+            targets,
+            this::entityCheck,
+            priority.get(),
+            bypassMode.get() == BypassMode.Standard
+                && !targetLock.get()
+                ? maxTargets.get()
+                : 1
+        );
+
+        if (targetLock.get() && !targets.isEmpty()) {
+            lockedTarget = targets.getFirst();
+        }
+    }
+
+    private void invalidateTarget(Entity target) {
+        if (lockedTarget == target) {
+            lockedTarget = null;
+        }
+
+        targets.clear();
+
+        preparedTarget = null;
+        currentAimPoint = null;
+
+        combatPrepared = false;
+        grimRotationTicks = 0;
+
+        aimPointResolver.reset();
+        reachController.clearSelectedBox();
+        criticalController.reset(mc.player);
+
+        stopAttacking();
+    }
+
+    private void attackNormally(Entity target) {
+        if (
+            target == null
+                || !target.isAlive()
+                || !isActive()
+                || mc.player == null
+                || mc.world == null
+                || mc.interactionManager == null
+                || !entityCheck(target)
+                || !normalItemInHand()
+        ) {
+            return;
+        }
+
+        if (!attackWithReachProfile(target)) {
+            return;
+        }
+
+        hitTimer = 0;
+        criticalController.afterAttack(mc.player);
+    }
+
+    private boolean attackWithReachProfile(Entity target) {
+        if (
+            target == null
+                || currentAimPoint == null
+                || mc.player == null
+                || mc.interactionManager == null
+        ) {
+            return false;
+        }
+
+        boolean resetSprint =
+            sprintReset.get()
+                && (
+                bypassMode.get() != BypassMode.Standard
+                    || reachMode.get()
+                    != AuraReachController.Mode.Normal
+            );
+
+        AuraReachController.SprintSession sprintSession =
+            reachController.stopSprint(
+                mc.player,
+                resetSprint
+            );
+
+        AuraReachController.SpoofSession spoofSession = null;
+
+        try {
+            if (
+                reachMode.get()
+                    == AuraReachController.Mode.PositionSpoof
+            ) {
+                spoofSession =
+                    reachController.beginPositionSpoof(
+                        mc.player,
+                        currentAimPoint,
+                        spoofSafeRange.get(),
+                        spoofMaxStep.get(),
+                        spoofJitter.get()
+                    );
+
+                if (spoofSession == null) {
+                    return false;
+                }
+            } else if (
+                bypassMode.get() != BypassMode.Standard
+                    || reachMode.get()
+                    == AuraReachController.Mode.BackTrack
+            ) {
+                reachController.sendLookPacket(
+                    mc.player,
+                    currentAimPoint
+                );
+            }
+
+            mc.interactionManager.attackEntity(
+                mc.player,
+                target
+            );
+
+            mc.player.swingHand(Hand.MAIN_HAND);
+            return true;
+        } finally {
+            reachController.finishPositionSpoof(
+                mc.player,
+                spoofSession
+            );
+
+            reachController.restoreSprint(
+                mc.player,
+                sprintSession
+            );
+        }
+    }
+
+    private void performInstantShieldBreak(Entity target) {
+        if (
+            target == null
+                || !target.isAlive()
+                || mc.player == null
+                || mc.interactionManager == null
+        ) {
+            return;
+        }
+
+        FindItemResult axe = InvUtils.findInHotbar(
+            stack -> stack.getItem() instanceof AxeItem
+        );
+
+        if (!axe.found() || axe.slot() < 0) return;
+
+        int previousSelectedSlot =
+            mc.player.getInventory().selectedSlot;
+
+        boolean mustSwitch =
+            previousSelectedSlot != axe.slot();
+
+        if (mustSwitch) {
+            InvUtils.swap(axe.slot(), false);
+        }
+
+        boolean attacked = attackWithReachProfile(target);
+
+        if (mustSwitch) {
+            InvUtils.swap(previousSelectedSlot, false);
+        }
+
+        if (!attacked) return;
+
+        hitTimer = 0;
+        shieldBreakCooldown = shieldBreakDelay.get();
+
+        criticalController.afterAttack(mc.player);
+    }
+
+    private boolean profileAllowsAttack(Entity target) {
+        if (
+            reachMode.get()
+                == AuraReachController.Mode.PositionSpoof
+        ) {
+            return currentAimPoint != null;
+        }
+
+        if (
+            bypassMode.get() == BypassMode.Grim2
+                && grimRotationTicks < 1
+        ) {
+            return false;
+        }
+
+        if (
+            bypassMode.get() == BypassMode.Standard
+                && !strictRaycast.get()
+        ) {
+            return true;
+        }
+
+        return isServerLookingAt(
+            target,
+            getEffectiveRange() + 0.05
+        );
+    }
+
+    private boolean requiresVisiblePoint() {
+        if (
+            reachMode.get()
+                != AuraReachController.Mode.Normal
+        ) {
+            return true;
+        }
+
+        if (bypassMode.get() != BypassMode.Standard) {
+            return true;
+        }
+
+        return strictRaycast.get();
+    }
+
+    private boolean isServerLookingAt(
+        Entity target,
+        double rayLength
+    ) {
+        return reachController.isLookingAt(
+            mc.player,
+            target,
+            Rotations.serverYaw,
+            Rotations.serverPitch,
+            rayLength
+        );
+    }
+
+    private boolean shouldRotateAlways() {
+        return bypassMode.get() != BypassMode.Standard
+            || reachMode.get()
+            != AuraReachController.Mode.Normal
+            || rotation.get() == RotationMode.Always;
+    }
+
+    private void rotate(Vec3d point) {
+        if (
+            point == null
+                || mc.player == null
+                || (
+                bypassMode.get() == BypassMode.Standard
+                    && reachMode.get()
+                    == AuraReachController.Mode.Normal
+                    && rotation.get() == RotationMode.None
+            )
+        ) {
+            return;
+        }
+
+        Vec3d eyes = mc.player.getEyePos();
+
+        double differenceX = point.x - eyes.x;
+        double differenceY = point.y - eyes.y;
+        double differenceZ = point.z - eyes.z;
+
+        double horizontalDistance = Math.sqrt(
+            differenceX * differenceX
+                + differenceZ * differenceZ
+        );
+
+        float targetYaw = (float) (
+            Math.toDegrees(
+                Math.atan2(differenceZ, differenceX)
+            ) - 90
+        );
+
+        float targetPitch = MathHelper.clamp(
+            (float) -Math.toDegrees(
+                Math.atan2(
+                    differenceY,
+                    horizontalDistance
+                )
+            ),
+            -90,
+            90
+        );
+
+        float yaw = applyYawProfile(targetYaw);
+        float pitch = applyPitchProfile(targetPitch);
+
+        float yawDifference = Math.abs(
+            MathHelper.wrapDegrees(
+                yaw - Rotations.serverYaw
+            )
+        );
+
+        float pitchDifference = Math.abs(
+            pitch - Rotations.serverPitch
+        );
+
+        if (
+            yawDifference < 0.001f
+                && pitchDifference < 0.001f
+        ) {
+            return;
+        }
+
+        Rotations.rotate(
+            yaw,
+            pitch,
+            ROTATION_PRIORITY
+        );
+    }
+
+    private float applyYawProfile(float targetYaw) {
+        float currentYaw = Rotations.serverYaw;
+
+        float difference = MathHelper.wrapDegrees(
+            targetYaw - currentYaw
+        );
+
+        float maximumStep = switch (bypassMode.get()) {
+            case Grim2 -> 70.0f;
+            case Matrix -> 45.0f;
+            default -> 180.0f;
+        };
+
+        difference = MathHelper.clamp(
+            difference,
+            -maximumStep,
+            maximumStep
+        );
+
+        return currentYaw + difference;
+    }
+
+    private float applyPitchProfile(float targetPitch) {
+        float currentPitch = Rotations.serverPitch;
+        float difference = targetPitch - currentPitch;
+
+        float maximumStep = switch (bypassMode.get()) {
+            case Grim2 -> 35.0f;
+            case Matrix -> 25.0f;
+            default -> 180.0f;
+        };
+
+        difference = MathHelper.clamp(
+            difference,
+            -maximumStep,
+            maximumStep
+        );
+
+        return MathHelper.clamp(
+            currentPitch + difference,
+            -90,
+            90
+        );
+    }
+
+    private void pausePathing() {
+        if (
+            pauseBaritone.get()
+                && PathManagers.get().isPathing()
+                && !wasPathing
+        ) {
+            PathManagers.get().pause();
+            wasPathing = true;
+        }
+    }
+
+    private boolean prepareNormalWeapon() {
+        if (!autoSwitch.get()) return true;
+        if (weapon.get() == Weapon.Any) return true;
+
+        FindItemResult result = findWeapon();
+
+        if (!result.found() || result.slot() < 0) {
+            return false;
+        }
+
+        int selectedSlot =
+            mc.player.getInventory().selectedSlot;
+
+        if (!swapped && selectedSlot != result.slot()) {
+            previousSlot = selectedSlot;
+            swapped = true;
+        }
+
+        if (selectedSlot != result.slot()) {
+            InvUtils.swap(result.slot(), false);
+        }
+
+        return true;
+    }
+
+    private FindItemResult findWeapon() {
+        return switch (weapon.get()) {
+            case Sword -> InvUtils.findInHotbar(
+                stack -> stack.getItem() instanceof SwordItem
+            );
+
+            case Axe -> InvUtils.findInHotbar(
+                stack -> stack.getItem() instanceof AxeItem
+            );
+
+            case Mace -> InvUtils.findInHotbar(
+                stack -> stack.getItem() instanceof MaceItem
+            );
+
+            case Trident -> InvUtils.findInHotbar(
+                stack -> stack.getItem() instanceof TridentItem
+            );
+
+            case All -> findPreferredWeapon();
+
+            case Any -> InvUtils.findInHotbar(stack -> true);
+        };
+    }
+
+    private FindItemResult findPreferredWeapon() {
+        FindItemResult result = InvUtils.findInHotbar(
+            stack -> stack.getItem() instanceof SwordItem
+        );
+
+        if (result.found()) return result;
+
+        result = InvUtils.findInHotbar(
+            stack -> stack.getItem() instanceof MaceItem
+        );
+
+        if (result.found()) return result;
+
+        result = InvUtils.findInHotbar(
+            stack -> stack.getItem() instanceof TridentItem
+        );
+
+        if (result.found()) return result;
+
+        return InvUtils.findInHotbar(
+            stack -> stack.getItem() instanceof AxeItem
+        );
+    }
+
+    private boolean normalItemInHand() {
+        Item item =
+            mc.player.getMainHandStack().getItem();
+
+        return switch (weapon.get()) {
+            case Sword -> item instanceof SwordItem;
+            case Axe -> item instanceof AxeItem;
+            case Mace -> item instanceof MaceItem;
+            case Trident -> item instanceof TridentItem;
+
+            case All ->
+                item instanceof SwordItem
+                    || item instanceof AxeItem
+                    || item instanceof MaceItem
+                    || item instanceof TridentItem;
+
+            case Any -> true;
+        };
+    }
+
+    private boolean isTargetBlockingShield(Entity entity) {
+        if (!(entity instanceof PlayerEntity player)) {
+            return false;
+        }
+
+        boolean hasShield =
+            player.getMainHandStack().isOf(Items.SHIELD)
+                || player.getOffHandStack().isOf(Items.SHIELD);
+
+        return hasShield
+            && (
+            player.isBlocking()
+                || player.isUsingItem()
+        );
+    }
+
+    private float getCooldownProgress() {
+        if (
+            bypassMode.get() != BypassMode.Standard
+                || !customDelay.get()
+        ) {
+            return mc.player.getAttackCooldownProgress(0.5f);
+        }
+
+        float requiredTicks = getRequiredCustomTicks();
+
+        if (requiredTicks <= 0) return 1.0f;
+
+        return MathHelper.clamp(
+            hitTimer / requiredTicks,
+            0,
+            1
+        );
+    }
+
+    private boolean isCooldownReady(float progress) {
+        if (switchTimer > 0) return false;
+
+        if (
+            bypassMode.get() == BypassMode.Standard
+                && customDelay.get()
+        ) {
+            return hitTimer >= getRequiredCustomTicks();
+        }
+
+        return progress >= getEffectiveCooldownThreshold();
+    }
+
+    private double getEffectiveCooldownThreshold() {
+        return switch (bypassMode.get()) {
+            case Grim1 -> Math.max(
+                cooldownThreshold.get(),
+                0.90
+            );
+
+            case Grim2 -> Math.max(
+                cooldownThreshold.get(),
+                0.95
+            );
+
+            case Matrix -> Math.max(
+                cooldownThreshold.get(),
+                0.92
+            );
+
+            case Standard -> cooldownThreshold.get();
+        };
+    }
+
+    private int getEffectiveSwitchDelay() {
+        return switch (bypassMode.get()) {
+            case Grim1 -> Math.max(switchDelay.get(), 1);
+            case Grim2 -> Math.max(switchDelay.get(), 2);
+            case Matrix -> Math.max(switchDelay.get(), 1);
+            case Standard -> switchDelay.get();
+        };
+    }
+
+    private float getRequiredCustomTicks() {
+        float requiredTicks = hitDelay.get();
+
+        if (tpsSync.get()) {
+            float tickRate =
+                TickRate.INSTANCE.getTickRate();
+
+            float factor = tickRate / 20.0f;
+
+            if (factor > 0) {
+                requiredTicks /= factor;
+            }
+        }
+
+        return Math.max(0, requiredTicks);
+    }
+
+    private double getEffectiveRange() {
+        return range.get();
+    }
+
+    private double getEffectiveWallsRange() {
+        if (
+            bypassMode.get() != BypassMode.Standard
+                || reachMode.get()
+                != AuraReachController.Mode.Normal
+        ) {
+            return 0;
+        }
+
+        return Math.min(
+            wallsRange.get(),
+            getEffectiveRange()
+        );
+    }
+
+    private AuraCriticalController.Mode
+    getEffectiveCriticalMode() {
+        AuraCriticalController.Mode mode =
+            criticalMode.get();
+
+        if (mode == AuraCriticalController.Mode.Off) {
+            return mode;
+        }
+
+        if (
+            mode == AuraCriticalController.Mode.Smart
+                && !hasJumpSpace()
+        ) {
+            return AuraCriticalController.Mode.Off;
+        }
+
+        return mode;
+    }
+
+    private boolean hasJumpSpace() {
+        if (mc.player == null || mc.world == null) {
+            return false;
+        }
+
+        BlockPos basePosition =
+            mc.player.getBlockPos();
+
+        for (int offset = 2; offset <= 3; offset++) {
+            BlockPos position =
+                basePosition.up(offset);
+
+            BlockState state =
+                mc.world.getBlockState(position);
+
+            if (
+                !state.isAir()
+                    && !state.getCollisionShape(
+                    mc.world,
+                    position
+                ).isEmpty()
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean entityCheck(Entity entity) {
+        if (
+            entity == null
+                || entity == mc.player
+                || entity == mc.cameraEntity
+                || !entity.isAlive()
+        ) {
+            return false;
+        }
+
+        if (
+            entity instanceof LivingEntity living
+                && living.isDead()
+        ) {
+            return false;
+        }
+
+        Box hitbox = entity.getBoundingBox();
+
+        double closestX = MathHelper.clamp(
+            mc.player.getX(),
+            hitbox.minX,
+            hitbox.maxX
+        );
+
+        double closestY = MathHelper.clamp(
+            mc.player.getEyeY(),
+            hitbox.minY,
+            hitbox.maxY
+        );
+
+        double closestZ = MathHelper.clamp(
+            mc.player.getZ(),
+            hitbox.minZ,
+            hitbox.maxZ
+        );
+
+        if (
+            !PlayerUtils.isWithin(
+                closestX,
+                closestY,
+                closestZ,
+                getEffectiveRange()
+            )
+        ) {
+            return false;
+        }
+
+        if (!entities.get().contains(entity.getType())) {
+            return false;
+        }
+
+        if (ignoreNamed.get() && entity.hasCustomName()) {
+            return false;
+        }
+
+        if (
+            !PlayerUtils.canSeeEntity(entity)
+                && !PlayerUtils.isWithin(
+                entity,
+                getEffectiveWallsRange()
+            )
+        ) {
+            return false;
+        }
+
+        if (
+            ignoreTamed.get()
+                && entity instanceof Tameable tameable
+                && tameable.getOwnerUuid() != null
+                && tameable.getOwnerUuid().equals(
+                mc.player.getUuid()
+            )
+        ) {
+            return false;
+        }
+
+        if (ignorePassive.get()) {
+            if (
+                entity instanceof EndermanEntity enderman
+                    && !enderman.isAngry()
+            ) {
+                return false;
+            }
+
+            if (
+                entity instanceof ZombifiedPiglinEntity piglin
+                    && !piglin.isAttacking()
+            ) {
+                return false;
+            }
+
+            if (
+                entity instanceof WolfEntity wolf
+                    && !wolf.isAttacking()
+            ) {
+                return false;
+            }
+        }
+
+        if (entity instanceof PlayerEntity player) {
+            if (player.isCreative()) return false;
+
+            if (!Friends.get().shouldAttack(player)) {
+                return false;
+            }
+
+            if (
+                shieldMode.get() == ShieldMode.Ignore
+                    && isTargetBlockingShield(player)
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void stopAttacking() {
+        combatPrepared = false;
+        preparedTarget = null;
+        attacking = false;
+
+        if (wasPathing) {
+            PathManagers.get().resume();
+            wasPathing = false;
+        }
+
+        if (swapped) {
+            if (
+                swapBack.get()
+                    && previousSlot >= 0
+                    && previousSlot <= 8
+            ) {
+                InvUtils.swap(previousSlot, false);
+            }
+
+            swapped = false;
+            previousSlot = -1;
+        }
+    }
+
+    private void clearCombat() {
+        targets.clear();
+
+        lockedTarget = null;
+        preparedTarget = null;
+        currentAimPoint = null;
+
+        combatPrepared = false;
+        grimRotationTicks = 0;
+
+        aimPointResolver.reset();
+        reachController.clearSelectedBox();
+        criticalController.reset(mc.player);
+
+        stopAttacking();
+    }
+
+    private void applyWorkingPreset() {
+        weapon.set(Weapon.Any);
+        rotation.set(RotationMode.Always);
+
+        autoSwitch.set(false);
+        onlyOnClick.set(false);
+        onlyOnLook.set(false);
+        pauseBaritone.set(false);
+
+        shieldMode.set(ShieldMode.None);
+
+        targetLock.set(true);
+        maxTargets.set(1);
+
+        pauseOnLag.set(false);
+        pauseOnUse.set(false);
+        pauseOnCA.set(false);
+
+        customDelay.set(false);
+        tpsSync.set(false);
+        cooldownThreshold.set(0.90);
+        switchDelay.set(0);
+
+        criticalMode.set(
+            AuraCriticalController.Mode.Smart
+        );
+
+        autoCriticalJump.set(true);
+        jumpAtProgress.set(0.35);
+        minimumFallDistance.set(0.0);
+
+        bypassMode.set(BypassMode.Standard);
+        reachMode.set(AuraReachController.Mode.Normal);
+        strictRaycast.set(true);
+        sprintReset.set(true);
+
+        movementAssist.set(MovementAssistMode.None);
+
+        hitTimer = 100;
+        switchTimer = 0;
+        shieldBreakCooldown = 0;
+        grimRotationTicks = 0;
+
+        combatPrepared = false;
+        preparedTarget = null;
+
+        aimPointResolver.reset();
+        reachController.reset();
+        criticalController.reset(mc.player);
+    }
+
+    public boolean isManagingCriticals() {
+        return isActive()
+            && mc.player != null
+            && getEffectiveCriticalMode()
+            != AuraCriticalController.Mode.Off
+            && getTarget() != null;
+    }
+
+    public boolean shouldTargetStrafeJump() {
+        return !isManagingCriticals()
+            || !autoCriticalJump.get();
+    }
+
+    public boolean shouldSuppressSprint() {
+        return isManagingCriticals()
+            && criticalController.shouldSuppressSprint(
+                getEffectiveCriticalMode()
+            );
+    }
+
+    public boolean isWaitingForCritical() {
+        return criticalController.isWaitingForCritical();
+    }
+
+    public AuraCriticalController.State getCriticalState() {
+        return criticalController.getState();
+    }
+
+    public Entity getTarget() {
+        return targets.isEmpty()
+            ? null
+            : targets.getFirst();
+    }
+
+    public Vec3d getCurrentAimPoint() {
+        return currentAimPoint;
+    }
+
+    public BypassMode getBypassMode() {
+        return bypassMode.get();
+    }
+
+    public AuraReachController.Mode getReachMode() {
+        return reachMode.get();
+    }
+
+    @Override
+    public String getInfoString() {
+        Entity target = getTarget();
+
+        if (target == null) {
+            return bypassMode.get().name()
+                + " | "
+                + reachMode.get().name();
+        }
+
+        if (criticalController.isWaitingForCritical()) {
+            return bypassMode.get().name()
+                + " | "
+                + criticalController.getState().name();
+        }
+
+        return bypassMode.get().name()
+            + " | "
+            + reachMode.get().name()
+            + " | "
+            + EntityUtils.getName(target);
+    }
+
+    public enum Weapon {
+        Sword,
+        Axe,
+        Mace,
+        Trident,
+        All,
+        Any
+    }
+
+    public enum RotationMode {
+        Always,
+        OnHit,
+        None
+    }
+
+    public enum ShieldMode {
+        Ignore,
+        Break,
+        None
+    }
+
+    public enum BypassMode {
+        Standard,
+        Grim1,
+        Grim2,
+        Matrix
+    }
+
+    public enum MovementAssistMode {
+        None,
+        Free,
+        Focused,
+        OrbitAssist
+    }
+}
+
+
+После вставки запускай .\gradlew runClient. Пришли только блок ошибок compileJava, если они появятся.
+
+что поменялось?
+
+Главные изменения:
+
+    Attack Range теперь реально используется до 8, без фиксации Grim на 3/2.95.
+    Добавлен Reach Mode:
+        Normal — обычная атака.
+        BackTrack — наведение на сохранённые прошлые хитбоксы цели.
+        PositionSpoof — временный пакет позиции ближе к цели → удар → возврат.
+    Grim1/Grim2 перед ударом отправляют точный пакет поворота.
+    Добавлен Sprint Reset.
+    PositionSpoof получил настройки безопасной дистанции, максимального перемещения и jitter.
+    BackTrack получил настройку глубины истории в тиках.
+    Raycast теперь учитывает выбранный исторический хитбокс.
+    Shield Break работает через тот же reach-механизм.
+    Криты, автопрыжок, выбор оружия и Movement Assist сохранены.
+
+
+Для проверки 6 блоков:
+
+text
+
+Attack Range: 6
+Bypass Mode: Grim1
+Reach Mode: PositionSpoof
+Spoof Safe Range: 2.85
+Spoof Max Step: 4
+
+
+Это экспериментальный пакетный режим: сервер может откатить позицию или заблокировать удар.
+
+читай еще раз байпасы в сурсах других клиентов надо дпоиливать
+
+Analysis
+Перечитываю все донорские reach и rotation bypass реализации.Индексирую боевые модули и ключевые пакетные обходы.Читаю Thunder Aura целиком вокруг атаки и resolver.Извлекаю настоящий Thunder BackTrack, Predictive и Advantage resolver.Читаю миксин истории серверных координат Thunder.Читаю Rasty Aura, MXReach и through-walls spoof полностью.Сверяю настройки и порядок Rasty атаки без пропусков.Читаю Wild Aura и его пакетные sprint/rotation режимы.Ищу Nuclear/Tusk Aura и её античит-профили.Перечисляю Nuclear combat-файлы рядом с BackTrack.Повторяю поиск путей без проблем экранирования.Читаю Nuclear AttackAura и отдельный BackTrack.Проверяю, откуда Nuclear получает backtrack-позиции.Проверяю Thunder задержку ping и точный post-attack возврат.Ищу Expensive Aura и её обходы атаки.Читаю Expensive Aura, attack handler и SprintManager.Проверяю инфраструктуру mixin для серверной истории позиций.Сверяю порядок Grim проверки атаки и movement-пакета.
+
+Ты прав — после полного перечитывания текущую реализацию надо переделать. Наши главные ошибки:
+
+    BackTrack сейчас сохраняет обычные клиентские координаты каждый тик. Thunder сохраняет именно серверные позиции при updateTrackedPositionAndAngles, временно подставляет лучший хитбокс для расчётов, затем возвращает сущность назад.
+    PositionSpoof у нас оставляет 2.85 блока. Rasty MXReach телепортирует примерно на 0.1–1.5, стандартно 0.5 блока от цели, атакует и возвращается с небольшим jitter.
+    Grim1/Grim2 у нас искусственные. В Thunder порядок такой: stop sprint → Full с серверным поворотом → удар → восстановление sprint → Full с клиентским поворотом.
+    Expensive One Tick использует отдельный пакет поворота до удара и возврат после.
+    Rasty также имеет DigSpoof: START_DESTROY_BLOCK → ABORT_DESTROY_BLOCK для первого блока между игроком и целью.
+    Wild не имеет отдельного reach-обхода: там подмена yaw/pitch всех movement-пакетов и блокировка повторного START_SPRINTING.
+
+
+Правильная структура будет раздельной:
+
+    Rotation Profile: Standard / Thunder Grim / Expensive OneTick.
+    Resolver: Off / Advantage / Predictive / BackTrack.
+    Reach: Normal / Rasty MXReach.
+    Walls: Off / Raycast / Rasty DigSpoof.
+    Sprint: None / Packet / Legit / Thunder.
+
+
+Текущие AuraReachController и KillAura пока не финальные. Для настоящего Thunder BackTrack потребуется ещё mixin, записывающий серверные позиции сущностей. Следующую версию делаем уже по этой структуре, без выдуманных Grim1/Grim2.
