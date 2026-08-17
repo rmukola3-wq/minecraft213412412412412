@@ -1,0 +1,954 @@
+читай devvv3 devvv4 devvv5  devvv6 что бы воставнвоить контекст что я делал это я сокрпилва сессию прчоиатй что я делал я не хочу занвоо обяьснять и вот сурсы моег офорка morzh_real2.txt
+mprzh_real1.txt ( я разибл на 2 части тк лимит на гитхабе) я уже перенс впринципе норм ауру оцени и прочиатй сурсы иунтруции в devv2-6
+
+Analysis
+Ищу указанные файлы и определяю нужный репозиторий.Проверяю объём частей и структуру сохранённой сессии.Читаю хронологию запросов, решений и незавершённых задач.Индексирую текущую Aura, контроллеры и связанные mixin-классы.Читаю реализацию режимов, атакующий цикл и reach-механику.Проверяю условия удара, критов, raycast и щитолома.Сверяю порт с оригинальной Rockstar Aura построчно.Проверяю фактическое использование настроек и порядок пакетов.Проверяю очередь ротаций между PRE и POST.Сравниваю новую Aura с вчерашним снимком форка.Уточняю формат старого снимка для корректного сравнения.Фиксирую точные доказательства и итоговую оценку готовности.
+
+Контекст восстановлен по devvvvvvv3, devvv4–6 и обеим частям исходников. devvv2 в репозиториях не найден.
+
+Текущая оценка Aura: 5.5/10 как готовый модуль, 7/10 как основа.
+
+Что сделано хорошо:
+
+    Перенесены четыре Rockstar-режима: Classical, Neuro, FunTime Snap, Alternative.
+    Правильное разделение: PRE рассчитывает ротацию, POST атакует.
+    Старые выдуманные bypass-режимы отключены.
+    Сохранена интеграция TargetStrafe и HUD.
+
+
+Критичные недоработки:
+
+    Настройки насильно сбрасываются при каждом включении и загрузке конфига: mprzh_real1.txt#L60090-L60135.
+    updateTrackedFall() вызывается в PRE и POST, поэтому airTicks и sprintOffTicks считаются дважды: mprzh_real1.txt#L60148-L60215.
+    Raycast фактически пропускает удар при промахе, если цель просто находится в радиусе: mprzh_real1.txt#L60344-L60372.
+    ShieldBreaker сначала бьёт мечом, затем сразу топором без восстановления cooldown. Это не согласованный алгоритм: mprzh_real1.txt#L60500-L60518.
+    Sprint останавливается, но явно не восстанавливается.
+    hitchance и prepareHit() не используются.
+    Reach/BackTrack/bypass пока полностью отключены: mprzh_real1.txt#L60698-L60704.
+    Neuro перенесён без CatBoost, а Classical/FunTime заметно упрощены относительно оригинала: mprzh_real1.txt#L64692-L64730.
+    Дальность выставлена 5.2, хотя работающего reach-механизма сейчас нет.
+
+
+Итог: ты действительно сильно продвинулся и выполнил главный пункт из devvv6 — собрал Classical-базу и режимы Rockstar. Но Aura пока промежуточная: сначала исправляем перечисленные дефекты и добиваем точность Classical, затем подключаем остальные режимы, после этого — Thunder/Rasty bypass. Изменений сейчас не вносил. Уверенность средне-высокая: оценка по коду, без сборки и серверного теста.
+
+если четно то что щас лушче в 1000 раз во всем чем было в прошлых фокрах сусры хможеш ьпостмотерть старые там оно флагалось вобще всем что можно + ае на хвх без античта сосало щас +- мнорм давай дальеш улшчать
+
+Согласен: реальные HVH-тесты важнее формального сходства с донорами. Текущую Aura не переписываем.
+
+Следующий безопасный этап:
+
+    Убираем сброс настроек при включении.
+    Исправляем двойной подсчёт падения.
+    Чиним raycast без изменения ротаций.
+    Переделываем ShieldBreaker: меч → топор перед ударом → возврат.
+    Восстанавливаем sprint после атаки.
+    Удаляем или подключаем мёртвые настройки.
+
+
+Classical и рабочие тайминги сохраняем. Bypass/BackTrack добавим только после повторного HVH-теста этой версии. Для правок нужен актуальный проект файлами либо я подготовлю полный обновлённый KillAura.java по дампу.
+
+мне нужно пофиксить короче оно чт оыб крит проешл убирает спринт ударяет и назад српинт не вклчюается а долнжо быть так
+спринт - выкл спринт удар - вкл назад ( если преде этим был вкл )
+
+Analysis
+Проверяю точный порядок STOP → удар → START.
+
+Да, причина — stopSprint() запоминает отключение, но восстановления нет.
+
+В KillAura.java добавь поле:
+
+java
+
+private boolean restoreSprintAfterAttack;
+
+
+Полностью замени stopSprint() и добавь восстановление:
+
+java
+
+private void stopSprint() {
+    if (mc.player == null) return;
+
+    if (!suppressingSprint) {
+        restoreSprintAfterAttack = mc.player.isSprinting();
+    }
+
+    suppressingSprint = true;
+
+    if (mc.player.isSprinting() && mc.getNetworkHandler() != null) {
+        mc.getNetworkHandler().sendPacket(
+            new ClientCommandC2SPacket(
+                mc.player,
+                ClientCommandC2SPacket.Mode.STOP_SPRINTING
+            )
+        );
+    }
+
+    mc.player.setSprinting(false);
+}
+
+private void restoreSprint() {
+    boolean shouldRestore =
+        suppressingSprint && restoreSprintAfterAttack;
+
+    suppressingSprint = false;
+    restoreSprintAfterAttack = false;
+
+    if (
+        !shouldRestore
+            || mc.player == null
+            || mc.getNetworkHandler() == null
+    ) {
+        return;
+    }
+
+    mc.player.setSprinting(true);
+    mc.getNetworkHandler().sendPacket(
+        new ClientCommandC2SPacket(
+            mc.player,
+            ClientCommandC2SPacket.Mode.START_SPRINTING
+        )
+    );
+}
+
+
+В attack() замени участок удара:
+
+java
+
+stopSprint();
+
+try {
+    mc.interactionManager.attackEntity(mc.player, target);
+    mc.player.swingHand(Hand.MAIN_HAND);
+    tryBreakShield();
+} finally {
+    restoreSprint();
+}
+
+
+В начало loseTarget() добавь:
+
+java
+
+restoreSprint();
+
+
+А в clear():
+
+java
+
+suppressingSprint = false;
+restoreSprintAfterAttack = false;
+
+
+Получится нужный пакетный порядок:
+
+text
+
+STOP_SPRINTING → ATTACK → START_SPRINTING
+
+
+Спринт восстановится только если он был включён до подготовки критического удара. Строку mc.options.sprintKey.setPressed(false) обязательно убрать — она и удерживала спринт выключенным.
+
+что после килларуы тсоит переносить? какие функции делать дальше?
+
+Сразу после KillAura лучше доделать TargetStrafe — он сильнее всего влияет на HVH и напрямую зависит от ротаций, критов и спринта Aura.
+
+Порядок разработки:
+
+    TargetStrafe
+        синхронизация со sprint restore;
+        смена направления при столкновении/краю;
+        сохранение дистанции до цели;
+        пауза во время критического окна;
+        movement correction из Rasty/Thunder.
+
+    Настоящий BackTrack из Thunder
+        хранение серверных позиций через updateTrackedPositionAndAngles;
+        выбор лучшего исторического хитбокса;
+        raycast по выбранному хитбоксу;
+        визуализация позиции для отладки.
+
+    Resolver
+        Advantage;
+        Predictive;
+        BackTrack;
+        независимость от режима ротации.
+
+    Пакетные профили ротации
+        Standard;
+        Thunder Grim;
+        Expensive OneTick;
+        возврат клиентской ротации после удара.
+
+    Walls/Reach
+        обычный Raycast;
+        Rasty DigSpoof;
+        MXReach добавлять последним и отдельно включаемым.
+
+    Боевые помощники
+        нормальный ShieldBreaker;
+        AutoWeapon;
+        AntiBot;
+        проверка команды, друзей и невидимых целей.
+
+
+Главный приоритет: KillAura stability → TargetStrafe → BackTrack → Resolver → bypass. HUD и TargetESP уже достаточно развиты — пока их трогать не стоит.
+
+нет ну там другие функции их же много других есть
+
+Analysis
+Сравниваю текущие модули с наборами донорских клиентов.
+
+Да, я слишком сузил план до связанных с Aura функций. В донорах действительно много отдельных модулей.
+
+После KillAura я бы переносил так:
+
+    Strafe — самостоятельный ускоренный стрейф, не TargetStrafe.
+    Velocity — режимы снижения knockback под разные античиты.
+    NoSlow — обход замедления с мечом, едой и луком.
+    AutoPotion — автоматические Strength, Speed, Fire Resistance.
+    AutoPearl — бросок перла по направлению/бинду.
+    Smart AutoTotem — учитывать здоровье, кристаллы, падение и элитры.
+    AutoGApple — автоматическое золотое яблоко по здоровью.
+    InventoryCleaner — сортировка оружия, брони и мусора.
+    ChestStealer/Stealer — умный быстрый лут.
+    TriggerBot — легитный удар только по сущности под прицелом.
+    BackTrack — отдельный модуль с серверными позициями.
+    ElytraTarget — преследование и бой на элитрах.
+    SuperBow/FastBow — ускоренные лук и арбалет.
+    Timer — динамическая скорость клиента.
+    TeleportBack — возврат после опасного перемещения.
+    Phase/NoClip — серверные профили прохождения блоков.
+    PeekAssist — автоматический выход из укрытия и возвращение.
+    AutoSwap — автоматическая смена предметов по ситуации.
+    NoFall — нормальные Grim/Packet/Legit режимы.
+    Speed/LongJump — перенос отдельных проверенных профилей, а не замена целого модуля.
+
+
+Мой оптимальный порядок для PvP-форка:
+
+text
+
+KillAura
+→ Strafe
+→ Velocity
+→ NoSlow
+→ AutoPotion
+→ Smart AutoTotem
+→ AutoPearl
+→ InventoryCleaner
+→ BackTrack
+→ ElytraTarget
+→ Speed/LongJump/NoFall
+
+
+Первым после Aura я бы переносил именно Rockstar Strafe, затем полностью переделывал Velocity. Это даст заметное улучшение HVH, а не просто дополнительные кнопки в GUI.
+
+хотя бы в одних сурсах есть flight target? что бы на хвх сервер без антчита на флае с киларйо прелсодвать игркоа бытсро очнеь
+
+Analysis
+Ищу FlightTarget и аналоги преследования цели в полёте.Проверяю, работает ли найденное преследование без элитры.
+
+Точного FlightTarget для обычного Flight в исходниках нет. Но есть три близких реализации:
+
+    Expensive ElytraTarget — лучший донор: поиск цели до 100 блоков, синхронизация с Aura, предикт движения, автодистанция и ускорение около цели: espensive source.txt#L38388-L38621.
+    Rockstar ElytraTarget — значительно сложнее, с перегоном, resolver и уходом от цели.
+    Wild Aura ElytraTarget — встроен непосредственно в Aura.
+
+
+Для твоего HVH лучше сделать отдельный FlightTarget, который работает вместе с обычным Flight:
+
+    берёт KillAura.getTarget();
+    предсказывает позицию цели;
+    напрямую направляет velocity к цели, независимо от yaw Aura;
+    держит дистанцию 2–3 блока;
+    замедляется рядом, чтобы не перелетать;
+    имеет Horizontal Speed, Vertical Speed, Prediction и Max Range;
+    мгновенно прекращает управление при потере цели.
+
+
+Основу берём из Expensive, но убираем проверку элитры и фейерверки. Вместо них:
+
+java
+
+Vec3d predicted = target.getPos()
+    .add(target.getVelocity().multiply(predictionTicks));
+
+Vec3d destination = predicted.add(0, target.getHeight() * 0.5, 0);
+Vec3d delta = destination.subtract(mc.player.getPos());
+
+if (delta.length() > followDistance) {
+    mc.player.setVelocity(delta.normalize().multiply(speed));
+} else {
+    mc.player.setVelocity(Vec3d.ZERO);
+}
+
+
+Это будет именно быстрое воздушное преследование под KillAura без конфликта её ротаций. Лучший следующий перенос после исправления sprint — FlightTarget на основе Expensive.
+
+ну да начинай говрит ьмне что делат ькидай полный файл ну полный код и гвори гед сдалт кьаокй файл сделай так тчо бы он на флае вокруг игркоа очеьн быстро крутился и прелсовдал его
+
+Analysis
+Проверяю API движения и совместимость с текущим Flight.Проверяю регистрацию модулей и доступ к цели KillAura.Уточняю импорты перед выдачей полного совместимого файла.Проверяю изменение вертикальной скорости без конфликтов.
+
+Создай новый файл:
+
+meteor-fork/src/main/java/meteordevelopment/meteorclient/systems/modules/movement/FlightTarget.java
+
+Полный код:
+
+java
+
+package meteordevelopment.meteorclient.systems.modules.movement;
+
+import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.mixininterface.IVec3d;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.DoubleSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.friends.Friends;
+import meteordevelopment.meteorclient.systems.modules.Categories;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.combat.KillAura;
+import meteordevelopment.orbit.EventHandler;
+import meteordevelopment.orbit.EventPriority;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MovementType;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+
+public class FlightTarget extends Module {
+    private final SettingGroup sgTarget = settings.createGroup("Target");
+    private final SettingGroup sgMovement = settings.createGroup("Movement");
+    private final SettingGroup sgOrbit = settings.createGroup("Orbit");
+    private final SettingGroup sgSafety = settings.createGroup("Safety");
+
+    private final Setting<Boolean> syncAura = sgTarget.add(
+        new BoolSetting.Builder()
+            .name("sync-aura")
+            .description("Uses the current KillAura target when possible.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Boolean> targetLock = sgTarget.add(
+        new BoolSetting.Builder()
+            .name("target-lock")
+            .description("Keeps chasing the selected player.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Double> targetRange = sgTarget.add(
+        new DoubleSetting.Builder()
+            .name("target-range")
+            .description("Maximum player search distance.")
+            .defaultValue(100.0)
+            .range(5.0, 250.0)
+            .sliderRange(5.0, 150.0)
+            .build()
+    );
+
+    private final Setting<Double> prediction = sgTarget.add(
+        new DoubleSetting.Builder()
+            .name("prediction")
+            .description("Predicts target movement in ticks.")
+            .defaultValue(2.0)
+            .range(0.0, 10.0)
+            .sliderRange(0.0, 6.0)
+            .decimalPlaces(1)
+            .build()
+    );
+
+    private final Setting<Double> chaseSpeed = sgMovement.add(
+        new DoubleSetting.Builder()
+            .name("chase-speed")
+            .description("Maximum speed while catching the target.")
+            .defaultValue(4.0)
+            .range(0.1, 15.0)
+            .sliderRange(0.1, 10.0)
+            .decimalPlaces(2)
+            .build()
+    );
+
+    private final Setting<Double> verticalSpeed = sgMovement.add(
+        new DoubleSetting.Builder()
+            .name("vertical-speed")
+            .description("Maximum vertical chase speed.")
+            .defaultValue(3.0)
+            .range(0.1, 10.0)
+            .sliderRange(0.1, 6.0)
+            .decimalPlaces(2)
+            .build()
+    );
+
+    private final Setting<Double> verticalStrength = sgMovement.add(
+        new DoubleSetting.Builder()
+            .name("vertical-strength")
+            .description("How quickly height differences are corrected.")
+            .defaultValue(0.85)
+            .range(0.05, 2.0)
+            .sliderRange(0.05, 1.5)
+            .decimalPlaces(2)
+            .build()
+    );
+
+    private final Setting<Double> heightOffset = sgMovement.add(
+        new DoubleSetting.Builder()
+            .name("height-offset")
+            .description("Flight height relative to the target center.")
+            .defaultValue(0.25)
+            .range(-5.0, 5.0)
+            .sliderRange(-3.0, 3.0)
+            .decimalPlaces(2)
+            .build()
+    );
+
+    private final Setting<Double> orbitRadius = sgOrbit.add(
+        new DoubleSetting.Builder()
+            .name("orbit-radius")
+            .description("Distance maintained around the target.")
+            .defaultValue(3.0)
+            .range(0.5, 8.0)
+            .sliderRange(0.5, 6.0)
+            .decimalPlaces(2)
+            .build()
+    );
+
+    private final Setting<Double> orbitSpeed = sgOrbit.add(
+        new DoubleSetting.Builder()
+            .name("orbit-speed")
+            .description("Horizontal speed around the target.")
+            .defaultValue(2.2)
+            .range(0.1, 10.0)
+            .sliderRange(0.1, 6.0)
+            .decimalPlaces(2)
+            .build()
+    );
+
+    private final Setting<Double> radialStrength = sgOrbit.add(
+        new DoubleSetting.Builder()
+            .name("radius-strength")
+            .description("How aggressively the configured radius is maintained.")
+            .defaultValue(1.15)
+            .range(0.05, 4.0)
+            .sliderRange(0.05, 2.5)
+            .decimalPlaces(2)
+            .build()
+    );
+
+    private final Setting<Double> chaseThreshold = sgOrbit.add(
+        new DoubleSetting.Builder()
+            .name("chase-threshold")
+            .description("Distance outside the orbit before direct chasing starts.")
+            .defaultValue(2.0)
+            .range(0.0, 15.0)
+            .sliderRange(0.0, 8.0)
+            .decimalPlaces(1)
+            .build()
+    );
+
+    private final Setting<Boolean> clockwise = sgOrbit.add(
+        new BoolSetting.Builder()
+            .name("clockwise")
+            .description("Initial orbit direction.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Boolean> collisionSwitch = sgSafety.add(
+        new BoolSetting.Builder()
+            .name("collision-switch")
+            .description("Changes orbit direction after hitting a wall.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Double> collisionBoost = sgSafety.add(
+        new DoubleSetting.Builder()
+            .name("collision-boost")
+            .description("Moves upward after hitting an obstacle.")
+            .defaultValue(0.8)
+            .range(0.0, 5.0)
+            .sliderRange(0.0, 3.0)
+            .decimalPlaces(2)
+            .visible(collisionSwitch::get)
+            .build()
+    );
+
+    private final Setting<Boolean> stopWithoutTarget = sgSafety.add(
+        new BoolSetting.Builder()
+            .name("stop-without-target")
+            .description("Stops movement after losing the target.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Boolean> stopOnDeactivate = sgSafety.add(
+        new BoolSetting.Builder()
+            .name("stop-on-deactivate")
+            .description("Stops movement when FlightTarget is disabled.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private LivingEntity target;
+
+    private boolean orbitClockwise;
+    private boolean lastClockwiseSetting;
+    private boolean wasColliding;
+    private boolean controlling;
+
+    public FlightTarget() {
+        super(
+            Categories.Movement,
+            "flight-target",
+            "Rapidly chases and circles KillAura targets while Flight is active."
+        );
+    }
+
+    @Override
+    public void onActivate() {
+        target = null;
+
+        orbitClockwise = clockwise.get();
+        lastClockwiseSetting = clockwise.get();
+
+        wasColliding = false;
+        controlling = false;
+    }
+
+    @Override
+    public void onDeactivate() {
+        if (
+            stopOnDeactivate.get()
+                && controlling
+                && mc.player != null
+        ) {
+            mc.player.setVelocity(Vec3d.ZERO);
+        }
+
+        target = null;
+        controlling = false;
+        wasColliding = false;
+    }
+
+    @EventHandler(priority = EventPriority.LOW)
+    private void onTickPre(TickEvent.Pre event) {
+        if (!canRun()) {
+            target = null;
+            return;
+        }
+
+        if (clockwise.get() != lastClockwiseSetting) {
+            lastClockwiseSetting = clockwise.get();
+            orbitClockwise = clockwise.get();
+        }
+
+        boolean collided = mc.player.horizontalCollision;
+
+        if (
+            collisionSwitch.get()
+                && collided
+                && !wasColliding
+        ) {
+            orbitClockwise = !orbitClockwise;
+        }
+
+        wasColliding = collided;
+
+        LivingEntity auraTarget = getAuraTarget();
+
+        if (auraTarget != null) {
+            target = auraTarget;
+            return;
+        }
+
+        if (
+            targetLock.get()
+                && isValidTarget(target)
+        ) {
+            return;
+        }
+
+        target = findTarget();
+    }
+
+    /*
+     * Executes after normal Flight movement and writes velocity
+     * for the next movement cycle.
+     */
+    @EventHandler(priority = EventPriority.LOWEST - 1000)
+    private void onTickPost(TickEvent.Post event) {
+        applyVelocity();
+    }
+
+    /*
+     * Overrides the actual movement vector in the current tick.
+     * It never changes yaw or pitch, so KillAura owns rotation.
+     */
+    @EventHandler(priority = EventPriority.LOWEST - 1000)
+    private void onMove(PlayerMoveEvent event) {
+        if (
+            event.type != MovementType.SELF
+                || !canControl()
+        ) {
+            return;
+        }
+
+        Vec3d velocity = calculateVelocity();
+
+        if (velocity == null) return;
+
+        ((IVec3d) event.movement).meteor$setXZ(
+            velocity.x,
+            velocity.z
+        );
+
+        ((IVec3d) event.movement).meteor$setY(
+            velocity.y
+        );
+
+        mc.player.setVelocity(velocity);
+        controlling = true;
+    }
+
+    private void applyVelocity() {
+        if (!canControl()) {
+            if (
+                controlling
+                    && stopWithoutTarget.get()
+                    && mc.player != null
+            ) {
+                mc.player.setVelocity(Vec3d.ZERO);
+            }
+
+            controlling = false;
+            return;
+        }
+
+        Vec3d velocity = calculateVelocity();
+
+        if (velocity == null) {
+            controlling = false;
+            return;
+        }
+
+        mc.player.setVelocity(velocity);
+        controlling = true;
+    }
+
+    private Vec3d calculateVelocity() {
+        if (mc.player == null || target == null) return null;
+
+        Vec3d targetVelocity = target.getVelocity();
+
+        Vec3d predictedTarget = target.getPos()
+            .add(targetVelocity.multiply(prediction.get()))
+            .add(
+                0,
+                target.getHeight() * 0.5 + heightOffset.get(),
+                0
+            );
+
+        Vec3d playerCenter = mc.player.getPos().add(
+            0,
+            mc.player.getHeight() * 0.5,
+            0
+        );
+
+        double relativeX =
+            playerCenter.x - predictedTarget.x;
+
+        double relativeZ =
+            playerCenter.z - predictedTarget.z;
+
+        double horizontalDistance = Math.hypot(
+            relativeX,
+            relativeZ
+        );
+
+        double radialX;
+        double radialZ;
+
+        if (horizontalDistance < 1.0E-5) {
+            double angle = Math.toRadians(
+                mc.player.age * 37.0
+            );
+
+            radialX = Math.cos(angle);
+            radialZ = Math.sin(angle);
+            horizontalDistance = 0.0;
+        } else {
+            radialX = relativeX / horizontalDistance;
+            radialZ = relativeZ / horizontalDistance;
+        }
+
+        double velocityX;
+        double velocityZ;
+
+        double radius = orbitRadius.get();
+
+        if (
+            horizontalDistance
+                > radius + chaseThreshold.get()
+        ) {
+            /*
+             * Target is far away: fly directly towards it.
+             */
+            velocityX =
+                -radialX * chaseSpeed.get()
+                    + targetVelocity.x;
+
+            velocityZ =
+                -radialZ * chaseSpeed.get()
+                    + targetVelocity.z;
+        } else {
+            /*
+             * Target is close: use tangential velocity for orbiting
+             * and radial correction for maintaining attack distance.
+             */
+            double tangentX = orbitClockwise
+                ? -radialZ
+                : radialZ;
+
+            double tangentZ = orbitClockwise
+                ? radialX
+                : -radialX;
+
+            double correction = MathHelper.clamp(
+                (radius - horizontalDistance)
+                    * radialStrength.get(),
+                -chaseSpeed.get(),
+                chaseSpeed.get()
+            );
+
+            velocityX =
+                tangentX * orbitSpeed.get()
+                    + radialX * correction
+                    + targetVelocity.x;
+
+            velocityZ =
+                tangentZ * orbitSpeed.get()
+                    + radialZ * correction
+                    + targetVelocity.z;
+        }
+
+        double targetHorizontalSpeed = Math.hypot(
+            targetVelocity.x,
+            targetVelocity.z
+        );
+
+        double maximumHorizontal =
+            Math.max(
+                chaseSpeed.get(),
+                orbitSpeed.get()
+            ) * 1.15 + targetHorizontalSpeed;
+
+        double horizontalSpeed = Math.hypot(
+            velocityX,
+            velocityZ
+        );
+
+        if (
+            horizontalSpeed > maximumHorizontal
+                && horizontalSpeed > 1.0E-5
+        ) {
+            double scale =
+                maximumHorizontal / horizontalSpeed;
+
+            velocityX *= scale;
+            velocityZ *= scale;
+        }
+
+        double verticalDifference =
+            predictedTarget.y - playerCenter.y;
+
+        double velocityY =
+            verticalDifference
+                * verticalStrength.get()
+                + targetVelocity.y;
+
+        velocityY = MathHelper.clamp(
+            velocityY,
+            -verticalSpeed.get(),
+            verticalSpeed.get()
+        );
+
+        if (
+            collisionSwitch.get()
+                && mc.player.horizontalCollision
+        ) {
+            velocityY = Math.max(
+                velocityY,
+                collisionBoost.get()
+            );
+        }
+
+        return new Vec3d(
+            velocityX,
+            velocityY,
+            velocityZ
+        );
+    }
+
+    private LivingEntity getAuraTarget() {
+        if (!syncAura.get()) return null;
+
+        KillAura aura = Modules.get().get(KillAura.class);
+
+        if (aura == null || !aura.isActive()) {
+            return null;
+        }
+
+        Entity auraTarget = aura.getTarget();
+
+        if (
+            auraTarget instanceof LivingEntity living
+                && isValidTarget(living)
+        ) {
+            return living;
+        }
+
+        return null;
+    }
+
+    private LivingEntity findTarget() {
+        PlayerEntity best = null;
+        double bestDistance = Double.MAX_VALUE;
+
+        for (PlayerEntity player : mc.world.getPlayers()) {
+            if (!isValidTarget(player)) continue;
+
+            double distance =
+                mc.player.squaredDistanceTo(player);
+
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = player;
+            }
+        }
+
+        return best;
+    }
+
+    private boolean isValidTarget(LivingEntity entity) {
+        if (
+            mc.player == null
+                || mc.world == null
+                || !(entity instanceof PlayerEntity player)
+                || entity == mc.player
+                || !entity.isAlive()
+                || entity.isRemoved()
+                || entity.getHealth() <= 0
+                || player.isCreative()
+                || player.isSpectator()
+        ) {
+            return false;
+        }
+
+        if (!Friends.get().shouldAttack(player)) {
+            return false;
+        }
+
+        double maximumDistance =
+            targetRange.get();
+
+        return mc.player.squaredDistanceTo(player)
+            <= maximumDistance * maximumDistance;
+    }
+
+    private boolean canRun() {
+        if (
+            mc.player == null
+                || mc.world == null
+                || !mc.player.isAlive()
+        ) {
+            return false;
+        }
+
+        Flight flight = Modules.get().get(Flight.class);
+
+        return flight != null && flight.isActive();
+    }
+
+    private boolean canControl() {
+        return canRun() && isValidTarget(target);
+    }
+
+    public LivingEntity getTarget() {
+        return target;
+    }
+
+    @Override
+    public String getInfoString() {
+        return target == null
+            ? "Searching"
+            : target.getName().getString();
+    }
+}
+
+
+Теперь открой:
+
+meteor-fork/src/main/java/meteordevelopment/meteorclient/systems/modules/Modules.java
+
+В методе initMovement() найди:
+
+java
+
+add(new Flight());
+add(new GUIMove());
+
+
+Замени на:
+
+java
+
+add(new Flight());
+add(new FlightTarget());
+add(new GUIMove());
+
+
+Настройки для быстрого HVH:
+
+text
+
+Flight:
+Mode = Velocity
+Anti Kick Mode = None
+
+FlightTarget:
+Sync Aura = true
+Target Lock = true
+Target Range = 100
+Prediction = 2
+
+Chase Speed = 4
+Vertical Speed = 3
+Vertical Strength = 0.85
+
+Orbit Radius = 3
+Orbit Speed = 2.2
+Radius Strength = 1.15
+Chase Threshold = 2
+Collision Switch = true
+
+
+Включать:
+
+text
+
+Flight
+KillAura
+FlightTarget
+
+
+FlightTarget сам найдёт ближайшего игрока с расстояния до 100 блоков, быстро догонит его, затем перейдёт на круговое движение. Ротацию он не меняет — головой и пакетами продолжает управлять KillAura. Код составлен под текущий дамп, но сборкой не проверен, поскольку отдельного Gradle-проекта в репозитории нет.
