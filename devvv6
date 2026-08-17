@@ -1,0 +1,3151 @@
+итай devvv3 devvv4 devvv5 что бы воставнвоить контекст что я делал это я сокрпилва сессию прчоиатй что я делал я не хочу занвоо обяьснять и вот сурсы моег офорка meteor_17_08_26 ч
+
+Analysis
+Ищу файлы `devvv3`, `devvv4`, `devvv5` и `meteor_17_08_26`.Проверяю структуру репозиториев и возможное другое имя `devvv3`.Проверяю размеры и формат четырёх найденных файлов.Определяю структуру сохранённых сессий и исходника форка.Выделяю все запросы, ответы и точки остановки сессий.Дочитываю этапы `devvv5`, включая финальные ошибки и незавершённую задачу.Проверяю самый конец `devvv5` и последний согласованный план.Сверяю последнюю сессию с текущими файлами форка.Проверяю пакетную структуру, настройки ауры и ресурсы Target ESP.Восстанавливаю историю GUI, критов, TargetStrafe и ShieldBreaker.Уточняю статус текстурного Target ESP и внесённых исправлений.
+
+Контекст восстановил. Прочитал devvvvvvv3 (это твой devvv3), devvv4, devvv5 и текущий снимок meteor_17_08_26.
+
+Где остановились:
+
+    Target ESP уже переделан на текстуры и работает.
+    Криты, ShieldBreaker, Movement Assist и TargetStrafe пока сохраняем.
+    Текущие Grim1/Grim2 и AuraReachController признаны неправильными.
+    Следующая задача — полноценный реворк KillAura:
+        Rotation: Standard / Thunder Grim / Expensive OneTick.
+        Resolver: Off / Advantage / Predictive / настоящий BackTrack серверных позиций.
+        Reach: Normal / Rasty MXReach.
+        Walls: Off / Raycast / Rasty DigSpoof.
+        Sprint: None / Packet / Legit / Thunder.
+    Для настоящего BackTrack потребуется mixin, записывающий серверные позиции сущностей.
+    Выдуманные ограничения Grim на 3/2.95 блока убираем.
+
+
+Помню формат работы: точный относительный путь и всегда полный код файла; большой файл — ровно двумя частями с ожиданием «сделал».
+
+Повторно объяснять ничего не нужно. Изменений сейчас не вносил.
+
+devvv5  послдений на том остнвоились посмотри щас на соклкьбо я продвинулся посмотри по дамтам агруки я вчера загуржал форк свой и сгеондяз агрузил вот посмотрри много ли я сделал
+
+Analysis
+Сравниваю историю загрузок и снимки форка по датам.Считаю добавленные, удалённые и изменённые файлы между снимками.Проверяю формат старого снимка для точного постраничного сравнения.Измеряю реальный объём изменений без влияния перевода строк.Разбираю изменения по модулям, отделяя функционал от форматирования.Проверяю изменения HUD и TargetHUD отдельным сравнением.Анализирую прогресс KillAura и нового reach-контроллера.Проверяю объём и завершённость нового Target ESP.Проверяю точные размеры изменённых классов для итоговой оценки.Проверяю возможные незавершённые или регрессивные изменения сегодняшнего снимка.Проверяю, не отключился ли HUD после сегодняшней правки.
+
+Да, за ~23,5 часа ты продвинулся сильно:
+
+    Снимок вырос с 102 801 до 104 392 строк.
+    2 008 строк добавлено, 417 удалено.
+    Изменено 6 классов и создан новый AuraReachController.
+    TargetESP: 164 → 1 104 строки, 37 текстур и 12 типов анимации.
+    Добавлены BackTrack, PositionSpoof, sprint-reset и интеграция reach в KillAura.
+    Исправлен TargetHUD: анимации перенесены в tick, устранены проблемы batching и обрезания брони.
+
+
+Но Aura пока промежуточная:
+
+    BackTrack хранит клиентские, а не серверные позиции.
+    Grim-профили всё ещё искусственные.
+    Нет серверного mixin, DigSpoof, Advantage/Predictive и OneTick.
+    Обнаружена регрессия: Hud.active снова по умолчанию false, хотя вкладки включения HUD у тебя нет.
+    frameId добавлен, но нигде не увеличивается.
+
+
+Итог: по объёму сделано много. TargetESP практически завершён, TargetHUD заметно улучшен. По финальному реворку Aura выполнена примерно половина — фундамент есть, но текущую bypass-архитектуру всё равно договорились переделать. Сборку после последних изменений дамп не подтверждает.
+
+нужно доделывать ее , читай все сурсы в репе расти танедр хак обязательон експенсив рокстар тоже поищи по репам всем щас чиат во всех них аууру и все чт с ней свзяано
+
+Analysis
+Индексирую Aura и зависимости Rasty, ThunderHack, Expensive, Rockstar.Нахожу точные классы Aura, BackTrack, ротаций и щитов.Проверяю формат дампов и границы нужных реализаций.Индексирую основные классы и соседние зависимости каждого клиента.Читаю ThunderHack Aura, resolver, packet-order и серверные позиции.Дочитываю ThunderHack ShieldBreaker, критические окна и resolver mixin.Читаю Rasty Aura, MXReach, DigSpoof, криты и StrikeManager.Дочитываю точный PRE/POST-порядок Rasty и пакетные обходы.Читаю Expensive Aura, AttackHandler, scheduler, sprint и rotation pipeline.Дочитываю Expensive AttackHandler, Adaptive Critical и SprintManager.Проверяю точные тайминги и четыре sprint-режима Expensive.Читаю Rockstar KillAura, старые ротации, raycast и TargetStrafe.Ищу дополнительные версии этих Aura во всех подключённых репозиториях.Дочитываю Rasty rotation-controller, multipoint, raycast и target selection.Сопоставляю донорские механизмы с текущей Morzh KillAura.Фиксирую постоянные ссылки на прочитанные донорские исходники.
+
+Прочитал Aura и зависимости во всех репозиториях. Других версий этих клиентов не найдено.
+
+Главные источники:
+
+    ThunderHack Aura: настоящий BackTrack серверных позиций, Advantage resolver, Grim packet-order, raycast и ShieldBreaker.
+    Rasty Aura: PRE-ротация/POST-атака, MXReach, DigSpoof, JumpSync, MultiPoint, packet ShieldBreaker и movement correction.
+    Expensive Aura: AttackHandler, ClickScheduler, SprintManager, OneTick rotation, Adaptive Critical и RotationController.
+    Rockstar KillAura: старые Matrix/AAC-ротации, FOV/сортировка и TargetStrafe. Используем только отдельные идеи.
+
+
+Что обязательно исправлять в Morzh:
+
+    BackTrack записывать через updateTrackedPositionAndAngles, а не клиентский снимок каждого тика.
+    MXReach перенести точно из Rasty: spoof-distance 0.1–1.5, стандартно 0.5 → атака → возврат.
+    Разделить Rotation, Resolver, Reach, Walls и Sprint на независимые профили.
+    PRE: цель и ротация. POST: повторная проверка cooldown, raycast и критов, затем атака.
+    ShieldBreaker: топор выбирается только в момент удара и сразу возвращается меч.
+    Добавить Thunder Advantage/BackTrack, Rasty DigSpoof/MXReach, Expensive OneTick.
+    Expensive ShieldBreaker не брать: настройка существует, но реализация фактически не подключена.
+    Rockstar не использовать как основу — слишком старая версия.
+
+
+Контекст полностью готов. Следующим этапом можно переделывать архитектуру Aura без выдуманных Grim1/Grim2.
+
+посмотри еще ликвид
+
+Analysis
+Ищу LiquidBounce Aura и все связанные боевые компоненты.Определяю версию LiquidBounce и границы KillAura-компонентов.Читаю LiquidBounce KillAura, требования, range, target-tracker и критический scheduler.Дочитываю LiquidBounce simulation-криты, повторную проверку и Backtrack.Проверяю точные режимы критов и структуру настроек LiquidBounce.Проверяю LiquidBounce shield-break, auto-weapon и rotation timing.Дочитываю LiquidBounce AutoWeapon и режимы ротации перед выводом.
+
+LiquidBounce тоже полностью посмотрел: ModuleKillAura.
+
+Из него обязательно берём:
+
+    Повторную canAttackNow() непосредственно внутри callback перед отправкой атаки.
+    Criticals: Smart / Ignore / Always.
+    Smart-крит оценивает выгоду ожидания, будущий cooldown, движение игрока/цели и столкновение при падении.
+    Rotation Timing: Normal / Snap / OnTick.
+    OnTick: пакет поворота → атака → возврат клиентского взгляда.
+    Отдельные attack-range, walls-range и scan-range.
+    Точный PointTracker + raytrace хитбокса.
+    Предсказание выхода цели из дальности.
+    Sprint блокируется только перед ожидаемым критическим ударом.
+
+
+Что не переносим напрямую:
+
+    LiquidBounce Backtrack задерживает входящие пакеты через Blink. Для Morzh безопаснее Thunder server-position resolver.
+    AutoWeapon держит выбранный слот до 20 тиков и сам отмечает ненадёжность смены оружия в одном тике. Для нашего мгновенного ShieldBreaker лучше Rasty/Thunder.
+
+
+Итоговая основа Aura теперь такая: архитектура и проверки LiquidBounce, resolver ThunderHack, MXReach/DigSpoof/ShieldBreaker Rasty, OneTick Expensive. Rockstar — только дополнительные старые режимы.
+
+нужно щас делать новые номарлньые ротации , нормальные тайминги везде , + удобную настрйоку нужно убрать лишние полузнки там милион настреок я не понимаю , + нужно байпасы брать и сделать нормальную легит ауру щас жто какой то недо аим асисит нужно режими брать из расти и ркостар это навреное лучшее пока что чт оя нашел ну и ликвид
+
+Analysis
+Проектирую упрощённые пресеты и проверяю API ротаций Meteor.Фиксирую новую архитектуру Aura и порядок полной замены файлов.Проверяю callback и client-side поворот перед написанием контроллера.
+
+Переписываем Aura вокруг пресетов, без десятков ползунков:
+
+    Legit
+    Rasty Matrix
+    Rasty Snap
+    Rockstar
+    Liquid Snap
+    Liquid OnTick
+    Grim
+    Custom
+
+
+В обычном GUI останутся: профиль, range, критические удары, ShieldBreaker, оружие и movement assist. Детальные параметры будут видны только в Custom.
+
+Первым создадим полный контроллер ротаций:
+
+src/main/java/meteordevelopment/meteorclient/systems/modules/combat/aura/AuraRotationController.java
+
+java
+
+package meteordevelopment.meteorclient.systems.modules.combat.aura;
+
+import meteordevelopment.meteorclient.utils.player.Rotations;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+
+import java.util.concurrent.ThreadLocalRandom;
+
+public final class AuraRotationController {
+    private float yaw;
+    private float pitch;
+
+    private float noiseYaw;
+    private float noisePitch;
+    private float targetNoiseYaw;
+    private float targetNoisePitch;
+
+    private int targetId = -1;
+    private long nextNoiseUpdate;
+    private boolean initialized;
+
+    public void reset() {
+        yaw = 0;
+        pitch = 0;
+
+        noiseYaw = 0;
+        noisePitch = 0;
+        targetNoiseYaw = 0;
+        targetNoisePitch = 0;
+
+        targetId = -1;
+        nextNoiseUpdate = 0;
+        initialized = false;
+    }
+
+    public Result update(
+        MinecraftClient mc,
+        ClientPlayerEntity player,
+        Entity target,
+        Vec3d point,
+        Style style,
+        boolean attackReady
+    ) {
+        if (mc == null || player == null || target == null || point == null) {
+            reset();
+            return null;
+        }
+
+        if (!initialized) {
+            yaw = Rotations.serverYaw;
+            pitch = Rotations.serverPitch;
+            initialized = true;
+        }
+
+        if (targetId != target.getId()) {
+            targetId = target.getId();
+
+            yaw = Rotations.serverYaw;
+            pitch = Rotations.serverPitch;
+
+            noiseYaw = 0;
+            noisePitch = 0;
+            targetNoiseYaw = 0;
+            targetNoisePitch = 0;
+            nextNoiseUpdate = 0;
+        }
+
+        Angle targetAngle = angleTo(player.getEyePos(), point);
+
+        updateNoise(style, attackReady);
+
+        switch (style) {
+            case Legit -> updateLegit(targetAngle);
+            case RastyMatrix -> updateRastyMatrix(targetAngle, attackReady);
+            case RastySnap -> updateRastySnap(targetAngle, attackReady);
+            case Rockstar -> updateRockstar(targetAngle, attackReady);
+            case LiquidSnap -> updateLiquidSnap(targetAngle, attackReady);
+            case LiquidOnTick -> updateLiquidOnTick(targetAngle, attackReady);
+            case Grim -> updateGrim(targetAngle, attackReady);
+            case Instant -> {
+                yaw = targetAngle.yaw;
+                pitch = targetAngle.pitch;
+            }
+        }
+
+        yaw = applySensitivity(mc, yaw, Rotations.serverYaw);
+        pitch = applySensitivity(mc, pitch, Rotations.serverPitch);
+        pitch = MathHelper.clamp(pitch, -90, 90);
+
+        float error = rotationDifference(
+            yaw,
+            pitch,
+            targetAngle.yaw,
+            targetAngle.pitch
+        );
+
+        return new Result(
+            yaw,
+            pitch,
+            style == Style.Legit,
+            canAttack(style, attackReady, error),
+            error
+        );
+    }
+
+    private void updateLegit(Angle target) {
+        float yawDifference = MathHelper.wrapDegrees(target.yaw - yaw);
+        float pitchDifference = target.pitch - pitch;
+
+        float distance = (float) Math.hypot(
+            yawDifference,
+            pitchDifference
+        );
+
+        float yawStep = MathHelper.clamp(
+            5.5f + distance * 0.10f,
+            5.5f,
+            13.5f
+        );
+
+        float pitchStep = MathHelper.clamp(
+            3.5f + distance * 0.06f,
+            3.5f,
+            8.0f
+        );
+
+        yaw += MathHelper.clamp(
+            yawDifference,
+            -yawStep,
+            yawStep
+        );
+
+        pitch += MathHelper.clamp(
+            pitchDifference,
+            -pitchStep,
+            pitchStep
+        );
+
+        yaw += noiseYaw * 0.18f;
+        pitch += noisePitch * 0.10f;
+    }
+
+    private void updateRastyMatrix(
+        Angle target,
+        boolean attackReady
+    ) {
+        float yawDifference = MathHelper.wrapDegrees(target.yaw - yaw);
+        float pitchDifference = target.pitch - pitch;
+
+        float difference = rotationDifference(
+            yaw,
+            pitch,
+            target.yaw,
+            target.pitch
+        );
+
+        float speed;
+
+        if (attackReady) {
+            speed = random(0.76f, 0.92f);
+        } else if (difference <= 4.0f) {
+            speed = random(0.04f, 0.08f);
+        } else {
+            speed = random(0.15f, 0.45f);
+        }
+
+        yaw = MathHelper.lerp(
+            speed,
+            yaw,
+            yaw + yawDifference
+        );
+
+        pitch = MathHelper.lerp(
+            Math.min(1.0f, speed * 0.85f),
+            pitch,
+            pitch + pitchDifference
+        );
+
+        if (!attackReady) {
+            yaw += noiseYaw;
+            pitch += noisePitch;
+        }
+    }
+
+    private void updateRastySnap(
+        Angle target,
+        boolean attackReady
+    ) {
+        if (attackReady) {
+            yaw = target.yaw;
+            pitch = target.pitch;
+            return;
+        }
+
+        float yawDifference = MathHelper.wrapDegrees(target.yaw - yaw);
+        float pitchDifference = target.pitch - pitch;
+
+        yaw += MathHelper.clamp(
+            yawDifference,
+            -18.0f,
+            18.0f
+        );
+
+        pitch += MathHelper.clamp(
+            pitchDifference,
+            -9.0f,
+            9.0f
+        );
+    }
+
+    private void updateRockstar(
+        Angle target,
+        boolean attackReady
+    ) {
+        float yawDifference = MathHelper.wrapDegrees(target.yaw - yaw);
+        float pitchDifference = target.pitch - pitch;
+
+        float yawSpeed = attackReady
+            ? random(45.0f, 70.0f)
+            : random(28.0f, 48.0f);
+
+        float pitchSpeed = attackReady
+            ? random(18.0f, 32.0f)
+            : random(8.0f, 18.0f);
+
+        yaw += MathHelper.clamp(
+            yawDifference,
+            -yawSpeed,
+            yawSpeed
+        );
+
+        pitch += MathHelper.clamp(
+            pitchDifference,
+            -pitchSpeed,
+            pitchSpeed
+        );
+
+        if (!attackReady) {
+            yaw += noiseYaw * 0.35f;
+            pitch += noisePitch * 0.20f;
+        }
+    }
+
+    private void updateLiquidSnap(
+        Angle target,
+        boolean attackReady
+    ) {
+        if (!attackReady) return;
+
+        yaw = target.yaw;
+        pitch = target.pitch;
+    }
+
+    private void updateLiquidOnTick(
+        Angle target,
+        boolean attackReady
+    ) {
+        if (attackReady) {
+            yaw = target.yaw;
+            pitch = target.pitch;
+            return;
+        }
+
+        float yawDifference = MathHelper.wrapDegrees(target.yaw - yaw);
+        float pitchDifference = target.pitch - pitch;
+
+        yaw += MathHelper.clamp(
+            yawDifference,
+            -35.0f,
+            35.0f
+        );
+
+        pitch += MathHelper.clamp(
+            pitchDifference,
+            -20.0f,
+            20.0f
+        );
+    }
+
+    private void updateGrim(
+        Angle target,
+        boolean attackReady
+    ) {
+        float yawDifference = MathHelper.wrapDegrees(target.yaw - yaw);
+        float pitchDifference = target.pitch - pitch;
+
+        float yawStep = attackReady ? 180.0f : 70.0f;
+        float pitchStep = attackReady ? 90.0f : 35.0f;
+
+        yaw += MathHelper.clamp(
+            yawDifference,
+            -yawStep,
+            yawStep
+        );
+
+        pitch += MathHelper.clamp(
+            pitchDifference,
+            -pitchStep,
+            pitchStep
+        );
+    }
+
+    private boolean canAttack(
+        Style style,
+        boolean attackReady,
+        float error
+    ) {
+        if (!attackReady) return false;
+
+        return switch (style) {
+            case Legit -> error <= 5.0f;
+            case RastyMatrix -> error <= 4.0f;
+            case Rockstar -> error <= 5.5f;
+
+            case RastySnap,
+                 LiquidSnap,
+                 LiquidOnTick,
+                 Grim,
+                 Instant -> error <= 1.5f;
+        };
+    }
+
+    private void updateNoise(
+        Style style,
+        boolean attackReady
+    ) {
+        if (
+            style == Style.LiquidSnap
+                || style == Style.LiquidOnTick
+                || style == Style.Grim
+                || style == Style.Instant
+        ) {
+            noiseYaw = 0;
+            noisePitch = 0;
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+
+        if (now >= nextNoiseUpdate) {
+            float yawAmount = style == Style.Legit
+                ? 0.35f
+                : 0.75f;
+
+            float pitchAmount = style == Style.Legit
+                ? 0.18f
+                : 0.35f;
+
+            if (attackReady) {
+                yawAmount *= 0.25f;
+                pitchAmount *= 0.25f;
+            }
+
+            targetNoiseYaw = random(
+                -yawAmount,
+                yawAmount
+            );
+
+            targetNoisePitch = random(
+                -pitchAmount,
+                pitchAmount
+            );
+
+            nextNoiseUpdate = now
+                + ThreadLocalRandom.current().nextLong(55, 125);
+        }
+
+        noiseYaw = MathHelper.lerp(
+            0.25f,
+            noiseYaw,
+            targetNoiseYaw
+        );
+
+        noisePitch = MathHelper.lerp(
+            0.25f,
+            noisePitch,
+            targetNoisePitch
+        );
+    }
+
+    private Angle angleTo(
+        Vec3d origin,
+        Vec3d point
+    ) {
+        double differenceX = point.x - origin.x;
+        double differenceY = point.y - origin.y;
+        double differenceZ = point.z - origin.z;
+
+        double horizontal = Math.sqrt(
+            differenceX * differenceX
+                + differenceZ * differenceZ
+        );
+
+        float targetYaw = (float) (
+            Math.toDegrees(
+                Math.atan2(differenceZ, differenceX)
+            ) - 90
+        );
+
+        float targetPitch = MathHelper.clamp(
+            (float) -Math.toDegrees(
+                Math.atan2(differenceY, horizontal)
+            ),
+            -90,
+            90
+        );
+
+        return new Angle(targetYaw, targetPitch);
+    }
+
+    private float applySensitivity(
+        MinecraftClient mc,
+        float value,
+        float previous
+    ) {
+        double sensitivity =
+            mc.options.getMouseSensitivity().getValue();
+
+        double gcd = Math.pow(
+            sensitivity * 0.6 + 0.2,
+            3
+        ) * 1.2;
+
+        float difference = value - previous;
+
+        return previous
+            + Math.round(difference / gcd) * (float) gcd;
+    }
+
+    private float rotationDifference(
+        float firstYaw,
+        float firstPitch,
+        float secondYaw,
+        float secondPitch
+    ) {
+        float yawDifference = MathHelper.wrapDegrees(
+            secondYaw - firstYaw
+        );
+
+        float pitchDifference =
+            secondPitch - firstPitch;
+
+        return (float) Math.hypot(
+            yawDifference,
+            pitchDifference
+        );
+    }
+
+    private float random(float minimum, float maximum) {
+        return ThreadLocalRandom.current().nextFloat(
+            minimum,
+            maximum
+        );
+    }
+
+    private record Angle(
+        float yaw,
+        float pitch
+    ) {
+    }
+
+    public record Result(
+        float yaw,
+        float pitch,
+        boolean clientSide,
+        boolean attackAllowed,
+        float error
+    ) {
+    }
+
+    public enum Style {
+        Legit,
+        RastyMatrix,
+        RastySnap,
+        Rockstar,
+        LiquidSnap,
+        LiquidOnTick,
+        Grim,
+        Instant
+    }
+}
+
+
+Этот файл пока только создаёт нормальный rotation pipeline. Старую KillAura до подключения контроллера не запускай с ожиданием новых режимов. Следующим заменим тайминги и затем полностью KillAura с упрощённым меню.
+
+да давай терь подлкючим
+
+Analysis
+Сверяю API критов и TargetStrafe перед полной интеграцией.Читаю текущий выбор целей и проверки для безопасного сохранения совместимости.
+
+Подключаем контроллер и одновременно упрощаем настройки.
+
+Полностью очисти файл:
+
+src/main/java/meteordevelopment/meteorclient/systems/modules/combat/KillAura.java
+
+Вставь часть 1 из 2:
+
+java
+
+package meteordevelopment.meteorclient.systems.modules.combat;
+
+import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.mixininterface.IVec3d;
+import meteordevelopment.meteorclient.pathing.PathManagers;
+import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friends;
+import meteordevelopment.meteorclient.systems.modules.Categories;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.combat.aura.AuraAimPointResolver;
+import meteordevelopment.meteorclient.systems.modules.combat.aura.AuraCriticalController;
+import meteordevelopment.meteorclient.systems.modules.combat.aura.AuraReachController;
+import meteordevelopment.meteorclient.systems.modules.combat.aura.AuraRotationController;
+import meteordevelopment.meteorclient.systems.modules.movement.TargetStrafe;
+import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.entity.SortPriority;
+import meteordevelopment.meteorclient.utils.entity.TargetUtils;
+import meteordevelopment.meteorclient.utils.player.FindItemResult;
+import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.meteorclient.utils.player.PlayerUtils;
+import meteordevelopment.meteorclient.utils.player.Rotations;
+import meteordevelopment.orbit.EventHandler;
+import meteordevelopment.orbit.EventPriority;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MovementType;
+import net.minecraft.entity.Tameable;
+import net.minecraft.entity.mob.EndermanEntity;
+import net.minecraft.entity.mob.ZombifiedPiglinEntity;
+import net.minecraft.entity.passive.WolfEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.AxeItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
+import net.minecraft.item.MaceItem;
+import net.minecraft.item.SwordItem;
+import net.minecraft.item.TridentItem;
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
+
+public class KillAura extends Module {
+    private static final int ROTATION_PRIORITY = 50;
+
+    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgTargeting = settings.createGroup("Targeting");
+    private final SettingGroup sgCombat = settings.createGroup("Combat");
+    private final SettingGroup sgMovement = settings.createGroup("Movement");
+    private final SettingGroup sgCustom = settings.createGroup("Custom");
+
+    private final Setting<Profile> profile = sgGeneral.add(
+        new EnumSetting.Builder<Profile>()
+            .name("profile")
+            .description("Complete rotation and attack-timing preset.")
+            .defaultValue(Profile.RastyMatrix)
+            .build()
+    );
+
+    private final Setting<Weapon> weapon = sgGeneral.add(
+        new EnumSetting.Builder<Weapon>()
+            .name("weapon")
+            .description("Weapon used for normal attacks.")
+            .defaultValue(Weapon.Any)
+            .build()
+    );
+
+    private final Setting<Boolean> autoSwitch = sgGeneral.add(
+        new BoolSetting.Builder()
+            .name("auto-switch")
+            .description("Automatically selects the configured weapon.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<Boolean> swapBack = sgGeneral.add(
+        new BoolSetting.Builder()
+            .name("swap-back")
+            .description("Returns the previous slot when combat ends.")
+            .defaultValue(true)
+            .visible(autoSwitch::get)
+            .build()
+    );
+
+    private final Setting<Boolean> onlyOnClick = sgGeneral.add(
+        new BoolSetting.Builder()
+            .name("only-on-click")
+            .description("Attacks only while the attack key is held.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<Boolean> pauseOnUse = sgGeneral.add(
+        new BoolSetting.Builder()
+            .name("pause-on-use")
+            .description("Pauses while eating, drinking or using items.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Boolean> pauseBaritone = sgGeneral.add(
+        new BoolSetting.Builder()
+            .name("pause-baritone")
+            .description("Pauses Baritone while fighting.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<Set<EntityType<?>>> entities = sgTargeting.add(
+        new EntityTypeListSetting.Builder()
+            .name("entities")
+            .description("Entity types to attack.")
+            .onlyAttackable()
+            .defaultValue(EntityType.PLAYER)
+            .build()
+    );
+
+    private final Setting<SortPriority> priority = sgTargeting.add(
+        new EnumSetting.Builder<SortPriority>()
+            .name("priority")
+            .description("Target selection priority.")
+            .defaultValue(SortPriority.ClosestAngle)
+            .build()
+    );
+
+    private final Setting<Double> range = sgTargeting.add(
+        new DoubleSetting.Builder()
+            .name("attack-range")
+            .description("Maximum attack distance.")
+            .defaultValue(3.2)
+            .range(1.0, 8.0)
+            .sliderRange(1.0, 6.0)
+            .decimalPlaces(2)
+            .build()
+    );
+
+    private final Setting<Double> wallsRange = sgTargeting.add(
+        new DoubleSetting.Builder()
+            .name("walls-range")
+            .description("Maximum attack distance through blocks.")
+            .defaultValue(0.0)
+            .range(0.0, 8.0)
+            .sliderRange(0.0, 6.0)
+            .decimalPlaces(2)
+            .build()
+    );
+
+    private final Setting<Boolean> targetLock = sgTargeting.add(
+        new BoolSetting.Builder()
+            .name("target-lock")
+            .description("Keeps the current target while it remains valid.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Boolean> ignoreNamed = sgTargeting.add(
+        new BoolSetting.Builder()
+            .name("ignore-named")
+            .description("Ignores named entities.")
+            .defaultValue(false)
+            .build()
+    );
+
+    private final Setting<Boolean> ignorePassive = sgTargeting.add(
+        new BoolSetting.Builder()
+            .name("ignore-passive")
+            .description("Ignores passive neutral entities.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<Boolean> ignoreTamed = sgTargeting.add(
+        new BoolSetting.Builder()
+            .name("ignore-tamed")
+            .description("Ignores entities tamed by you.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<AuraCriticalController.Mode> criticalMode =
+        sgCombat.add(
+            new EnumSetting.Builder<AuraCriticalController.Mode>()
+                .name("criticals")
+                .description("Off, Smart fallback or critical hits only.")
+                .defaultValue(AuraCriticalController.Mode.Smart)
+                .build()
+        );
+
+    private final Setting<Boolean> autoCriticalJump = sgCombat.add(
+        new BoolSetting.Builder()
+            .name("auto-critical-jump")
+            .description("Automatically jumps for critical attacks.")
+            .defaultValue(true)
+            .visible(() ->
+                criticalMode.get() != AuraCriticalController.Mode.Off
+            )
+            .build()
+    );
+
+    private final Setting<ShieldMode> shieldMode = sgCombat.add(
+        new EnumSetting.Builder<ShieldMode>()
+            .name("shield")
+            .description("Breaks shields or ignores blocking targets.")
+            .defaultValue(ShieldMode.Break)
+            .build()
+    );
+
+    private final Setting<Boolean> strictRaycast = sgCombat.add(
+        new BoolSetting.Builder()
+            .name("strict-raycast")
+            .description("Requires the attack rotation to intersect the hitbox.")
+            .defaultValue(true)
+            .build()
+    );
+
+    private final Setting<MovementAssistMode> movementAssist =
+        sgMovement.add(
+            new EnumSetting.Builder<MovementAssistMode>()
+                .name("movement-assist")
+                .description("Soft movement correction while fighting.")
+                .defaultValue(MovementAssistMode.Free)
+                .build()
+        );
+
+    private final Setting<Double> assistStrength = sgMovement.add(
+        new DoubleSetting.Builder()
+            .name("assist-strength")
+            .description("Strength of Focused movement assistance.")
+            .defaultValue(0.25)
+            .range(0.05, 0.80)
+            .sliderRange(0.05, 0.60)
+            .decimalPlaces(2)
+            .visible(() ->
+                movementAssist.get() == MovementAssistMode.Focused
+            )
+            .build()
+    );
+
+    private final Setting<AuraRotationController.Style> customRotation =
+        sgCustom.add(
+            new EnumSetting.Builder<AuraRotationController.Style>()
+                .name("rotation")
+                .description("Custom rotation style.")
+                .defaultValue(
+                    AuraRotationController.Style.RastyMatrix
+                )
+                .visible(() -> profile.get() == Profile.Custom)
+                .build()
+        );
+
+    private final Setting<TimingMode> customTiming = sgCustom.add(
+        new EnumSetting.Builder<TimingMode>()
+            .name("timing")
+            .description("Custom attack timing.")
+            .defaultValue(TimingMode.Smart)
+            .visible(() -> profile.get() == Profile.Custom)
+            .build()
+    );
+
+    private final Setting<Double> customCooldown = sgCustom.add(
+        new DoubleSetting.Builder()
+            .name("cooldown")
+            .description("Required cooldown for Custom timing.")
+            .defaultValue(0.90)
+            .range(0.50, 1.0)
+            .sliderRange(0.70, 1.0)
+            .decimalPlaces(2)
+            .visible(() ->
+                profile.get() == Profile.Custom
+                    && customTiming.get() == TimingMode.Custom
+            )
+            .build()
+    );
+
+    private final AuraAimPointResolver aimPointResolver =
+        new AuraAimPointResolver();
+
+    private final AuraCriticalController criticalController =
+        new AuraCriticalController();
+
+    private final AuraRotationController rotationController =
+        new AuraRotationController();
+
+    /*
+     * Kept for public compatibility with TargetStrafe and the
+     * next reach/bypass stage.
+     */
+    private final AuraReachController reachController =
+        new AuraReachController();
+
+    private final List<Entity> targets = new ArrayList<>();
+
+    private Entity lockedTarget;
+    private Entity preparedTarget;
+
+    private Vec3d currentAimPoint;
+
+    private AuraRotationController.Result preparedRotation;
+
+    private int switchTimer;
+    private int shieldBreakCooldown;
+
+    private double nextCooldownThreshold;
+
+    private boolean combatPrepared;
+    private boolean wasPathing;
+
+    public boolean attacking;
+    public boolean swapped;
+
+    public static int previousSlot = -1;
+
+    public KillAura() {
+        super(
+            Categories.Combat,
+            "kill-aura",
+            "Preset based combat aura with Rasty, Rockstar, Liquid and Grim rotations."
+        );
+    }
+
+    @Override
+    public void onActivate() {
+        targets.clear();
+
+        lockedTarget = null;
+        preparedTarget = null;
+        currentAimPoint = null;
+        preparedRotation = null;
+
+        switchTimer = 0;
+        shieldBreakCooldown = 0;
+
+        combatPrepared = false;
+        wasPathing = false;
+
+        attacking = false;
+        swapped = false;
+        previousSlot = -1;
+
+        aimPointResolver.reset();
+        criticalController.reset(mc.player);
+        rotationController.reset();
+        reachController.reset();
+
+        rollNextCooldown();
+    }
+
+    @Override
+    public void onDeactivate() {
+        clearCombat();
+
+        rotationController.reset();
+        reachController.reset();
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    private void onTickPre(TickEvent.Pre event) {
+        criticalController.tick(mc.player);
+        reachController.tick();
+
+        if (switchTimer > 0) switchTimer--;
+        if (shieldBreakCooldown > 0) shieldBreakCooldown--;
+
+        combatPrepared = false;
+        attacking = false;
+
+        preparedTarget = null;
+        preparedRotation = null;
+
+        if (!basicCheck()) {
+            stopAttacking();
+            return;
+        }
+
+        updateTargets();
+
+        Entity target = getTarget();
+
+        if (target == null) {
+            currentAimPoint = null;
+            rotationController.reset();
+            criticalController.reset(mc.player);
+
+            stopAttacking();
+            return;
+        }
+
+        currentAimPoint = aimPointResolver.resolve(
+            mc,
+            target,
+            range.get(),
+            Math.min(range.get(), wallsRange.get())
+        );
+
+        if (currentAimPoint == null) {
+            invalidateTarget(target);
+            return;
+        }
+
+        if (!prepareNormalWeapon()) {
+            stopAttacking();
+            return;
+        }
+
+        boolean cooldownReady =
+            isCooldownReady(getCooldownProgress());
+
+        preparedRotation = rotationController.update(
+            mc,
+            mc.player,
+            target,
+            currentAimPoint,
+            getRotationStyle(),
+            cooldownReady
+        );
+
+        if (preparedRotation == null) {
+            stopAttacking();
+            return;
+        }
+
+        applyPreparedRotation(preparedRotation);
+
+        preparedTarget = target;
+        combatPrepared = true;
+        attacking = true;
+
+        pausePathing();
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    private void onTickPost(TickEvent.Post event) {
+        if (
+            !combatPrepared
+                || preparedTarget == null
+                || preparedRotation == null
+                || mc.player == null
+                || mc.world == null
+                || mc.interactionManager == null
+        ) {
+            return;
+        }
+
+        Entity target = preparedTarget;
+
+        if (!entityCheck(target)) {
+            invalidateTarget(target);
+            return;
+        }
+
+        currentAimPoint = aimPointResolver.resolve(
+            mc,
+            target,
+            range.get(),
+            Math.min(range.get(), wallsRange.get())
+        );
+
+        if (currentAimPoint == null) {
+            invalidateTarget(target);
+            return;
+        }
+
+        float cooldownProgress = getCooldownProgress();
+        boolean cooldownReady =
+            isCooldownReady(cooldownProgress);
+
+        AuraCriticalController.Mode effectiveCriticalMode =
+            getEffectiveCriticalMode();
+
+        AuraCriticalController.Decision decision =
+            criticalController.update(
+                mc.player,
+                effectiveCriticalMode,
+                cooldownReady,
+                cooldownProgress,
+                autoCriticalJump.get(),
+                getJumpProgress(),
+                0.0
+            );
+
+        if (decision == AuraCriticalController.Decision.Wait) {
+            return;
+        }
+
+        AuraRotationController.Result attackRotation =
+            rotationController.update(
+                mc,
+                mc.player,
+                target,
+                currentAimPoint,
+                getRotationStyle(),
+                true
+            );
+
+        if (
+            attackRotation == null
+                || !attackRotation.attackAllowed()
+        ) {
+            return;
+        }
+
+        criticalController.beforeAttack(
+            mc.player,
+            decision
+        );
+
+        Runnable attackAction = () -> {
+            if (
+                !canAttackNow(
+                    target,
+                    attackRotation,
+                    decision
+                )
+            ) {
+                return;
+            }
+
+            if (
+                shieldMode.get() == ShieldMode.Break
+                    && isTargetBlockingShield(target)
+                    && shieldBreakCooldown <= 0
+            ) {
+                performInstantShieldBreak(target);
+            } else {
+                performNormalAttack(target);
+            }
+        };
+
+        if (attackRotation.clientSide()) {
+            mc.player.setYaw(attackRotation.yaw());
+            mc.player.setPitch(attackRotation.pitch());
+
+            attackAction.run();
+        } else {
+            Rotations.rotate(
+                attackRotation.yaw(),
+                attackRotation.pitch(),
+                ROTATION_PRIORITY,
+                false,
+                attackAction
+            );
+        }
+    }
+
+    @EventHandler
+    private void onSendPacket(PacketEvent.Send event) {
+        if (event.packet instanceof UpdateSelectedSlotC2SPacket) {
+            switchTimer = getSwitchDelay();
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST - 200)
+    private void onMove(PlayerMoveEvent event) {
+        if (
+            movementAssist.get() == MovementAssistMode.None
+                || movementAssist.get() == MovementAssistMode.Free
+                || event.type != MovementType.SELF
+                || mc.player == null
+                || !(getTarget() instanceof LivingEntity target)
+                || Modules.get().isActive(TargetStrafe.class)
+        ) {
+            return;
+        }
+
+        double currentX = event.movement.x;
+        double currentZ = event.movement.z;
+
+        double speed = Math.hypot(currentX, currentZ);
+
+        if (speed < 0.001) return;
+
+        Vec3d targetPosition =
+            target.getBoundingBox().getCenter();
+
+        double differenceX =
+            targetPosition.x - mc.player.getX();
+
+        double differenceZ =
+            targetPosition.z - mc.player.getZ();
+
+        double distance = Math.hypot(
+            differenceX,
+            differenceZ
+        );
+
+        if (distance < 0.001) return;
+
+        double forwardX = differenceX / distance;
+        double forwardZ = differenceZ / distance;
+
+        double strength = assistStrength.get();
+
+        double desiredX =
+            currentX * (1.0 - strength)
+                + forwardX * speed * strength;
+
+        double desiredZ =
+            currentZ * (1.0 - strength)
+                + forwardZ * speed * strength;
+
+        double desiredLength = Math.hypot(
+            desiredX,
+            desiredZ
+        );
+
+        if (desiredLength < 0.001) return;
+
+        desiredX = desiredX / desiredLength * speed;
+        desiredZ = desiredZ / desiredLength * speed;
+
+        ((IVec3d) event.movement).meteor$setXZ(
+            desiredX,
+            desiredZ
+        );
+    }
+
+
+Напиши сделал — пришлю часть 2 из 2.
+
+сделал
+
+Вставь часть 2 сразу после первой:
+
+java
+
+private void applyPreparedRotation(
+        AuraRotationController.Result result
+    ) {
+        if (result == null || mc.player == null) return;
+
+        if (result.clientSide()) {
+            mc.player.setYaw(result.yaw());
+            mc.player.setPitch(result.pitch());
+            return;
+        }
+
+        Rotations.rotate(
+            result.yaw(),
+            result.pitch(),
+            ROTATION_PRIORITY
+        );
+    }
+
+    private boolean canAttackNow(
+        Entity target,
+        AuraRotationController.Result rotation,
+        AuraCriticalController.Decision decision
+    ) {
+        if (
+            !isActive()
+                || mc.player == null
+                || mc.world == null
+                || mc.interactionManager == null
+                || target == null
+                || target != preparedTarget
+                || !entityCheck(target)
+                || !normalItemInHand()
+                || !isCooldownReady(getCooldownProgress())
+                || rotation == null
+                || !rotation.attackAllowed()
+        ) {
+            return false;
+        }
+
+        if (
+            decision == AuraCriticalController.Decision.CriticalAttack
+                && mc.player.isOnGround()
+        ) {
+            return false;
+        }
+
+        if (!strictRaycast.get()) return true;
+
+        return reachController.isLookingAt(
+            mc.player,
+            target,
+            rotation.yaw(),
+            rotation.pitch(),
+            range.get() + 0.05
+        );
+    }
+
+    private void performNormalAttack(Entity target) {
+        if (
+            target == null
+                || !target.isAlive()
+                || mc.player == null
+                || mc.interactionManager == null
+        ) {
+            return;
+        }
+
+        mc.interactionManager.attackEntity(
+            mc.player,
+            target
+        );
+
+        mc.player.swingHand(Hand.MAIN_HAND);
+
+        finishAttack();
+    }
+
+    private void performInstantShieldBreak(Entity target) {
+        FindItemResult axe = InvUtils.findInHotbar(
+            stack -> stack.getItem() instanceof AxeItem
+        );
+
+        if (!axe.found() || axe.slot() < 0) {
+            performNormalAttack(target);
+            return;
+        }
+
+        int oldSlot =
+            mc.player.getInventory().selectedSlot;
+
+        boolean changed = oldSlot != axe.slot();
+
+        if (changed) {
+            InvUtils.swap(axe.slot(), false);
+        }
+
+        /*
+         * Rasty/Thunder order:
+         * sword -> axe -> attack -> sword.
+         * The axe is never held while waiting for cooldown.
+         */
+        mc.interactionManager.attackEntity(
+            mc.player,
+            target
+        );
+
+        mc.player.swingHand(Hand.MAIN_HAND);
+
+        if (changed) {
+            InvUtils.swap(oldSlot, false);
+        }
+
+        shieldBreakCooldown = 10;
+
+        finishAttack();
+    }
+
+    private void finishAttack() {
+        criticalController.afterAttack(mc.player);
+
+        rollNextCooldown();
+
+        combatPrepared = false;
+        attacking = false;
+    }
+
+    private boolean basicCheck() {
+        if (
+            mc.player == null
+                || mc.world == null
+                || mc.interactionManager == null
+                || !mc.player.isAlive()
+        ) {
+            return false;
+        }
+
+        if (
+            onlyOnClick.get()
+                && !mc.options.attackKey.isPressed()
+        ) {
+            return false;
+        }
+
+        return !pauseOnUse.get()
+            || !mc.player.isUsingItem();
+    }
+
+    private void updateTargets() {
+        targets.clear();
+
+        if (
+            targetLock.get()
+                && lockedTarget != null
+                && entityCheck(lockedTarget)
+        ) {
+            targets.add(lockedTarget);
+            return;
+        }
+
+        lockedTarget = null;
+
+        aimPointResolver.reset();
+        reachController.clearSelectedBox();
+
+        TargetUtils.getList(
+            targets,
+            this::entityCheck,
+            priority.get(),
+            1
+        );
+
+        if (targetLock.get() && !targets.isEmpty()) {
+            lockedTarget = targets.getFirst();
+        }
+    }
+
+    private void invalidateTarget(Entity target) {
+        if (lockedTarget == target) {
+            lockedTarget = null;
+        }
+
+        targets.clear();
+
+        preparedTarget = null;
+        currentAimPoint = null;
+        preparedRotation = null;
+
+        combatPrepared = false;
+        attacking = false;
+
+        aimPointResolver.reset();
+        rotationController.reset();
+        reachController.clearSelectedBox();
+        criticalController.reset(mc.player);
+
+        stopAttacking();
+    }
+
+    private void pausePathing() {
+        if (
+            pauseBaritone.get()
+                && PathManagers.get().isPathing()
+                && !wasPathing
+        ) {
+            PathManagers.get().pause();
+            wasPathing = true;
+        }
+    }
+
+    private boolean prepareNormalWeapon() {
+        if (!autoSwitch.get()) return true;
+        if (weapon.get() == Weapon.Any) return true;
+
+        FindItemResult result = findWeapon();
+
+        if (!result.found() || result.slot() < 0) {
+            return false;
+        }
+
+        int selectedSlot =
+            mc.player.getInventory().selectedSlot;
+
+        if (!swapped && selectedSlot != result.slot()) {
+            previousSlot = selectedSlot;
+            swapped = true;
+        }
+
+        if (selectedSlot != result.slot()) {
+            InvUtils.swap(result.slot(), false);
+        }
+
+        return true;
+    }
+
+    private FindItemResult findWeapon() {
+        return switch (weapon.get()) {
+            case Sword -> InvUtils.findInHotbar(
+                stack -> stack.getItem() instanceof SwordItem
+            );
+
+            case Axe -> InvUtils.findInHotbar(
+                stack -> stack.getItem() instanceof AxeItem
+            );
+
+            case Mace -> InvUtils.findInHotbar(
+                stack -> stack.getItem() instanceof MaceItem
+            );
+
+            case Trident -> InvUtils.findInHotbar(
+                stack -> stack.getItem() instanceof TridentItem
+            );
+
+            case All -> findPreferredWeapon();
+
+            case Any -> InvUtils.findInHotbar(
+                stack -> true
+            );
+        };
+    }
+
+    private FindItemResult findPreferredWeapon() {
+        FindItemResult result = InvUtils.findInHotbar(
+            stack -> stack.getItem() instanceof SwordItem
+        );
+
+        if (result.found()) return result;
+
+        result = InvUtils.findInHotbar(
+            stack -> stack.getItem() instanceof MaceItem
+        );
+
+        if (result.found()) return result;
+
+        result = InvUtils.findInHotbar(
+            stack -> stack.getItem() instanceof TridentItem
+        );
+
+        if (result.found()) return result;
+
+        return InvUtils.findInHotbar(
+            stack -> stack.getItem() instanceof AxeItem
+        );
+    }
+
+    private boolean normalItemInHand() {
+        if (mc.player == null) return false;
+
+        Item item =
+            mc.player.getMainHandStack().getItem();
+
+        return switch (weapon.get()) {
+            case Sword -> item instanceof SwordItem;
+            case Axe -> item instanceof AxeItem;
+            case Mace -> item instanceof MaceItem;
+            case Trident -> item instanceof TridentItem;
+
+            case All ->
+                item instanceof SwordItem
+                    || item instanceof AxeItem
+                    || item instanceof MaceItem
+                    || item instanceof TridentItem;
+
+            case Any -> true;
+        };
+    }
+
+    private boolean isTargetBlockingShield(Entity entity) {
+        if (!(entity instanceof PlayerEntity player)) {
+            return false;
+        }
+
+        boolean hasShield =
+            player.getMainHandStack().isOf(Items.SHIELD)
+                || player.getOffHandStack().isOf(Items.SHIELD);
+
+        return hasShield
+            && (
+            player.isBlocking()
+                || player.isUsingItem()
+        );
+    }
+
+    private float getCooldownProgress() {
+        if (mc.player == null) return 0;
+
+        return mc.player.getAttackCooldownProgress(0.5f);
+    }
+
+    private boolean isCooldownReady(float progress) {
+        if (switchTimer > 0) return false;
+
+        return progress >= nextCooldownThreshold;
+    }
+
+    private void rollNextCooldown() {
+        TimingMode timing = getTimingMode();
+
+        nextCooldownThreshold = switch (timing) {
+            case Legit -> random(0.94, 0.99);
+            case Smart -> random(0.89, 0.93);
+            case Rockstar -> random(0.90, 0.96);
+            case Liquid -> 0.90;
+            case Grim -> random(0.95, 0.98);
+            case Custom -> customCooldown.get();
+        };
+    }
+
+    private int getSwitchDelay() {
+        return switch (getTimingMode()) {
+            case Grim -> 2;
+            case Liquid -> 1;
+            case Legit, Smart, Rockstar, Custom -> 0;
+        };
+    }
+
+    private double getJumpProgress() {
+        return switch (getTimingMode()) {
+            case Legit -> 0.55;
+            case Smart -> 0.35;
+            case Rockstar -> 0.45;
+            case Liquid -> 0.35;
+            case Grim -> 0.30;
+            case Custom -> 0.35;
+        };
+    }
+
+    private TimingMode getTimingMode() {
+        return switch (profile.get()) {
+            case Legit -> TimingMode.Legit;
+
+            case RastyMatrix,
+                 RastySnap -> TimingMode.Smart;
+
+            case Rockstar -> TimingMode.Rockstar;
+
+            case LiquidSnap,
+                 LiquidOnTick -> TimingMode.Liquid;
+
+            case Grim -> TimingMode.Grim;
+
+            case Custom -> customTiming.get();
+        };
+    }
+
+    private AuraRotationController.Style getRotationStyle() {
+        return switch (profile.get()) {
+            case Legit ->
+                AuraRotationController.Style.Legit;
+
+            case RastyMatrix ->
+                AuraRotationController.Style.RastyMatrix;
+
+            case RastySnap ->
+                AuraRotationController.Style.RastySnap;
+
+            case Rockstar ->
+                AuraRotationController.Style.Rockstar;
+
+            case LiquidSnap ->
+                AuraRotationController.Style.LiquidSnap;
+
+            case LiquidOnTick ->
+                AuraRotationController.Style.LiquidOnTick;
+
+            case Grim ->
+                AuraRotationController.Style.Grim;
+
+            case Custom -> customRotation.get();
+        };
+    }
+
+    private AuraCriticalController.Mode
+    getEffectiveCriticalMode() {
+        AuraCriticalController.Mode mode =
+            criticalMode.get();
+
+        if (mode == AuraCriticalController.Mode.Off) {
+            return mode;
+        }
+
+        /*
+         * Smart falls back to normal attacks when jumping
+         * is impossible. OnlyCriticals continues waiting.
+         */
+        if (
+            mode == AuraCriticalController.Mode.Smart
+                && !hasJumpSpace()
+        ) {
+            return AuraCriticalController.Mode.Off;
+        }
+
+        return mode;
+    }
+
+    private boolean hasJumpSpace() {
+        if (mc.player == null || mc.world == null) {
+            return false;
+        }
+
+        BlockPos base = mc.player.getBlockPos();
+
+        for (int offset = 2; offset <= 3; offset++) {
+            BlockPos position = base.up(offset);
+
+            BlockState state =
+                mc.world.getBlockState(position);
+
+            if (
+                !state.isAir()
+                    && !state.getCollisionShape(
+                    mc.world,
+                    position
+                ).isEmpty()
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean entityCheck(Entity entity) {
+        if (
+            entity == null
+                || entity == mc.player
+                || entity == mc.cameraEntity
+                || !entity.isAlive()
+        ) {
+            return false;
+        }
+
+        if (
+            entity instanceof LivingEntity living
+                && living.isDead()
+        ) {
+            return false;
+        }
+
+        Box box = entity.getBoundingBox();
+
+        double closestX = MathHelper.clamp(
+            mc.player.getX(),
+            box.minX,
+            box.maxX
+        );
+
+        double closestY = MathHelper.clamp(
+            mc.player.getEyeY(),
+            box.minY,
+            box.maxY
+        );
+
+        double closestZ = MathHelper.clamp(
+            mc.player.getZ(),
+            box.minZ,
+            box.maxZ
+        );
+
+        if (
+            !PlayerUtils.isWithin(
+                closestX,
+                closestY,
+                closestZ,
+                range.get()
+            )
+        ) {
+            return false;
+        }
+
+        if (!entities.get().contains(entity.getType())) {
+            return false;
+        }
+
+        if (ignoreNamed.get() && entity.hasCustomName()) {
+            return false;
+        }
+
+        if (
+            !PlayerUtils.canSeeEntity(entity)
+                && !PlayerUtils.isWithin(
+                entity,
+                Math.min(
+                    wallsRange.get(),
+                    range.get()
+                )
+            )
+        ) {
+            return false;
+        }
+
+        if (
+            ignoreTamed.get()
+                && entity instanceof Tameable tameable
+                && tameable.getOwnerUuid() != null
+                && tameable.getOwnerUuid().equals(
+                    mc.player.getUuid()
+                )
+        ) {
+            return false;
+        }
+
+        if (ignorePassive.get()) {
+            if (
+                entity instanceof EndermanEntity enderman
+                    && !enderman.isAngry()
+            ) {
+                return false;
+            }
+
+            if (
+                entity instanceof ZombifiedPiglinEntity piglin
+                    && !piglin.isAttacking()
+            ) {
+                return false;
+            }
+
+            if (
+                entity instanceof WolfEntity wolf
+                    && !wolf.isAttacking()
+            ) {
+                return false;
+            }
+        }
+
+        if (entity instanceof PlayerEntity player) {
+            if (player.isCreative()) return false;
+
+            if (!Friends.get().shouldAttack(player)) {
+                return false;
+            }
+
+            if (
+                shieldMode.get() == ShieldMode.Ignore
+                    && isTargetBlockingShield(player)
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void stopAttacking() {
+        combatPrepared = false;
+        attacking = false;
+
+        preparedTarget = null;
+        preparedRotation = null;
+
+        if (wasPathing) {
+            PathManagers.get().resume();
+            wasPathing = false;
+        }
+
+        if (swapped) {
+            if (
+                swapBack.get()
+                    && previousSlot >= 0
+                    && previousSlot <= 8
+            ) {
+                InvUtils.swap(previousSlot, false);
+            }
+
+            swapped = false;
+            previousSlot = -1;
+        }
+    }
+
+    private void clearCombat() {
+        targets.clear();
+
+        lockedTarget = null;
+        preparedTarget = null;
+
+        currentAimPoint = null;
+        preparedRotation = null;
+
+        combatPrepared = false;
+        attacking = false;
+
+        aimPointResolver.reset();
+        rotationController.reset();
+        reachController.clearSelectedBox();
+        criticalController.reset(mc.player);
+
+        stopAttacking();
+    }
+
+    private double random(
+        double minimum,
+        double maximum
+    ) {
+        return ThreadLocalRandom.current().nextDouble(
+            minimum,
+            maximum
+        );
+    }
+
+    public boolean isManagingCriticals() {
+        return isActive()
+            && mc.player != null
+            && getEffectiveCriticalMode()
+            != AuraCriticalController.Mode.Off
+            && getTarget() != null;
+    }
+
+    public boolean shouldTargetStrafeJump() {
+        return !isManagingCriticals()
+            || !autoCriticalJump.get();
+    }
+
+    public boolean shouldSuppressSprint() {
+        return isManagingCriticals()
+            && criticalController.shouldSuppressSprint(
+            getEffectiveCriticalMode()
+        );
+    }
+
+    public boolean isWaitingForCritical() {
+        return criticalController.isWaitingForCritical();
+    }
+
+    public AuraCriticalController.State getCriticalState() {
+        return criticalController.getState();
+    }
+
+    public Entity getTarget() {
+        return targets.isEmpty()
+            ? null
+            : targets.getFirst();
+    }
+
+    public Vec3d getCurrentAimPoint() {
+        return currentAimPoint;
+    }
+
+    /*
+     * Compatibility methods retained until the new resolver/reach
+     * controller replaces the old bypass implementation.
+     */
+    public BypassMode getBypassMode() {
+        return profile.get() == Profile.Grim
+            ? BypassMode.Grim
+            : BypassMode.Standard;
+    }
+
+    public AuraReachController.Mode getReachMode() {
+        return AuraReachController.Mode.Normal;
+    }
+
+    @Override
+    public String getInfoString() {
+        Entity target = getTarget();
+
+        if (target == null) {
+            return profile.get().toString();
+        }
+
+        if (criticalController.isWaitingForCritical()) {
+            return profile.get()
+                + " | "
+                + criticalController.getState();
+        }
+
+        return profile.get()
+            + " | "
+            + EntityUtils.getName(target);
+    }
+
+    public enum Profile {
+        Legit,
+        RastyMatrix,
+        RastySnap,
+        Rockstar,
+        LiquidSnap,
+        LiquidOnTick,
+        Grim,
+        Custom
+    }
+
+    public enum TimingMode {
+        Legit,
+        Smart,
+        Rockstar,
+        Liquid,
+        Grim,
+        Custom
+    }
+
+    public enum Weapon {
+        Sword,
+        Axe,
+        Mace,
+        Trident,
+        All,
+        Any
+    }
+
+    public enum ShieldMode {
+        None,
+        Break,
+        Ignore
+    }
+
+    public enum MovementAssistMode {
+        None,
+        Free,
+        Focused
+    }
+
+    public enum BypassMode {
+        Standard,
+        Grim
+    }
+}
+
+
+Теперь запускай:
+
+powershell
+
+.\gradlew runClient
+
+
+Пришли блок compileJava, если появятся ошибки.
+
+ad/INFO] (Minecraft) Created: 2048x1024x4 minecraft:textures/atlas/armor_trims.png-atlas
+[13:16:36] [Render thread/INFO] (Minecraft) Created: 128x64x4 minecraft:textures/atlas/decorated_pot.png-atlas
+[13:16:36] [Render thread/INFO] (Minecraft) Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
+[13:16:36] [Render thread/INFO] (Minecraft) Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
+[13:16:36] [Render thread/INFO] (Minecraft) Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
+[13:16:36] [Render thread/INFO] (Minecraft) Created: 64x64x0 minecraft:textures/atlas/map_decorations.png-atlas
+[13:16:37] [Render thread/INFO] (Minecraft) Created: 512x256x0 minecraft:textures/atlas/particles.png-atlas
+[13:16:37] [Render thread/INFO] (Minecraft) Created: 512x256x0 minecraft:textures/atlas/paintings.png-atlas
+[13:16:37] [Render thread/INFO] (Minecraft) Created: 256x128x0 minecraft:textures/atlas/mob_effects.png-atlas
+[13:16:37] [Render thread/INFO] (Minecraft) Created: 1024x512x0 minecraft:textures/atlas/gui.png-atlas
+
+
+    I[13:16:39] [Render thread/INFO] (Meteor Client) Checking latest version of Meteor Client
+    <==[13:16:45] [Render thread/INFO] (Minecraft) Stopping!
+    [13:16:45] [Thread-7/INFO] (Meteor Client) Saving
+    :runClient
+    BUILD SUCCESSFUL in 30s
+    9 actionable tasks: 1 executed, 8 up-to-date
+    Configuration cache entry stored.
+    PS C:\dev\meteor-fork> .\gradlew runclient
+    Reusing configuration cache.
+
+
+
+    Task :compileJava
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\modules\combat\AimAssist.java:213: error: cannot find symbol
+    return killAura != null && killAura.isDrivingPlayerRotation();
+    ^
+    symbol:   method isDrivingPlayerRotation()
+    location: variable killAura of type KillAura
+    Note: Some input files use or override a deprecated API.
+    Note: Recompile with -Xlint:deprecation for details.
+    Note: Some input files use unchecked or unsafe operations.
+    Note: Recompile with -Xlint:unchecked for details.
+    1 error
+    3 warnings
+
+
+
+    Task :compileJava FAILED
+
+
+[Incubating] Problems report is available at: file:///C:/dev/meteor-fork/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+    What went wrong: Execution failed for task ':compileJava'.
+
+
+
+    Compilation failed; see the compiler output below.
+    Note: Recompile with -Xlint:deprecation for details.Note: Recompile with -Xlint:unchecked for details.Note: Some input files use unchecked or unsafe operations.C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\modules\combat\AimAssist.java:213: error: cannot find symbol
+    return killAura != null && killAura.isDrivingPlayerRotation();
+    ^
+    symbol:   method isDrivingPlayerRotation()
+    location: variable killAura of type KillAuraNote: Some input files use or override a deprecated API.warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    1 error
+    3 warnings
+
+
+    Try:
+
+
+
+    Check your code and dependencies to fix the compilation error(s)
+    Run with --scan to get full insights.
+
+
+BUILD FAILED in 8s
+8 actionable tasks: 1 executed, 7 up-to-date
+Configuration cache entry reused.
+PS C:\dev\meteor-fork>
+
+Analysis
+Проверяю исходный контракт AimAssist с KillAura.
+
+Ошибка только из-за потерянного публичного метода совместимости с AimAssist.
+
+В KillAura.java перед getInfoString() добавь:
+
+java
+
+public boolean isDrivingPlayerRotation() {
+    return isActive()
+        && combatPrepared
+        && preparedTarget != null
+        && preparedRotation != null;
+}
+
+
+Предупреждения Level.FULL безопасны. После добавления снова запусти:
+
+powershell
+
+.\gradlew runClient
+
+ead-7/INFO] (Meteor Client) Saving
+
+
+    :runClient
+    BUILD SUCCESSFUL in 30s
+    9 actionable tasks: 1 executed, 8 up-to-date
+    Configuration cache entry stored.
+    PS C:\dev\meteor-fork> .\gradlew runclient
+    Reusing configuration cache.
+
+
+
+    Task :compileJava
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\modules\combat\AimAssist.java:213: error: cannot find symbol
+    return killAura != null && killAura.isDrivingPlayerRotation();
+    ^
+    symbol:   method isDrivingPlayerRotation()
+    location: variable killAura of type KillAura
+    Note: Some input files use or override a deprecated API.
+    Note: Recompile with -Xlint:deprecation for details.
+    Note: Some input files use unchecked or unsafe operations.
+    Note: Recompile with -Xlint:unchecked for details.
+    1 error
+    3 warnings
+
+
+
+    Task :compileJava FAILED
+
+
+[Incubating] Problems report is available at: file:///C:/dev/meteor-fork/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+    What went wrong: Execution failed for task ':compileJava'.
+
+
+
+    Compilation failed; see the compiler output below.
+    Note: Recompile with -Xlint:deprecation for details.Note: Recompile with -Xlint:unchecked for details.Note: Some input files use unchecked or unsafe operations.C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\modules\combat\AimAssist.java:213: error: cannot find symbol
+    return killAura != null && killAura.isDrivingPlayerRotation();
+    ^
+    symbol:   method isDrivingPlayerRotation()
+    location: variable killAura of type KillAuraNote: Some input files use or override a deprecated API.warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    1 error
+    3 warnings
+
+
+    Try:
+
+
+
+    Check your code and dependencies to fix the compilation error(s)
+    Run with --scan to get full insights.
+
+
+BUILD FAILED in 8s
+8 actionable tasks: 1 executed, 7 up-to-date
+Configuration cache entry reused.
+PS C:\dev\meteor-fork> .\gradlew runclient
+Reusing configuration cache.
+
+
+    Task :compileJava
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\modules\combat\KillAura.java:1317: error: method does not override or implement a method from a supertype
+    @Override
+    ^
+    Note: Some input files use or override a deprecated API.
+    Note: Recompile with -Xlint:deprecation for details.
+    Note: Some input files use unchecked or unsafe operations.
+    Note: Recompile with -Xlint:unchecked for details.
+    1 error
+    3 warnings
+
+
+
+    Task :compileJava FAILED
+
+
+[Incubating] Problems report is available at: file:///C:/dev/meteor-fork/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+    What went wrong: Execution failed for task ':compileJava'.
+
+
+
+    Compilation failed; see the compiler output below.
+    Note: Recompile with -Xlint:deprecation for details.Note: Recompile with -Xlint:unchecked for details.C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\modules\combat\KillAura.java:1317: error: method does not override or implement a method from a supertype
+    @Override
+    ^Note: Some input files use unchecked or unsafe operations.Note: Some input files use or override a deprecated API.warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    warning: unknown enum constant Level.FULL
+    reason: class file for com.google.j2objc.annotations.ReflectionSupport$Level not found
+    1 error
+    3 warnings
+
+
+    Try:
+
+
+
+    Check your code and dependencies to fix the compilation error(s)
+    Run with --scan to get full insights.
+
+
+BUILD FAILED in 5s
+8 actionable tasks: 1 executed, 7 up-to-date
+Configuration cache entry reused.
+PS C:\dev\meteor-fork>
+
+Метод вставлен после @Override, поэтому аннотация применена к нему.
+
+Замени этот участок на:
+
+java
+
+public boolean isDrivingPlayerRotation() {
+    return isActive()
+        && combatPrepared
+        && preparedTarget != null
+        && preparedRotation != null;
+}
+
+@Override
+public String getInfoString() {
+
+
+То есть @Override должен находиться непосредственно перед getInfoString(). Затем снова запусти сборку.
+
+/*
+* Compatibility methods retained until the new resolver/reach
+* controller replaces the old bypass implementation.
+*/
+public BypassMode getBypassMode() {
+return profile.get() == Profile.Grim
+? BypassMode.Grim
+: BypassMode.Standard;
+}
+
+public AuraReachController.Mode getReachMode() {
+    return AuraReachController.Mode.Normal;
+}
+
+@Override
+
+public boolean isDrivingPlayerRotation() {
+    return isActive()
+        && combatPrepared
+        && preparedTarget != null
+        && preparedRotation != null;
+}
+
+public String getInfoString() {
+    Entity target = getTarget();
+
+    if (target == null) {
+        return profile.get().toString();
+    }
+
+    if (criticalController.isWaitingForCritical()) {
+        return profile.get()
+            + " | "
+            + criticalController.getState();
+    }
+
+    return profile.get()
+        + " | "
+        + EntityUtils.getName(target);
+}
+
+public enum Profile {
+    Legit,
+    RastyMatrix,
+    RastySnap,
+    Rockstar,
+    LiquidSnap,
+    LiquidOnTick,
+    Grim,
+    Custom
+}
+
+public enum TimingMode {
+    Legit,
+    Smart,
+    Rockstar,
+    Liquid,
+    Grim,
+    Custom
+}
+
+public enum Weapon {
+    Sword,
+    Axe,
+    Mace,
+    Trident,
+    All,
+    Any
+}
+
+public enum ShieldMode {
+    None,
+    Break,
+    Ignore
+}
+
+public enum MovementAssistMode {
+    None,
+    Free,
+    Focused
+}
+
+public enum BypassMode {
+    Standard,
+    Grim
+}
+
+
+}
+
+кидай весь фикшеный жтот кусрок
+
+Полностью замени показанный кусок на этот:
+
+java
+
+/*
+ * Compatibility methods retained until the new resolver/reach
+ * controller replaces the old bypass implementation.
+ */
+public BypassMode getBypassMode() {
+    return profile.get() == Profile.Grim
+        ? BypassMode.Grim
+        : BypassMode.Standard;
+}
+
+public AuraReachController.Mode getReachMode() {
+    return AuraReachController.Mode.Normal;
+}
+
+public boolean isDrivingPlayerRotation() {
+    return isActive()
+        && combatPrepared
+        && preparedTarget != null
+        && preparedRotation != null;
+}
+
+@Override
+public String getInfoString() {
+    Entity target = getTarget();
+
+    if (target == null) {
+        return profile.get().toString();
+    }
+
+    if (criticalController.isWaitingForCritical()) {
+        return profile.get()
+            + " | "
+            + criticalController.getState();
+    }
+
+    return profile.get()
+        + " | "
+        + EntityUtils.getName(target);
+}
+
+public enum Profile {
+    Legit,
+    RastyMatrix,
+    RastySnap,
+    Rockstar,
+    LiquidSnap,
+    LiquidOnTick,
+    Grim,
+    Custom
+}
+
+public enum TimingMode {
+    Legit,
+    Smart,
+    Rockstar,
+    Liquid,
+    Grim,
+    Custom
+}
+
+public enum Weapon {
+    Sword,
+    Axe,
+    Mace,
+    Trident,
+    All,
+    Any
+}
+
+public enum ShieldMode {
+    None,
+    Break,
+    Ignore
+}
+
+public enum MovementAssistMode {
+    None,
+    Free,
+    Focused
+}
+
+public enum BypassMode {
+    Standard,
+    Grim
+}
+}
+
+наша аура при любых найстркоах флагется. Защел с ркостара првоерить на тот же сервер при настрйкоах ауры ркостара Настройки Aura (Автоматически убивает сущностей):
+
+Режим
+
+Классическая (активно)
+
+Нейро
+
+FunTime Snap
+
+Альтернативная
+
+
+Дистанция атаки
+
+Значение: 5.2
+
+
+Дистанция наводки
+
+Значение: 1.5
+
+
+Коррекция движения
+
+Нет (активно)
+
+Сфокусированная
+
+Незаметная
+
+Таргетированная
+
+
+Сортировка
+
+По полю зрения (активно)
+
+По дистанции
+
+По здоровью
+
+По кому больше урона
+
+По тому что больше сносит
+
+
+Другое (4 из 6)
+
+Только криты (включено)
+
+Через стены (включено)
+
+Не бить если ешь (выключено)
+
+Проверка наводки (включено)
+
+Только с оружием (включено)
+
+Автоматически брать меч (выключено)
+
+
+Цели (4 из 6)
+(Часть вариантов перекрыта всплывающей подсказкой)
+
+Мобы (включено)
+
+Друзья (выключено)
+
+Боты (выключено)
+
+
+Преследование / Дополнительно (закрытые секции)
+
+Ускорение
+
+Нет (активно)
+
+Прямо
+
+На цель
+
+
+Все иделаьно рабаоет
+
+Analysis
+Сопоставляю эти настройки с точной донорской реализацией Aura.Ищу донорский режим по английским названиям и структуре меню.Проверяю Wild Aura: описание настроек совпадает почти полностью.
+
+Да, сравнение подтвердило: текущую Aura использовать нельзя. Моя ошибка — режимы были приблизительно воспроизведены, а не перенесены точно.
+
+Основные причины флагов:
+
+    В PRE отправляется ротация, затем в POST ставится ещё одна ротация с callback — получаются лишние look-пакеты.
+    Smart-криты автоматически прыгают и многократно переключают sprint.
+    Порог 0.89–0.93 слишком агрессивный. Рабочая Aura ждёт примерно 0.97 и 540–570 мс.
+    У нас attack-range одновременно используется для поиска. У рабочего клиента отдельно: атака 5.2, наводка ещё +1.5.
+    Snap должен отправлять единственную ротацию только перед ударом.
+    Raycast и cooldown должны повторно проверяться сразу перед attack-пакетом.
+
+
+Также показанное меню не соответствует старому Rockstar из sourse3.txt: там нет режимов «Классическая / Нейро / FunTime Snap / Альтернативная». Значит, точного исходника проверенной тобой Aura в репозитории пока нет.
+
+Следующая версия будет построена строго так:
+
+    одна ротация за тик;
+    Classic и FunTime Snap по донорской последовательности;
+    таймер 540–570 мс + cooldown 0.97;
+    Only Criticals без автоматического прыжка;
+    sprint reset только непосредственно вокруг удара;
+    отдельные Attack Range и Aim Range;
+    повторный raycast перед атакой.
+
+
+Текущую Aura пока не тестируй — её rotation/timing pipeline будем заменять полностью.
+
+рокстар аура при таких настйркоах Настройки Aura (Автоматически убивает сущностей):
+
+Режим
+
+Классическая (активно)
+
+Нейро
+
+FunTime Snap
+
+Альтернативная
+
+
+Дистанция атаки
+
+Значение: 5.2
+
+
+Дистанция наводки
+
+Значение: 1.5
+
+
+Коррекция движения
+
+Нет (активно)
+
+Сфокусированная
+
+Незаметная
+
+Таргетированная
+
+
+Сортировка
+
+По полю зрения (активно)
+
+По дистанции
+
+По здоровью
+
+По кому больше урона
+
+По тому что больше сносит
+
+
+Другое (4 из 6)
+
+Только криты (включено)
+
+Через стены (включено)
+
+Не бить если ешь (выключено)
+
+Проверка наводки (включено)
+
+Только с оружием (включено)
+
+Автоматически брать меч (выключено)
+
+
+Цели (4 из 6)
+(Часть вариантов перекрыта всплывающей подсказкой)
+
+Мобы (включено)
+
+Друзья (выключено)
+
+Боты (выключено)
+
+
+Преследование / Дополнительно (закрытые секции)
+
+Ускорение
+
+Нет (активно)
+
+Прямо
+
+На цель
+
+
+иделаьно роабаоет можно полностью спастить их ауру ну не 1 в 1 а настолкьо ансоклкбо можно просто что бы она подклчюилась вобще ауратнао свзяать с таргет стреф и остальынми натсрйкоами а потмо уже улушчть ее начать rocstar реально норм
+
+Analysis
+Сверяю показанное меню с фактическими режимами Rockstar в дампе.
+
+Да, можно аккуратно перенести рабочую Rockstar Aura и затем связать её с TargetStrafe, TargetESP, ShieldBreaker и критами Morzh.
+
+Но sourse3.txt содержит другую, старую Rockstar Aura: режимы Matrix / Snap / Client / AAC / ReallyWorld / Legit, а не Классическая / Нейро / FunTime Snap / Альтернативная. Поэтому продолжать по sourse3.txt нельзя — снова получится приблизительная и флагающая реализация.
+
+Загрузи исходники именно проверенного клиента:
+
+    основной Aura;
+    четыре rotation-режима;
+    attack/click scheduler;
+    raycast/point finder;
+    movement correction;
+    critical/sprint helpers;
+    mixin, который подменяет yaw/pitch movement-пакетов.
+
+
+Можно просто выгрузить весь исходник клиента одним TXT. После этого перенесём сначала Классическую практически без изменений, сохранив твои TargetStrafe и остальные модули. Настройки повторно объяснять не потребуется.
+
+я залил ркостар 2 на гихтаб но ты ег оне вдишиль чт оыб ты увидле нужно рнестать чта а елси яретсену у тебя рпаодет память чт обы я быстр овотснвли конеткст оставь себе будущему рсокажи че делат ькакие сурсы смотрет ьфайл так и называется ркостар 2 если что и инруцию сбее болющу себе будущему остасвьб щас
+
+Скопируй это сообщение в новый чат:
+
+
+Сообщение для продолжения разработки Morzh Aura
+
+Продолжаем разработку Morzh Client — форка Meteor Client под Minecraft 1.21.4 и Java 21.
+
+Пользователь сам заменяет файлы. Всегда:
+
+    указывать точный относительный путь;
+    присылать полный код изменяемого файла;
+    большой файл делить ровно на две части;
+    после первой части ждать сообщение сделал;
+    не заставлять пользователя повторно объяснять контекст.
+
+
+Что прочитать первым
+
+    Найти во всех подключённых репозиториях новый файл ркостар 2 или rockstar 2.
+    Прочитать его полностью, особенно:
+        Aura;
+        rotation modes;
+        attack scheduler;
+        critical timing;
+        raycast и point finder;
+        target selector;
+        movement correction;
+        sprint handling;
+        packet mixins.
+    Затем прочитать devvv5 — это последняя сохранённая сессия.
+    Сверить с текущим снимком проекта meteor_17_08_26.
+
+
+Не начинать писать код до полного чтения ркостар 2.
+
+Почему нужен именно ркостар 2
+
+Старый sourse3.txt содержит другую устаревшую Rockstar Aura под старую версию Minecraft. Там режимы:
+
+    Matrix;
+    Snap;
+    Client;
+    AAC;
+    ReallyWorld;
+    Legit;
+    SunRise;
+    MagicGrief;
+    StormHVH.
+
+
+Это не та Aura, которую пользователь реально проверил.
+
+В новой работающей Rockstar Aura есть:
+
+    Классическая;
+    Нейро;
+    FunTime Snap;
+    Альтернативная.
+
+
+Пользователь проверил её на том же сервере, где Morzh Aura флагается. Rockstar при следующих настройках работает идеально:
+
+    Режим: Классическая.
+    Дистанция атаки: 5.2.
+    Дистанция наводки: 1.5.
+    Коррекция движения: Нет.
+    Сортировка: По полю зрения.
+    Только криты: включено.
+    Через стены: включено.
+    Не бить если ешь: выключено.
+    Проверка наводки: включено.
+    Только с оружием: включено.
+    Автоматически брать меч: выключено.
+    Мобы: включено.
+    Друзья: выключено.
+    Боты: выключено.
+    Ускорение: Нет.
+
+
+Нужно сначала максимально точно перенести Классическую Aura из ркостар 2, адаптируя только API Minecraft/Meteor. Не придумывать ротации и тайминги самостоятельно.
+
+Текущее состояние Morzh Aura
+
+Были созданы или заменены:
+
+src/main/java/meteordevelopment/meteorclient/systems/modules/combat/aura/AuraRotationController.java
+
+src/main/java/meteordevelopment/meteorclient/systems/modules/combat/KillAura.java
+
+В AuraRotationController добавлялись приблизительные режимы:
+
+    Legit;
+    RastyMatrix;
+    RastySnap;
+    Rockstar;
+    LiquidSnap;
+    LiquidOnTick;
+    Grim;
+    Instant.
+
+
+В KillAura добавлялись профили:
+
+    Legit;
+    RastyMatrix;
+    RastySnap;
+    Rockstar;
+    LiquidSnap;
+    LiquidOnTick;
+    Grim;
+    Custom.
+
+
+Эта реализация не является точным портом. Пользователь проверил её: Aura флагается практически при любых настройках. Не нужно продолжать улучшать эту архитектуру поверх существующей — сначала сравнить и заменить её точной логикой ркостар 2.
+
+Найденные причины флагов текущей Aura
+
+Основные подозрения с высокой уверенностью:
+
+    В PRE ставится одна ротация, а в POST ещё одна ротация с callback.
+    В результате Meteor может отправлять несколько look/movement-пакетов за один цикл.
+    Ротации приблизительно придуманы, а не перенесены из доноров.
+    Smart critical автоматически прыгает и часто управляет sprint-пакетами.
+    Порог cooldown был рандомизирован примерно от 0.89 до 0.93.
+    Нет отдельной дистанции наводки: attack range одновременно использовался для поиска.
+    Snap реализован не по точной донорской последовательности.
+    Sprint reset выполняется не только непосредственно возле attack-пакета.
+    Старый AuraCriticalController содержит отладочный вывод Aura Debug.
+    Ротация может постоянно удерживаться стандартным Rotations, создавая лишние пакеты.
+
+
+Правильное направление нового переноса
+
+Сначала портировать Классическую из ркостар 2.
+
+Обязательные свойства:
+
+    один владелец ротации;
+    не более одной логической ротации за тик;
+    точный порядок событий из донорского клиента;
+    отдельные Attack Range и Aim Range;
+    поиск цели до attackRange + aimRange;
+    атака только внутри attackRange;
+    raycast повторно проверяется непосредственно перед attack-пакетом;
+    cooldown проверяется непосредственно перед атакой;
+    Only Criticals не должен сам прыгать, если донор этого не делает;
+    sprint меняется только там, где это делает Rockstar;
+    ротация не должна отправляться одновременно через PRE и POST;
+    Snap должен активироваться только в момент, предусмотренный оригинальным scheduler;
+    movement correction переносится отдельно и может быть выключена;
+    сначала должна заработать Классическая без флагов;
+    Нейро, FunTime Snap и Альтернативная добавляются после проверки Классической.
+
+
+Настройки новой Aura
+
+Не делать десятки непонятных ползунков.
+
+Основной интерфейс должен быть похож на Rockstar:
+
+General
+
+    Mode:
+        Classical;
+        Neuro;
+        FunTimeSnap;
+        Alternative.
+    Attack Range.
+    Aim Range.
+    Weapon Only.
+    Auto Weapon.
+    Only On Click — если полезно.
+
+
+Movement Correction
+
+    None;
+    Focused;
+    Silent;
+    Targeted.
+
+
+Sorting
+
+    FOV;
+    Distance;
+    Health;
+    Most Damage;
+    Highest Damage.
+
+
+Combat Options
+
+    Only Criticals;
+    Through Walls;
+    No Eat Attack;
+    Raycast Check;
+    Shield Breaker.
+
+
+Targets
+
+    Players;
+    Mobs;
+    Animals;
+    Friends;
+    Bots;
+    Invisible.
+
+
+Advanced
+
+Скрыть сложные параметры. Показывать их только при необходимости или в отдельном Custom-режиме.
+
+Обязательная совместимость Morzh
+
+KillAura должна сохранить следующие публичные поля:
+
+java
+
+public boolean attacking;
+public boolean swapped;
+public static int previousSlot = -1;
+
+
+Иначе может сломаться HighwayBuilder.
+
+Для AimAssist нужен метод:
+
+java
+
+public boolean isDrivingPlayerRotation() {
+    return isActive()
+        && combatPrepared
+        && preparedTarget != null
+        && preparedRotation != null;
+}
+
+
+Но реализацию метода нужно адаптировать к новой Rockstar-архитектуре.
+
+Для TargetStrafe должны сохраниться методы:
+
+java
+
+public boolean isManagingCriticals()
+public boolean shouldTargetStrafeJump()
+public boolean shouldSuppressSprint()
+public boolean isWaitingForCritical()
+public AuraCriticalController.State getCriticalState()
+public Entity getTarget()
+public Vec3d getCurrentAimPoint()
+
+
+TargetESP и TargetHUD получают цель через:
+
+java
+
+getTarget()
+
+
+Не ломать эту связь.
+
+Последняя ошибка сборки
+
+После добавления isDrivingPlayerRotation() аннотация @Override случайно оказалась над этим методом.
+
+Правильный порядок:
+
+java
+
+public boolean isDrivingPlayerRotation() {
+    return isActive()
+        && combatPrepared
+        && preparedTarget != null
+        && preparedRotation != null;
+}
+
+@Override
+public String getInfoString() {
+
+
+После исправления пользователь ещё не прислал окончательный результат следующей сборки.
+
+Предупреждения:
+
+text
+
+unknown enum constant Level.FULL
+
+
+не блокируют сборку.
+
+Другие доноры, которые уже изучены
+
+Rasty — sourse7.txt
+
+Полезное:
+
+    PRE выбирает цель и рассчитывает ротацию;
+    POST выполняет атаку;
+    Matrix и Snap rotations;
+    MultiPoint;
+    RaycastAngle;
+    TargetFinder;
+    JumpSync и симуляция критов;
+    MXReach;
+    DigSpoof;
+    packet ShieldBreaker;
+    movement correction.
+
+
+MXReach:
+
+    временная позиция примерно в 0.1–1.5 блока от цели;
+    стандартно 0.5;
+    атака;
+    возврат на исходную позицию с небольшим jitter.
+
+
+LiquidBounce — sourse4.txt
+
+Полезное:
+
+    ModuleKillAura;
+    KillAuraClicker;
+    KillAuraRange;
+    KillAuraTargetTracker;
+    KillAuraRotationsValueGroup;
+    ModuleCriticals;
+    CriticalsJump;
+    ModuleAutoWeapon.
+
+
+Особенно важно:
+
+    повторный canAttackNow() внутри attack callback;
+    Criticals: Smart / Ignore / Always;
+    Smart оценивает выгоду ожидания крита;
+    симуляция движения игрока и цели;
+    Rotation Timing: Normal / Snap / OnTick;
+    отдельные range, wall range и scan range;
+    точный PointTracker и raytraceBox.
+
+
+LiquidBounce Backtrack задерживает входящие пакеты через Blink. Его напрямую в Morzh пока не переносить.
+
+ThunderHack — source6.txt
+
+Полезное:
+
+    Grim packet rotation;
+    stop sprint → rotation packet → attack → restore sprint → return rotation;
+    настоящий BackTrack серверных позиций;
+    updateTrackedPositionAndAngles mixin;
+    Advantage resolver;
+    hitbox scanning;
+    packet ShieldBreaker.
+
+
+Expensive — espensive source.txt
+
+Полезное:
+
+    AttackHandler;
+    ClickScheduler;
+    SprintManager;
+    RotationController;
+    RotationPlan;
+    One Tick rotation;
+    Adaptive Critical;
+    PointFinder / MultiPoint / SmartPoint.
+
+
+Expensive ShieldBreaker фактически не подключён, поэтому его не брать как основу.
+
+Wild — wild sourse.txt
+
+Полезное:
+
+    постоянная подмена yaw/pitch movement-пакетов;
+    Free/Focused correction;
+    cooldown около 0.97;
+    таймер атаки примерно 540–570 мс;
+    отдельные attack distance и preaim;
+    sprint блокируется возле атаки.
+
+
+Grim
+
+Источники:
+
+    ALL_JAVA_Grim-2.0.txt;
+    ALL_SOURCES_Grim-2.0.txt.
+
+
+Использовать их для проверки packet-order, reach, hitbox и rotation, а не придумывать режимы Grim1/Grim2.
+
+Reach и bypass
+
+Это делать после рабочей Classical Aura.
+
+Текущий AuraReachController промежуточный и неправильный:
+
+    BackTrack сохраняет клиентские позиции каждый тик;
+    нужен серверный updateTrackedPositionAndAngles;
+    PositionSpoof использует неправильную safe distance;
+    отсутствуют Advantage/Predictive;
+    нет точного Rasty DigSpoof.
+
+
+После Classical:
+
+    Resolver: Off / Advantage / Predictive / BackTrack.
+    Reach: Normal / RastyMXReach.
+    Walls: Off / Raycast / RastyDigSpoof.
+    Rotation packet profile: Standard / ThunderGrim / OneTick.
+    Sprint: None / Legit / Packet / Thunder.
+
+
+ShieldBreaker
+
+Рабочее требование пользователя:
+
+    ждать cooldown с мечом;
+    только непосредственно перед ударом взять топор;
+    ударить топором;
+    сразу вернуть меч;
+    не держать топор во время ожидания.
+
+
+Использовать Rasty/Thunder как основу.
+
+Порядок дальнейшей работы
+
+    Найти и полностью прочитать ркостар 2.
+    Убедиться, что там действительно есть режимы Classical/Neuro/FunTime Snap/Alternative.
+    Определить все зависимые классы и mixin.
+    Сравнить packet-order с Morzh/Meteor 1.21.4.
+    Не использовать текущий приблизительный AuraRotationController как источник истины.
+    Подготовить полный порт Classical.
+    Прислать пользователю полные файлы с точными путями.
+    Проверить compileJava.
+    Проверить Classical на том же сервере с указанным конфигом.
+    Только после отсутствия флагов подключать TargetStrafe.
+    Затем добавлять остальные Rockstar-режимы.
+    После этого добавлять Thunder/Rasty bypass.
+
+
+Главная цель: не создавать очередную «похожую» Aura. Сначала максимально точно перенести реально работающую Classical Aura из нового ркостар 2, затем постепенно адаптировать и улучшать её.
