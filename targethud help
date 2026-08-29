@@ -1,0 +1,3844 @@
+================================================================================
+TARGET HUD вЂ” РџРћР›РќР«Р™ Р‘РђРќР”Р› Р”Р›РЇ Р’РўРћР РћР“Рћ AI
+================================================================================
+РџСЂРѕРµРєС‚: Meteor Fork (Fabric, MC 1.21.4)
+РџСѓС‚СЊ СЂРµРїРѕ: C:\dev\meteor-fork
+Р”Р°С‚Р°: 2026-08-30
+
+Р¦Р•Р›Р¬: СЃРґРµР»Р°С‚СЊ СЂР°Р±РѕС‡РёР№ Target HUD СЃ:
+- С‚С‘РјРЅРѕР№ РїР°РЅРµР»СЊСЋ (С„РѕРЅ)
+- СЃРєСЂСѓРіР»С‘РЅРЅРѕР№ РіРѕР»РѕРІРѕР№ РёРіСЂРѕРєР°
+- РЅРёРєРѕРј (РѕР±СЂРµР·РєР° РґРѕ HP, Р±РµР· РїРµСЂРµРєСЂС‹С‚РёСЏ)
+- РїРѕР»РѕСЃРєРѕР№ HP + trail + absorption
+- Р±СЂРѕРЅС‘Р№ (4 СЃР»РѕС‚Р°)
+- С‚РѕС‚РµРјР°РјРё / С‡Р°СЂРєР°РјРё / РіРµРїР»Р°РјРё
+- fade Р°РЅРёРјР°С†РёРµР№
+
+================================================================================
+РљР РРўРР§Р•РЎРљРР• РџР РђР’РР›Рђ Р Р•РќР”Р•Р Рђ Р’ METEOR HUD
+================================================================================
+
+1. HUD СЂРёСЃСѓРµС‚СЃСЏ РІ РќР•РЎРљР•Р™Р›Р•РќРќР«РҐ РїРёРєСЃРµР»СЏС… СЌРєСЂР°РЅР°.
+   Render2D / rasty_texture / Visuals вЂ” РґР»СЏ ClickGUI (scaled coords).
+   РР· Visuals.java: "Do not use from HUD вЂ” HUD is unscaled pixels."
+
+2. Р РђР‘РћР§РР™ РџРђРўРўР•Р Рќ (Potions, Staff, Armor HUD):
+   renderer.post(() -> {
+       DrawContext ctx = HudRenderer.INSTANCE.drawContext;
+       HudChrome.card(ctx, x, y, w, h, radius);           // С„РѕРЅ
+       MorzhSmoothRenderer.text(...);                        // С‚РµРєСЃС‚
+       PlayerSkinDrawer.draw(ctx, skin, ix, iy, size);      // РіРѕР»РѕРІР° РёРіСЂРѕРєР°
+       RenderUtils.drawItem(ctx, stack, ix, iy, scale, true); // РїСЂРµРґРјРµС‚С‹
+   });
+
+3. РќР• Р РђР‘РћРўРђР•Рў / Р›РћРњРђР•Рў:
+   - Render2D.texture/blur/rect РЅР°РїСЂСЏРјСѓСЋ РёР· HUD Р±РµР· coord fix в†’ РЅРµРІРёРґРёРјРѕ
+   - HudGlUtil.roundedTexture (rasty_texture) в†’ РіРѕР»РѕРІР° РЅРµ РІРёРґРЅР°
+   - HeadPipeline + round_head shader в†’ Р»РѕРјР°РµС‚ С€СЂРёС„С‚С‹ (Р±РµР»С‹Рµ РєСѓР±С‹) РЅР° РґСЂСѓРіРёС… HUD
+   - Render2D.beginOverlay() + MorzhSmoothRenderer РІ РѕРґРЅРѕРј pass в†’ Р»РѕРјР°РµС‚ С€СЂРёС„С‚С‹
+
+4. GlDraw.java С„РёРєСЃ (РѕР±СЏР·Р°С‚РµР»РµРЅ РµСЃР»Рё РёСЃРїРѕР»СЊР·СѓРµС€СЊ РєР°СЃС‚РѕРј GL):
+   Р’РѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ GL program + VAO РїРѕСЃР»Рµ drawArrays.
+
+5. HP РЅР° СЃРµСЂРІРµСЂР°С…: ScoreboardHelper.getHealthBelowName() вЂ” BELOW_NAME objective.
+
+6. Р“РѕР»РѕРІР°:
+   - РРіСЂРѕРє: PlayerSkinDrawer.draw (100% СЂР°Р±РѕС‚Р°РµС‚, StaffBoardHud)
+   - РњРѕР±: ctx.drawTexture(RenderLayer::getGuiTextured, tex, ...)
+   - РЎРєСЂСѓРіР»С‘РЅРЅР°СЏ: С‚РѕР»СЊРєРѕ РµСЃР»Рё coord fix РїСЂР°РІРёР»СЊРЅС‹Р№ (Rasty Render2D.texture СЃ radius)
+
+================================================================================
+Р¤РђР™Р›Р« METEOR вЂ” РџРЈРўР
+================================================================================
+TargetHud (С‚РµРєСѓС‰РёР№):     src/main/java/.../systems/hud/elements/TargetHud.java
+HudGlUtil:               src/main/java/.../systems/hud/HudGlUtil.java
+HudChrome:               src/main/java/.../systems/hud/HudChrome.java
+ScoreboardHelper:        src/main/java/.../utils/player/ScoreboardHelper.java
+MorzhSmoothRenderer:     src/main/java/.../gui/morzh/MorzhSmoothRenderer.java
+Visuals (РќР• РґР»СЏ HUD):    src/main/java/.../gui/morzh/Visuals.java
+Render2D:                src/main/java/.../gui/rasty/util/render/Render2D.java
+GlDraw:                  src/main/java/.../gui/rasty/util/render/pipeline/GlDraw.java
+HeadPipeline (РЅРµ HUD):   src/main/java/.../utils/render/HeadPipeline.java
+RoundHeadRenderer:       src/main/java/.../utils/render/RoundHeadRenderer.java
+РЁРµР№РґРµСЂС‹ rasty_texture:   src/main/resources/assets/meteor-client/shaders/rasty_texture.{vert,frag}
+РЁРµР№РґРµСЂ round_head:       src/main/resources/assets/meteor-client/shaders/round_head.{vert,frag}
+
+Р РµС„РµСЂРµРЅСЃС‹:
+Rasty:     C:\dev\rastyclient-main\rastyclient-main\Rastyclient.cc\Rastyclient\src\main\java\rasty\screens\hud\TargetHud.java
+Wild/Xyeta: C:\dev\Xyeta\Xyeta\src\main\java\dev\client\ui\hud\impl\TargetHudElement.java
+Expensive4: C:\dev\Expensive-Last-src\expensive latest\src\main\java\aethereal\gui\TargetHudWidget.java
+
+Р Р°Р±РѕС‡РёРµ РїСЂРёРјРµСЂС‹ РІ meteor:
+PotionTimersHud: src/main/java/.../systems/hud/elements/PotionTimersHud.java
+StaffBoardHud:   src/main/java/.../systems/hud/elements/StaffBoardHud.java (PlayerSkinDrawer)
+ArmorHud:        src/main/java/.../systems/hud/elements/ArmorHud.java (RenderUtils.drawItem)
+
+================================================================================
+РР—Р’Р•РЎРўРќР«Р• Р‘РђР“Р / РЎРўРђРўРЈРЎ
+================================================================================
+[x] Р¤РѕРЅ РїСЂРѕРїР°РґР°Р» вЂ” С„РёРєСЃ: HudChrome.card + MorzhSmoothRenderer
+[x] РќРёРє РЅР°РµР·Р¶Р°Р» РЅР° HP вЂ” С„РёРєСЃ: fitText СЃ scale, СЂРµР·РµСЂРІ С€РёСЂРёРЅС‹ РїРѕРґ HP СЃРїСЂР°РІР°
+[?] Р“РѕР»РѕРІР° РЅРµ РІРёРґРЅР° Сѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ вЂ” РїРµСЂРµРєР»СЋС‡РµРЅРѕ РЅР° PlayerSkinDrawer
+[ ] РЎРєСЂСѓРіР»С‘РЅРЅР°СЏ РіРѕР»РѕРІР° С‡РµСЂРµР· С€РµР№РґРµСЂ вЂ” РїРѕРєР° РЅРµ СЂР°Р±РѕС‚Р°РµС‚ РІ HUD coord space
+[ ] РќРµ С‚СЂРѕРіР°С‚СЊ РјРѕРґСѓР»СЊ Speed
+
+================================================================================
+SECTION A вЂ” METEOR TargetHud.java (РўР•РљРЈР©РђРЇ Р’Р•Р РЎРРЇ)
+================================================================================
+
+// FILE: src/main/java/meteordevelopment/meteorclient/systems/hud/elements/TargetHud.java
+
+/*
+ * This file is part of the Meteor Client distribution.
+ * Copyright (c) Meteor Development.
+ */
+
+package meteordevelopment.meteorclient.systems.hud.elements;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import meteordevelopment.meteorclient.gui.morzh.MorzhSmoothRenderer;
+import meteordevelopment.meteorclient.gui.morzh.dropdown.DropDownColors;
+import meteordevelopment.meteorclient.settings.DoubleSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.hud.Hud;
+import meteordevelopment.meteorclient.systems.hud.HudChrome;
+import meteordevelopment.meteorclient.systems.hud.HudElement;
+import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
+import meteordevelopment.meteorclient.systems.hud.HudRenderer;
+import meteordevelopment.meteorclient.systems.hud.HudScalableElement;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.combat.KillAura;
+import meteordevelopment.meteorclient.utils.player.ScoreboardHelper;
+import meteordevelopment.meteorclient.utils.render.RenderUtils;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.PlayerSkinDrawer;
+import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.client.render.entity.state.LivingEntityRenderState;
+import net.minecraft.client.util.SkinTextures;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
+
+/** Target HUD вЂ” Morzh panel, vanilla head draw, armor + consumables. */
+public class TargetHud extends HudElement implements HudScalableElement {
+    private static final float BASE_W = 152f;
+    private static final float BASE_H = 58f;
+    private static final float HEAD = 36f;
+    private static final float HEAD_PAD = 8f;
+    private static final float CONTENT_X = HEAD_PAD + HEAD + 7f;
+    private static final int CLIENT = DropDownColors.rgb(129, 135, 255);
+    private static final float MIN_SCALE = 0.5f;
+    private static final float MAX_SCALE = 3f;
+
+    public static final HudElementInfo<TargetHud> INFO = new HudElementInfo<>(
+        Hud.GROUP, "target",
+        "Target HUD: portrait, name, armor, HP.",
+        TargetHud::new
+    );
+
+    private final SettingGroup sg = settings.getDefaultGroup();
+
+    private final Setting<Double> scale = sg.add(new DoubleSetting.Builder()
+        .name("scale")
+        .description("HUD scale.")
+        .defaultValue(1.0)
+        .min(MIN_SCALE)
+        .sliderMax(MAX_SCALE)
+        .onChanged(v -> calculateSize())
+        .build()
+    );
+
+    private LivingEntity lastTarget;
+    private float fade;
+    private float hpAnim;
+    private float hpTrail;
+    private long lastFrameNs;
+
+    public TargetHud() {
+        super(INFO);
+        calculateSize();
+    }
+
+    @Override
+    public void adjustScale(double delta) {
+        scale.set(MathHelper.clamp(scale.get() + delta, MIN_SCALE, MAX_SCALE));
+        calculateSize();
+    }
+
+    @Override
+    public double getScaleValue() {
+        return scale.get();
+    }
+
+    private float s() {
+        return scale.get().floatValue();
+    }
+
+    private void calculateSize() {
+        setSize(BASE_W * s(), BASE_H * s());
+    }
+
+    @Override
+    public void tick(HudRenderer renderer) {
+        LivingEntity t = resolveTarget();
+        if (t != null) lastTarget = t;
+    }
+
+    @Override
+    public void render(HudRenderer renderer) {
+        long now = System.nanoTime();
+        float dt = lastFrameNs == 0 ? 0.016f : MathHelper.clamp((now - lastFrameNs) / 1_000_000_000f, 0f, 0.05f);
+        lastFrameNs = now;
+
+        LivingEntity target = isInEditor() ? mc.player : resolveTarget();
+        if (target != null) lastTarget = target;
+
+        boolean show = lastTarget != null && (target != null || isInEditor() || mc.currentScreen instanceof ChatScreen);
+        fade = anim(fade, show ? 1f : 0f, dt, 12f);
+        if (fade < 0.03f || lastTarget == null) return;
+
+        LivingEntity entity = lastTarget;
+        float a = fade;
+        float sc = s();
+        float w = BASE_W * sc;
+        float h = BASE_H * sc;
+
+        float maxHp = Math.max(1f, entity.getMaxHealth());
+        float hp = ScoreboardHelper.getHealthBelowName(entity);
+        float hpPct = MathHelper.clamp(hp / maxHp, 0f, 1f);
+        hpAnim = anim(hpAnim, hpPct, dt, 14f);
+        if (hpTrail > hpAnim + 0.002f) hpTrail = anim(hpTrail, hpAnim, dt, 6f);
+        else hpTrail = hpAnim;
+
+        renderer.post(() -> {
+            DrawContext ctx = HudRenderer.INSTANCE.drawContext;
+            if (ctx == null) return;
+            draw(ctx, entity, x, y, w, h, sc, a, hp, maxHp);
+        });
+    }
+
+    // ... (РїРѕР»РЅС‹Р№ РєРѕРґ СЃРј. РІ СЂРµРїРѕ вЂ” 396 СЃС‚СЂРѕРє, РІРєР»СЋС‡Р°СЏ draw, drawArmorRow, drawHead, resolveTarget)
+}
+
+================================================================================
+SECTION B вЂ” METEOR RENDER HELPERS
+================================================================================
+
+// FILE: HudGlUtil.java (РїРѕРїС‹С‚РєР° coord fix РґР»СЏ rasty_texture вЂ” РіРѕР»РѕРІР° РќР• РІРёРґРЅР° Сѓ СЋР·РµСЂР°)
+package meteordevelopment.meteorclient.systems.hud;
+
+import meteordevelopment.meteorclient.gui.rasty.Initialization;
+import meteordevelopment.meteorclient.gui.rasty.util.render.Render2D;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.util.Identifier;
+
+public final class HudGlUtil {
+  public static void prepare(DrawContext context) {
+    if (context != null) context.draw();
+    Initialization.getInstance().getManager().getRenderCore().setupOverlayState();
+  }
+  private static float px(float hudCoord) { return hudCoord / Render2D.getScaleMultiplier(); }
+  public static void roundedTexture(Identifier id, float x, float y, float w, float h,
+    float u0, float v0, float u1, float v1, int color, float radius) {
+    float m = Render2D.getScaleMultiplier();
+    Render2D.texture(id, px(x), px(y), px(w), px(h), u0, v0, u1, v1, color, 0f, radius / m);
+  }
+}
+
+// FILE: HudChrome.java вЂ” card() РґР»СЏ С„РѕРЅР° HUD
+public static void card(DrawContext context, float x, float y, float w, float h, float radius) {
+  float outer = Math.max(5.5f, radius);
+  MorzhSmoothRenderer.roundedRect(context, x, y, w, h, outer, RV_OUTER);
+  MorzhSmoothRenderer.roundedRect(context, x + 1f, y + 1f, w - 2f, h - 2f, Math.max(4.5f, outer - 0.5f), RV_INNER);
+}
+
+// FILE: Visuals.java вЂ” Р’РђР–РќРћ
+/** Shader path for ClickGUI (scaled Screen coords). Do not use from HUD вЂ” HUD is unscaled pixels. */
+
+// FILE: Render2D.java вЂ” coord system
+private static final float FIXED_GUI_SCALE = 2.0f;
+public static float getScaleMultiplier() {
+  float currentScale = (float) client.getWindow().getScaleFactor();
+  return FIXED_GUI_SCALE / currentScale;
+}
+
+// FILE: GlDraw.java вЂ” С„РёРєСЃ GL state
+public static void triangles(int vertices) {
+  int prevProgram = GL32C.glGetInteger(GL32C.GL_CURRENT_PROGRAM);
+  int prevVao = GL32C.glGetInteger(GL32C.GL_VERTEX_ARRAY_BINDING);
+  // ... draw ...
+  GL.bindVertexArray(prevVao);
+  GL.useProgram(prevProgram);  // Р‘Р•Р— Р­РўРћР“Рћ вЂ” Р±РµР»С‹Рµ РєСѓР±С‹ РІРјРµСЃС‚Рѕ С‚РµРєСЃС‚Р°
+}
+
+// FILE: ScoreboardHelper.java
+public static float getHealthBelowName(LivingEntity entity) {
+  // BELOW_NAME scoreboard objective РґР»СЏ HP РЅР° FunTime/Р°РЅР°СЂС…РёРё
+}
+
+// FILE: MorzhSmoothRenderer.fitText СЃ scale (РґР»СЏ РѕР±СЂРµР·РєРё РЅРёРєР°)
+public static String fitText(String text, double maxWidth, double scale) {
+  // РѕР±СЂРµР·Р°РµС‚ СЃ "вЂ¦" РµСЃР»Рё РЅРµ РІР»РµР·Р°РµС‚
+}
+
+// FILE: StaffBoardHud вЂ” Р РђР‘РћР§РђРЇ Р“РћР›РћР’Рђ
+PlayerSkinDrawer.draw(context, row.entry.getSkinTextures(),
+  Math.round(x + 8 * s), Math.round(yOff + 2 * s), Math.round(10 * s));
+
+// FILE: RenderUtils.drawItem вЂ” РґР»СЏ Р±СЂРѕРЅРё/С‚РѕС‚РµРјРѕРІ
+public static void drawItem(DrawContext drawContext, ItemStack itemStack,
+  int x, int y, float scale, boolean overlay) { ... }
+
+// FILE: HeadPipeline + RoundHeadRenderer вЂ” РќР• РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РІ HUD (Р»РѕРјР°РµС‚ С€СЂРёС„С‚С‹)
+// round_head.vert/frag вЂ” РєР°СЃС‚РѕРјРЅС‹Р№ SDF С€РµР№РґРµСЂ РіРѕР»РѕРІС‹
+
+================================================================================
+SECTION C вЂ” RASTY TargetHud.java (MC 1.21.11, Render2D СЂР°Р±РѕС‚Р°РµС‚ РІ РёС… HUD)
+================================================================================
+// PATH: C:\dev\rastyclient-main\...\rasty\screens\hud\TargetHud.java
+// Р Р°Р·РјРµСЂ: 152x52, РіРѕР»РѕРІР° 36px, СЃРєСЂСѓРіР»С‘РЅРЅР°СЏ С‡РµСЂРµР· Render2D.texture radius=5
+// Р¤РёС‡Рё: blur С„РѕРЅ, shake РїСЂРё СѓРґР°СЂРµ, damage flash РЅР° HP bar, winning/losing, distance
+// HP: scoreboard BELOW_NAME, trail bar, absorption gradient
+// Р“РѕР»РѕРІР°:
+//   Render2D.texture(tex, faceX, faceY, FACE_SIZE, FACE_SIZE,
+//     8f/64f, 8f/64f, 16f/64f, 16f/64f, color, 0, 5f);
+//   + hat layer FACE_SIZE * 1.1f
+// Layout:
+//   row1: name (left) + hp string (right)
+//   row2: distance "X.X blk"
+//   row3: winning/losing dot + text
+//   bottom: HP bar with trail + damage flash + absorption
+
+[РџРћР›РќР«Р™ РРЎРҐРћР”РќРРљ вЂ” 399 СЃС‚СЂРѕРє, СЃРј. С„Р°Р№Р» РїРѕ РїСѓС‚Рё РІС‹С€Рµ]
+
+РљР»СЋС‡РµРІС‹Рµ РєРѕРЅСЃС‚Р°РЅС‚С‹ Rasty:
+  HUD_WIDTH = 152, HUD_HEIGHT = 52
+  FACE_SIZE = 36, FACE_PAD_X = 8
+  CONTENT_X_OFF = FACE_PAD_X + FACE_SIZE + 7
+
+================================================================================
+SECTION D вЂ” WILD / XYETA TargetHudElement.java (MC 1.21.4 вЂ” С‚РѕС‚ Р¶Рµ MC С‡С‚Рѕ meteor)
+================================================================================
+// PATH: C:\dev\Xyeta\Xyeta\src\main\java\dev\client\ui\hud\impl\TargetHudElement.java
+// Р Р°Р·РјРµСЂ: 130x50
+// РЎРІРѕР№ Builder API: blur + rectangle + BuiltTexture (rounded head radius 6)
+// Layout:
+//   - blur background 130x50 radius 11
+//   - head 32x32 at (x+9, y+9) rounded texture
+//   - name panel top right
+//   - armor slots 8x8 x4 at y+28.5
+//   - HP bar 3.25px height
+//   - HP number + "hp" label
+// Target: Aura -> TriggerBot -> ChatScreen self
+// Armor: renderItems() reverse getArmorItems(), scale 0.38
+
+[РџРћР›РќР«Р™ РРЎРҐРћР”РќРРљ вЂ” 187 СЃС‚СЂРѕРє, СЃРј. С„Р°Р№Р» РїРѕ РїСѓС‚Рё РІС‹С€Рµ]
+
+РљР»СЋС‡РµРІС‹Рµ РєРѕРЅСЃС‚Р°РЅС‚С‹ Wild:
+  width = 130, height = 50
+  head = 32x32 at offset (9, 9)
+  armor at x+53, y+30.5, item scale 0.38
+
+================================================================================
+SECTION E вЂ” EXPENSIVE 4 TargetHudWidget.java (MC 1.21.11, obfuscated engine)
+================================================================================
+// PATH: C:\dev\Expensive-Last-src\expensive latest\src\main\java\aethereal\gui\TargetHudWidget.java
+// Р Р°Р·РјРµСЂ: dynamic min 180x50, big mode 70h with armor row
+// Engine: GraphicsDrawEngine (roundedBlur, roundedRectangle, roundedTexture, msdfFont, itemStack)
+// Р¤РёС‡Рё:
+//   - blur background from framebuffer
+//   - rounded avatar with hurt tint (renderAvatar)
+//   - armor + mainhand + offhand (getEquipment)
+//   - name truncateToWidth with binary search
+//   - HP bar animated + absorption (golden)
+//   - heart/gapple icons for HP/absorption values
+//   - small/big layout modes (onlySmallVersion setting)
+//   - raycast target option
+// HP: ScoreboardHelper.INSTANCE.getHealthBelowName()
+// Avatar: roundedTexture with face UV from ItemSpriteManager
+
+[РџРћР›РќР«Р™ РРЎРҐРћР”РќРРљ вЂ” 466 СЃС‚СЂРѕРє, СЃРј. С„Р°Р№Р» РїРѕ РїСѓС‚Рё РІС‹С€Рµ]
+
+РљР»СЋС‡РµРІС‹Рµ РєРѕРЅСЃС‚Р°РЅС‚С‹ Expensive:
+  padding = 10, cornerRadius = 8
+  avatar 50x50 (or height-20)
+  itemSize = 12, itemSpacing = 3
+  minWidth = 180
+
+================================================================================
+SECTION F вЂ” РЁР•Р™Р”Р•Р Р« (meteor СѓР¶Рµ РёРјРµРµС‚ rasty_* РёР· Rasty)
+================================================================================
+
+// rasty_texture.frag вЂ” SDF rounded texture (РґР»СЏ СЃРєСЂСѓРіР»С‘РЅРЅРѕР№ РіРѕР»РѕРІС‹)
+// uniforms: Sampler0, rounded box SDF, gradient colors
+// РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ С‡РµСЂРµР· Render2D.texture(..., radius)
+
+// rasty_texture.vert вЂ” screen pos from u_Rect, u_Uv, u_Radii, u_Screen
+
+// round_head.vert/frag вЂ” РѕС‚РґРµР»СЊРЅС‹Р№ С€РµР№РґРµСЂ (HeadPipeline) вЂ” Р›РћРњРђР•Рў HUD РўР•РљРЎРў
+
+================================================================================
+SECTION G вЂ” Р Р•РљРћРњР•РќР”РђР¦РРЇ Р”Р›РЇ РџРћР РўРђ
+================================================================================
+
+Р›СѓС‡С€РёР№ РїР»Р°РЅ РґР»СЏ meteor-fork (MC 1.21.4):
+
+1. Р¤РћРќ: HudChrome.card (MorzhSmoothRenderer) вЂ” СЂР°Р±РѕС‚Р°РµС‚
+2. РўР•РљРЎРў: MorzhSmoothRenderer.text + fitText(scale) вЂ” СЂР°Р±РѕС‚Р°РµС‚
+3. Р“РћР›РћР’Рђ:
+   a) PlayerSkinDrawer вЂ” РєРІР°РґСЂР°С‚РЅР°СЏ, РЅРѕ 100% РІРёРґРЅР° (StaffBoardHud)
+   b) ctx.drawTexture РґР»СЏ РјРѕР±РѕРІ
+   c) РЎРєСЂСѓРіР»С‘РЅРЅР°СЏ: РїРѕСЂС‚РёСЂРѕРІР°С‚СЊ coord fix РёР· Visuals.overlayScale() * coords
+      РР›Р scissor РІРЅСѓС‚СЂРё Morzh rounded rect
+4. Р‘Р РћРќРЇ: RenderUtils.drawItem РєР°Рє ArmorHud (renderer.post)
+5. РўРћРўР•РњР«/Р§РђР РљР: countItem РїРѕ РёРЅРІРµРЅС‚Р°СЂСЋ С‚Р°СЂРіРµС‚Р° + РёРєРѕРЅРєРё/РїРёР»СЋР»Рё СЃРїСЂР°РІР°
+6. HP: ScoreboardHelper + trail bar РєР°Рє Rasty
+7. TARGET: KillAura -> crosshair entity -> self in chat
+8. LAYOUT: РІР·СЏС‚СЊ СЂР°Р·РјРµСЂС‹ Rasty 152x58, Wild armor row, Expensive equipment list
+
+РџСЃРµРІРґРѕРєРѕРґ layout:
+в”Њв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”ђ
+в”‚ [HEAD]  Nickname..............  20  в”‚
+в”‚  36px   [helm][chest][legs][boot] T3в”‚
+в”‚         в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв–‘в–‘в–‘в–‘в–‘в–‘в–‘в–‘в–‘в–‘в–‘в–‘в–‘в–‘  в”‚
+в””в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”
+  152 x 58
+
+================================================================================
+SECTION H вЂ” РџРћР›РќР«Р• РРЎРҐРћР”РќРРљР METEOR (copy-paste ready)
+================================================================================
+
+
+================================================================================
+SECTION I — FULL SOURCE FILES
+================================================================================
+
+
+
+################################################################################
+# METEOR TargetHud.java
+# PATH: C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\hud\elements\TargetHud.java
+################################################################################
+
+/*
+ * This file is part of the Meteor Client distribution.
+ * Copyright (c) Meteor Development.
+ */
+
+package meteordevelopment.meteorclient.systems.hud.elements;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import meteordevelopment.meteorclient.gui.morzh.MorzhSmoothRenderer;
+import meteordevelopment.meteorclient.gui.morzh.dropdown.DropDownColors;
+import meteordevelopment.meteorclient.settings.DoubleSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.hud.Hud;
+import meteordevelopment.meteorclient.systems.hud.HudChrome;
+import meteordevelopment.meteorclient.systems.hud.HudElement;
+import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
+import meteordevelopment.meteorclient.systems.hud.HudRenderer;
+import meteordevelopment.meteorclient.systems.hud.HudScalableElement;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.combat.KillAura;
+import meteordevelopment.meteorclient.utils.player.ScoreboardHelper;
+import meteordevelopment.meteorclient.utils.render.RenderUtils;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.PlayerSkinDrawer;
+import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.client.render.entity.state.LivingEntityRenderState;
+import net.minecraft.client.util.SkinTextures;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
+
+/** Target HUD вЂ” Morzh panel, vanilla head draw, armor + consumables. */
+public class TargetHud extends HudElement implements HudScalableElement {
+    private static final float BASE_W = 152f;
+    private static final float BASE_H = 58f;
+    private static final float HEAD = 36f;
+    private static final float HEAD_PAD = 8f;
+    private static final float CONTENT_X = HEAD_PAD + HEAD + 7f;
+    private static final int CLIENT = DropDownColors.rgb(129, 135, 255);
+    private static final float MIN_SCALE = 0.5f;
+    private static final float MAX_SCALE = 3f;
+
+    public static final HudElementInfo<TargetHud> INFO = new HudElementInfo<>(
+        Hud.GROUP, "target",
+        "Target HUD: portrait, name, armor, HP.",
+        TargetHud::new
+    );
+
+    private final SettingGroup sg = settings.getDefaultGroup();
+
+    private final Setting<Double> scale = sg.add(new DoubleSetting.Builder()
+        .name("scale")
+        .description("HUD scale.")
+        .defaultValue(1.0)
+        .min(MIN_SCALE)
+        .sliderMax(MAX_SCALE)
+        .onChanged(v -> calculateSize())
+        .build()
+    );
+
+    private LivingEntity lastTarget;
+    private float fade;
+    private float hpAnim;
+    private float hpTrail;
+    private long lastFrameNs;
+
+    public TargetHud() {
+        super(INFO);
+        calculateSize();
+    }
+
+    @Override
+    public void adjustScale(double delta) {
+        scale.set(MathHelper.clamp(scale.get() + delta, MIN_SCALE, MAX_SCALE));
+        calculateSize();
+    }
+
+    @Override
+    public double getScaleValue() {
+        return scale.get();
+    }
+
+    private float s() {
+        return scale.get().floatValue();
+    }
+
+    private void calculateSize() {
+        setSize(BASE_W * s(), BASE_H * s());
+    }
+
+    @Override
+    public void tick(HudRenderer renderer) {
+        LivingEntity t = resolveTarget();
+        if (t != null) lastTarget = t;
+    }
+
+    @Override
+    public void render(HudRenderer renderer) {
+        long now = System.nanoTime();
+        float dt = lastFrameNs == 0 ? 0.016f : MathHelper.clamp((now - lastFrameNs) / 1_000_000_000f, 0f, 0.05f);
+        lastFrameNs = now;
+
+        LivingEntity target = isInEditor() ? mc.player : resolveTarget();
+        if (target != null) lastTarget = target;
+
+        boolean show = lastTarget != null && (target != null || isInEditor() || mc.currentScreen instanceof ChatScreen);
+        fade = anim(fade, show ? 1f : 0f, dt, 12f);
+        if (fade < 0.03f || lastTarget == null) return;
+
+        LivingEntity entity = lastTarget;
+        float a = fade;
+        float sc = s();
+        float w = BASE_W * sc;
+        float h = BASE_H * sc;
+
+        float maxHp = Math.max(1f, entity.getMaxHealth());
+        float hp = ScoreboardHelper.getHealthBelowName(entity);
+        float hpPct = MathHelper.clamp(hp / maxHp, 0f, 1f);
+        hpAnim = anim(hpAnim, hpPct, dt, 14f);
+        if (hpTrail > hpAnim + 0.002f) hpTrail = anim(hpTrail, hpAnim, dt, 6f);
+        else hpTrail = hpAnim;
+
+        renderer.post(() -> {
+            DrawContext ctx = HudRenderer.INSTANCE.drawContext;
+            if (ctx == null) return;
+            draw(ctx, entity, x, y, w, h, sc, a, hp, maxHp);
+        });
+    }
+
+    private void draw(DrawContext ctx, LivingEntity entity, float px, float py, float w, float h,
+                      float sc, float alpha, float hp, float maxHp) {
+        int a = MathHelper.clamp(Math.round(255f * alpha), 0, 255);
+        float radius = 8f * sc;
+
+        HudChrome.card(ctx, px, py, w, h, radius);
+
+        float headX = px + HEAD_PAD * sc;
+        float headY = py + (h - HEAD * sc) / 2f;
+        float headS = HEAD * sc;
+        float headR = 6f * sc;
+
+        MorzhSmoothRenderer.roundedRect(ctx, headX, headY, headS, headS, headR,
+            DropDownColors.rgba(14, 14, 18, a));
+        drawHead(ctx, entity, headX, headY, headS, a);
+
+        float cx = px + CONTENT_X * sc;
+        float rightPad = 8f * sc;
+        float rightEdge = px + w - rightPad;
+        float barX = cx;
+        float barY = py + h - 11f * sc;
+        float barW = rightEdge - cx;
+        float barH = 3.5f * sc;
+        float barR = 1.5f * sc;
+
+        double nameFs = 0.58 * sc;
+        double infoFs = 0.48 * sc;
+
+        int hpInt = Math.round(hpAnim * maxHp);
+        String hpText = String.valueOf(hpInt);
+        float hpTw = (float) MorzhSmoothRenderer.textWidth(hpText, infoFs);
+        float hpX = rightEdge - hpTw;
+        float textGap = 5f * sc;
+
+        String name = entity.getName().getString();
+        String fittedName = MorzhSmoothRenderer.fitText(name, Math.max(0, hpX - cx - textGap), nameFs);
+        MorzhSmoothRenderer.text(ctx, fittedName, cx, py + 7f * sc,
+            DropDownColors.rgba(255, 255, 255, a), true, nameFs);
+        MorzhSmoothRenderer.text(ctx, hpText, hpX, py + 7f * sc,
+            DropDownColors.rgba(210, 210, 214, a), true, infoFs);
+
+        drawArmorRow(ctx, entity, cx, py + 20f * sc, rightEdge, sc, a, infoFs);
+
+        MorzhSmoothRenderer.roundedRect(ctx, barX, barY, barW, barH, barR,
+            DropDownColors.rgba(25, 25, 30, (int) (220 * alpha)));
+
+        float trailW = barW * hpTrail;
+        float fillW = barW * hpAnim;
+        if (trailW > fillW + 0.5f) {
+            MorzhSmoothRenderer.roundedRect(ctx, barX, barY, trailW, barH, barR,
+                DropDownColors.rgba(CLIENT >> 16 & 255, CLIENT >> 8 & 255, CLIENT & 255, (int) (120 * alpha)));
+        }
+
+        if (fillW > 0.5f) {
+            MorzhSmoothRenderer.gradientRect(ctx, barX, barY, fillW, barH,
+                DropDownColors.rgba(CLIENT >> 16 & 255, CLIENT >> 8 & 255, CLIENT & 255, a),
+                DropDownColors.rgba((CLIENT >> 16 & 255) / 2, (CLIENT >> 8 & 255) / 2, (CLIENT & 255) / 2, a));
+        }
+
+        float abs = entity.getAbsorptionAmount();
+        if (abs > 0.5f) {
+            float absW = barW * MathHelper.clamp(abs / maxHp, 0f, 1f);
+            MorzhSmoothRenderer.gradientRect(ctx, barX, barY, absW, barH,
+                DropDownColors.rgba(255, 200, 0, a),
+                DropDownColors.rgba(200, 140, 0, a));
+        }
+    }
+
+    private void drawArmorRow(DrawContext ctx, LivingEntity entity, float x, float y, float rightEdge,
+                              float sc, int alpha, double infoFs) {
+        float slot = 9f * sc;
+        float itemScale = 0.42f * sc;
+        float itemSize = 16f * itemScale;
+        float xOff = x;
+
+        List<ItemStack> armor = armorStacks(entity);
+        for (ItemStack stack : armor) {
+            drawItemSlot(ctx, stack, xOff, y, slot, itemScale, itemSize, alpha);
+            xOff += slot;
+        }
+
+        if (!(entity instanceof PlayerEntity player)) return;
+
+        int totems = countItem(player, Items.TOTEM_OF_UNDYING);
+        int egaps = countItem(player, Items.ENCHANTED_GOLDEN_APPLE);
+        int gaps = countItem(player, Items.GOLDEN_APPLE);
+
+        float pillH = 10f * sc;
+        float pillY = y + (slot - pillH) / 2f;
+        float pillX = rightEdge;
+
+        if (gaps > 0) {
+            String text = gaps + "g";
+            float tw = (float) MorzhSmoothRenderer.textWidth(text, infoFs);
+            float pw = tw + 6f * sc;
+            pillX -= pw;
+            MorzhSmoothRenderer.roundedRect(ctx, pillX, pillY, pw, pillH, 3f * sc,
+                DropDownColors.rgba(30, 30, 36, alpha));
+            MorzhSmoothRenderer.text(ctx, text, pillX + 3f * sc, pillY + 1f * sc,
+                DropDownColors.rgba(255, 210, 80, alpha), true, infoFs);
+            pillX -= 2f * sc;
+        }
+
+        if (egaps > 0) {
+            String text = egaps + "c";
+            float tw = (float) MorzhSmoothRenderer.textWidth(text, infoFs);
+            float pw = tw + 6f * sc;
+            pillX -= pw;
+            MorzhSmoothRenderer.roundedRect(ctx, pillX, pillY, pw, pillH, 3f * sc,
+                DropDownColors.rgba(30, 30, 36, alpha));
+            MorzhSmoothRenderer.text(ctx, text, pillX + 3f * sc, pillY + 1f * sc,
+                DropDownColors.rgba(255, 170, 220, alpha), true, infoFs);
+            pillX -= 2f * sc;
+        }
+
+        if (totems > 0) {
+            String text = String.valueOf(totems);
+            float tw = (float) MorzhSmoothRenderer.textWidth(text, infoFs);
+            float pw = tw + 6f * sc;
+            pillX -= pw;
+            MorzhSmoothRenderer.roundedRect(ctx, pillX, pillY, pw, pillH, 3f * sc,
+                DropDownColors.rgba(30, 30, 36, alpha));
+            MorzhSmoothRenderer.text(ctx, text, pillX + 3f * sc, pillY + 1f * sc,
+                DropDownColors.rgba(200, 200, 210, alpha), true, infoFs);
+            pillX -= 1f * sc;
+
+            float icon = 8f * sc;
+            pillX -= icon;
+            ItemStack totem = new ItemStack(Items.TOTEM_OF_UNDYING);
+            RenderUtils.drawItem(ctx, totem, Math.round(pillX), Math.round(y + (slot - icon) / 2f), icon / 16f, false);
+        }
+    }
+
+    private void drawItemSlot(DrawContext ctx, ItemStack stack, float x, float y, float slot,
+                              float itemScale, float itemSize, int alpha) {
+        MorzhSmoothRenderer.roundedRect(ctx, x, y, slot - 1f, slot - 1f, 2f * itemScale,
+            DropDownColors.rgba(22, 22, 28, alpha));
+
+        if (!stack.isEmpty()) {
+            float ix = x + (slot - itemSize) / 2f;
+            float iy = y + (slot - itemSize) / 2f;
+            RenderSystem.enableBlend();
+            RenderSystem.setShaderColor(1f, 1f, 1f, alpha / 255f);
+            RenderUtils.drawItem(ctx, stack, Math.round(ix), Math.round(iy), itemScale, true);
+            RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+        }
+    }
+
+    private List<ItemStack> armorStacks(LivingEntity entity) {
+        if (isInEditor()) {
+            return List.of(
+                Items.NETHERITE_HELMET.getDefaultStack(),
+                Items.NETHERITE_CHESTPLATE.getDefaultStack(),
+                Items.NETHERITE_LEGGINGS.getDefaultStack(),
+                Items.NETHERITE_BOOTS.getDefaultStack()
+            );
+        }
+
+        if (!(entity instanceof PlayerEntity player)) {
+            return List.of(ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY);
+        }
+
+        List<ItemStack> armor = new ArrayList<>(4);
+        player.getArmorItems().forEach(armor::add);
+        Collections.reverse(armor);
+        return armor;
+    }
+
+    private static int countItem(PlayerEntity player, Item item) {
+        int count = 0;
+        for (int i = 0; i < player.getInventory().size(); i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            if (stack.isOf(item)) count += stack.getCount();
+        }
+        return count;
+    }
+
+    private void drawHead(DrawContext ctx, LivingEntity entity, float x, float y, float size, int alpha) {
+        float tick = entity.hurtTime > 0 ? (float) HudRenderer.INSTANCE.delta : 0f;
+        float hurt = MathHelper.clamp((entity.hurtTime - tick) / 10f, 0f, 1f);
+        float shade = 1f - hurt * 0.55f;
+
+        int ix = Math.round(x);
+        int iy = Math.round(y);
+        int is = Math.max(1, Math.round(size));
+
+        RenderSystem.enableBlend();
+        RenderSystem.setShaderColor(1f, shade, shade, alpha / 255f);
+
+        SkinTextures skin = resolveSkin(entity);
+        if (skin != null) {
+            PlayerSkinDrawer.draw(ctx, skin, ix, iy, is);
+            RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+            return;
+        }
+
+        Identifier tex = resolveEntityTexture(entity);
+        if (tex != null) {
+            ctx.drawTexture(RenderLayer::getGuiTextured, tex, ix, iy, is, is, 8, 8, 8, 8, 64, 64);
+            RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+            return;
+        }
+
+        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+        MorzhSmoothRenderer.text(ctx, "?", x + size * 0.35f, y + size * 0.28f,
+            DropDownColors.rgba(255, 255, 255, alpha), true, 0.55);
+    }
+
+    private static SkinTextures resolveSkin(LivingEntity entity) {
+        if (entity instanceof AbstractClientPlayerEntity player) return player.getSkinTextures();
+        if (entity instanceof PlayerEntity player && mc.getNetworkHandler() != null) {
+            PlayerListEntry entry = mc.getNetworkHandler().getPlayerListEntry(player.getUuid());
+            if (entry != null) return entry.getSkinTextures();
+        }
+        return null;
+    }
+
+    private LivingEntity resolveTarget() {
+        if (isInEditor()) return mc.player;
+
+        KillAura aura = Modules.get().get(KillAura.class);
+        if (aura != null && aura.isActive()) {
+            LivingEntity t = aura.getTargetEntity();
+            if (t != null && t.isAlive()) return t;
+        }
+
+        if (mc.targetedEntity instanceof LivingEntity looked && looked.isAlive() && looked != mc.player) {
+            return looked;
+        }
+
+        if (mc.currentScreen instanceof ChatScreen) return mc.player;
+        return null;
+    }
+
+    private static Identifier resolveEntityTexture(LivingEntity entity) {
+        EntityRenderer<?, ?> base = mc.getEntityRenderDispatcher().getRenderer(entity);
+        if (base instanceof LivingEntityRenderer<?, ?, ?> living) {
+            @SuppressWarnings("unchecked")
+            LivingEntityRenderer<LivingEntity, LivingEntityRenderState, ?> renderer =
+                (LivingEntityRenderer<LivingEntity, LivingEntityRenderState, ?>) living;
+            LivingEntityRenderState state = renderer.getAndUpdateRenderState(entity, 1f);
+            return renderer.getTexture(state);
+        }
+        return null;
+    }
+
+    private static float anim(float cur, float target, float dt, float speed) {
+        if (Math.abs(cur - target) < 0.0005f) return target;
+        return cur + (target - cur) * (1f - (float) Math.exp(-speed * dt));
+    }
+}
+
+
+
+################################################################################
+# METEOR HudGlUtil.java
+# PATH: C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\hud\HudGlUtil.java
+################################################################################
+
+package meteordevelopment.meteorclient.systems.hud;
+
+import meteordevelopment.meteorclient.gui.rasty.Initialization;
+import meteordevelopment.meteorclient.gui.rasty.util.render.Render2D;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.util.Identifier;
+
+/** Render2D from HUD elements (fixes coordinate space + GL state). */
+public final class HudGlUtil {
+    private HudGlUtil() {}
+
+    public static void prepare(DrawContext context) {
+        if (context != null) context.draw();
+        Initialization.getInstance().getManager().getRenderCore().setupOverlayState();
+    }
+
+    private static float px(float hudCoord) {
+        return hudCoord / Render2D.getScaleMultiplier();
+    }
+
+    public static void roundedTexture(Identifier id, float x, float y, float w, float h,
+                                      float u0, float v0, float u1, float v1, int color, float radius) {
+        float m = Render2D.getScaleMultiplier();
+        Render2D.texture(id, px(x), px(y), px(w), px(h), u0, v0, u1, v1, color, 0f, radius / m);
+    }
+}
+
+
+
+################################################################################
+# METEOR HudChrome.java
+# PATH: C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\hud\HudChrome.java
+################################################################################
+
+package meteordevelopment.meteorclient.systems.hud;
+
+import meteordevelopment.meteorclient.gui.morzh.MorzhSmoothRenderer;
+import meteordevelopment.meteorclient.gui.morzh.dropdown.DropDownColors;
+import net.minecraft.client.gui.DrawContext;
+
+/**
+ * Really Visual HUD chrome: dark rounded card, orange accent, duration pills.
+ * Watermark still uses FIRST/SECOND split plates.
+ */
+public final class HudChrome {
+    public static final int FIRST = DropDownColors.rgba(22, 22, 26, 220);
+    public static final int SECOND = DropDownColors.rgba(14, 14, 17, 200);
+    public static final int BG = SECOND;
+    public static final int OUTLINE = DropDownColors.rgba(255, 255, 255, 22);
+    public static final int TEXT = DropDownColors.rgba(210, 210, 214, 255);
+    public static final int MUTED = DropDownColors.rgba(150, 150, 158, 255);
+    public static final int ACCENT = DropDownColors.rgba(198, 198, 198, 255);
+
+    public static final int RV_OUTER = -300871403;
+    public static final int RV_INNER = -15461351;
+    public static final int RV_INNER_SOFT = -15329764;
+    public static final int RV_PILL = -14803418;
+    public static final int RV_PILL_ALT = -14737626;
+    public static final int RV_ORANGE = -38400;
+    public static final int RV_BAR_BG = -15658731;
+    public static final int RV_HP = -4802881;
+    public static final int RV_HP_DOT = -8750459;
+    public static final int RV_SLOT = -15198179;
+
+    private HudChrome() {}
+
+    public static void panel(DrawContext context, float x, float y, float w, float h, float radius) {
+        card(context, x, y, w, h, Math.max(5f, radius));
+    }
+
+    public static void plate(DrawContext context, float x, float y, float w, float h, float radius) {
+        card(context, x, y, w, h, Math.max(5f, radius));
+    }
+
+    public static void split(DrawContext context, float x, float y, float leftW, float totalW, float h, float radius) {
+        float right = Math.max(0, totalW - leftW);
+        MorzhSmoothRenderer.roundedRect(context, x, y, leftW, h, radius, FIRST);
+        if (right > 0.5f) {
+            MorzhSmoothRenderer.roundedRect(context, x + leftW - 1f, y, right + 1f, h, radius, SECOND);
+        }
+    }
+
+    public static void headerBar(DrawContext context, float x, float y, float w, float h, float radius) {
+        MorzhSmoothRenderer.roundedRect(context, x, y, w, h, radius, FIRST);
+    }
+
+    public static void row(DrawContext context, float x, float y, float leftW, float totalW, float h, float radius) {
+        split(context, x, y, leftW, totalW, h, radius);
+    }
+
+    public static void title(DrawContext context, String title, float x, float y, float w, float s, double fs) {
+        header(context, title, x, y, w, s, fs);
+    }
+
+    public static void card(DrawContext context, float x, float y, float w, float h, float radius) {
+        float outer = Math.max(5.5f, radius);
+        MorzhSmoothRenderer.roundedRect(context, x, y, w, h, outer, RV_OUTER);
+        MorzhSmoothRenderer.roundedRect(context, x + 1f, y + 1f, w - 2f, h - 2f, Math.max(4.5f, outer - 0.5f), RV_INNER);
+    }
+
+    public static void header(DrawContext context, String title, float x, float y, float w, float s, double fs) {
+        orangeGlyph(context, x + 8 * s, y + 6 * s, 9 * s);
+        MorzhSmoothRenderer.text(context, title, x + 22 * s, y + 5 * s, 0xFFFFFFFF, true, fs);
+    }
+
+    public static void orangeGlyph(DrawContext context, float x, float y, float size) {
+        MorzhSmoothRenderer.roundedRect(context, x, y, size, size, size * 0.5f, RV_ORANGE);
+        MorzhSmoothRenderer.roundedRect(context, x + size * 0.17f, y + size * 0.17f, size * 0.66f, size * 0.66f, size * 0.33f, RV_INNER);
+        MorzhSmoothRenderer.roundedRect(context, x + size * 0.45f, y + size * 0.28f, size * 0.11f, size * 0.28f, 0.4f, RV_ORANGE);
+        MorzhSmoothRenderer.roundedRect(context, x + size * 0.45f, y + size * 0.5f, size * 0.22f, size * 0.11f, 0.4f, RV_ORANGE);
+    }
+
+    public static float pill(DrawContext context, String text, float right, float y, float height, double fs) {
+        float tw = (float) MorzhSmoothRenderer.textWidth(text, fs);
+        float pw = tw + 8f;
+        float ph = Math.max(11f, height);
+        float px = right - pw;
+        MorzhSmoothRenderer.roundedRect(context, px, y, pw, ph, 4f, RV_PILL);
+        MorzhSmoothRenderer.text(context, text, px + 4f, y + Math.max(1.5f, (ph - (float) MorzhSmoothRenderer.textHeight(fs)) / 2f), 0xFFFFFFFF, true, fs);
+        return pw;
+    }
+
+    public static int astolfo(int offset) {
+        float hue = (float) (((System.currentTimeMillis() / 20.0 + offset) % 360) / 360.0);
+        int rgb = java.awt.Color.HSBtoRGB(hue, 0.45f, 1f);
+        return DropDownColors.rgba((rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255, 255);
+    }
+}
+
+
+
+################################################################################
+# METEOR ScoreboardHelper.java
+# PATH: C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\utils\player\ScoreboardHelper.java
+################################################################################
+
+package meteordevelopment.meteorclient.utils.player;
+
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.scoreboard.ScoreAccess;
+import net.minecraft.scoreboard.ScoreHolder;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
+import net.minecraft.scoreboard.ScoreboardObjective;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
+
+/** Expensive-style health from scoreboard BELOW_NAME objective. */
+public final class ScoreboardHelper {
+    private ScoreboardHelper() {}
+
+    public static float getHealthBelowName(LivingEntity entity) {
+        try {
+            if (!(entity instanceof PlayerEntity player) || player == mc.player) {
+                return entity.getHealth();
+            }
+            if (mc.world == null || mc.world.getScoreboard() == null) {
+                return entity.getHealth();
+            }
+            ScoreboardObjective objective = mc.world.getScoreboard().getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME);
+            if (objective == null) return entity.getHealth();
+
+            ScoreAccess score = mc.world.getScoreboard().getOrCreateScore(
+                ScoreHolder.fromName(entity.getNameForScoreboard()), objective);
+            if (score == null) return entity.getHealth();
+            return score.getScore() == 0 ? mc.player.getHealth() : score.getScore();
+        } catch (Throwable ignored) {
+            return entity != null ? entity.getHealth() : 20f;
+        }
+    }
+}
+
+
+
+################################################################################
+# METEOR Visuals.java
+# PATH: C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\gui\morzh\Visuals.java
+################################################################################
+
+package meteordevelopment.meteorclient.gui.morzh;
+
+import meteordevelopment.meteorclient.gui.rasty.Initialization;
+import meteordevelopment.meteorclient.gui.rasty.util.render.Render2D;
+import meteordevelopment.meteorclient.gui.rasty.util.render.shader.RenderCore;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+
+/** Shader path for ClickGUI (scaled Screen coords). Do not use from HUD вЂ” HUD is unscaled pixels. */
+public final class Visuals {
+    private Visuals() {}
+
+    public static float overlayScale() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client == null || client.getWindow() == null) return 1f;
+        return (float) client.getWindow().getScaleFactor() / Render2D.getFixedGuiScale();
+    }
+
+    public static void flush(DrawContext context) {
+        if (context != null) context.draw();
+        RenderCore core = Initialization.getInstance().getManager().getRenderCore();
+        core.setupOverlayState();
+    }
+
+    public static void rect(DrawContext context, float x, float y, float w, float h,
+                            float tl, float tr, float br, float bl, int packed) {
+        if (w <= 0 || h <= 0) return;
+        flush(context);
+        float s = overlayScale();
+        Render2D.rect(x * s, y * s, w * s, h * s, packed, tl * s, tr * s, br * s, bl * s);
+    }
+
+    public static void rect(DrawContext context, float x, float y, float w, float h, float radius, int packed) {
+        rect(context, x, y, w, h, radius, radius, radius, radius, packed);
+    }
+
+    public static void gradientH(DrawContext context, float x, float y, float w, float h, int left, int right) {
+        if (w <= 0 || h <= 0) return;
+        flush(context);
+        float s = overlayScale();
+        Render2D.gradientRect(x * s, y * s, w * s, h * s, new int[]{left, right, right, left}, 0);
+    }
+
+    public static void gradientV(DrawContext context, float x, float y, float w, float h, int top, int bottom) {
+        if (w <= 0 || h <= 0) return;
+        flush(context);
+        float s = overlayScale();
+        Render2D.gradientRect(x * s, y * s, w * s, h * s, new int[]{top, top, bottom, bottom}, 0);
+    }
+
+    public static void outline(DrawContext context, float x, float y, float w, float h, float radius, float thickness, int packed) {
+        if (w <= 0 || h <= 0) return;
+        flush(context);
+        float s = overlayScale();
+        Render2D.outline(x * s, y * s, w * s, h * s, thickness * s, packed, radius * s);
+    }
+
+    public static void glow(DrawContext context, float x, float y, float w, float h, float radius, float pad, int packed) {
+        if (w <= 0 || h <= 0) return;
+        flush(context);
+        float s = overlayScale();
+        Render2D.glowOutline(x * s, y * s, w * s, h * s, pad * s, packed, radius * s, 1f, 1f);
+    }
+
+    public static void shadow(DrawContext context, float x, float y, float w, float h, float radius) {
+        glow(context, x, y + 2.5f, w, h, radius, 10f, 0x66000000);
+    }
+
+    /**
+     * Frosted panel: world blur + readable dark glass + white rim (not a solid navy block).
+     */
+    public static void glass(DrawContext context, float x, float y, float w, float h, float radius) {
+        glass(context, x, y, w, h, radius, 1f);
+    }
+
+    public static void glass(DrawContext context, float x, float y, float w, float h, float radius, float alpha) {
+        if (w <= 0 || h <= 0 || alpha <= 0.01f) return;
+        flush(context);
+        float s = overlayScale();
+        float sx = x * s, sy = y * s, sw = w * s, sh = h * s, sr = radius * s;
+        float a = Math.max(0f, Math.min(1f, alpha));
+
+        Render2D.blur(sx, sy, sw, sh, 14f * s, sr, pack(22, 24, 32, (int) (210 * a)));
+        Render2D.rect(sx, sy, sw, sh, pack(16, 18, 26, (int) (150 * a)), sr);
+        Render2D.rect(sx, sy, sw, Math.min(22f * s, sh * 0.18f), pack(255, 255, 255, (int) (18 * a)), sr, sr, 0, 0);
+        glow(context, x, y, w, h, radius, 8f, pack(133, 156, 255, (int) (40 * a)));
+        Render2D.outline(sx, sy, sw, sh, 1.1f * s, pack(230, 235, 255, (int) (90 * a)), sr);
+    }
+
+    public static void toast(DrawContext context, float x, float y, float w, float h, float radius, float alpha) {
+        if (w <= 0 || h <= 0 || alpha <= 0.01f) return;
+        flush(context);
+        float s = overlayScale();
+        float sx = x * s, sy = y * s, sw = w * s, sh = h * s, sr = radius * s;
+        int a = Math.max(0, Math.min(255, Math.round(200 * alpha)));
+        Render2D.blur(sx, sy, sw, sh, 8f * s, sr, (a << 24) | 0x10141C);
+        Render2D.rect(sx, sy, sw, sh, (Math.round(160 * alpha) << 24) | 0x10141C, sr);
+        Render2D.outline(sx, sy, sw, sh, 1f * s, (Math.round(80 * alpha) << 24) | 0xE8EEFF, sr);
+    }
+
+    private static int pack(int r, int g, int b, int a) {
+        return (a & 255) << 24 | (r & 255) << 16 | (g & 255) << 8 | (b & 255);
+    }
+}
+
+
+
+################################################################################
+# METEOR GlDraw.java
+# PATH: C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\gui\rasty\util\render\pipeline\GlDraw.java
+################################################################################
+
+package meteordevelopment.meteorclient.gui.rasty.util.render.pipeline;
+
+import meteordevelopment.meteorclient.renderer.GL;
+import org.lwjgl.opengl.GL32C;
+
+public final class GlDraw {
+    private static int vao;
+
+    private GlDraw() {}
+
+    public static void triangles(int vertices) {
+        int prevProgram = GL32C.glGetInteger(GL32C.GL_CURRENT_PROGRAM);
+        int prevVao = GL32C.glGetInteger(GL32C.GL_VERTEX_ARRAY_BINDING);
+
+        if (vao == 0) vao = GL.genVertexArray();
+        GL.disableCull();
+        GL.enableBlend();
+        GL.disableDepth();
+        GL.bindVertexArray(vao);
+        GL32C.glDrawArrays(GL32C.GL_TRIANGLES, 0, vertices);
+
+        GL.bindVertexArray(prevVao);
+        GL.useProgram(prevProgram);
+    }
+}
+
+
+
+################################################################################
+# METEOR HeadPipeline.java
+# PATH: C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\utils\render\HeadPipeline.java
+################################################################################
+
+package meteordevelopment.meteorclient.utils.render;
+
+import meteordevelopment.meteorclient.gui.rasty.util.render.pipeline.GlDraw;
+import meteordevelopment.meteorclient.renderer.GL;
+import meteordevelopment.meteorclient.renderer.Shader;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.AbstractTexture;
+import net.minecraft.util.Identifier;
+
+/** Rounded head texture draw for HUD (scaled GUI coordinates). */
+public final class HeadPipeline {
+    private static final float FIXED_GUI_SCALE = 2.0f;
+    private Shader shader;
+
+    private void ensureShader() {
+        if (shader == null) shader = new Shader("round_head.vert", "round_head.frag");
+    }
+
+    public void draw(Identifier textureId, float x, float y, float width, float height,
+                     float u0, float v0, float u1, float v1,
+                     float radius, float alpha, float hurt) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.getFramebuffer() == null || textureId == null) return;
+
+        AbstractTexture texture = client.getTextureManager().getTexture(textureId);
+        if (texture == null) return;
+
+        float screenW = client.getWindow().getFramebufferWidth() / FIXED_GUI_SCALE;
+        float screenH = client.getWindow().getFramebufferHeight() / FIXED_GUI_SCALE;
+
+        ensureShader();
+        GL.bindTexture(texture.getGlId(), 0);
+        shader.bind();
+        shader.set("Sampler0", 0);
+        shader.set("u_Rect", x, y, width, height);
+        shader.set("u_Uv", u0, v0, u1, v1);
+        shader.set("u_Radii", radius, radius, radius, radius);
+        shader.set("u_Rotation", 0, 0, 0, 0);
+        shader.set("u_Screen", screenW, screenH, 1f, FIXED_GUI_SCALE);
+        shader.set("hurt_time", hurt);
+        shader.set("alpha", alpha);
+        GlDraw.triangles(6);
+    }
+}
+
+
+
+################################################################################
+# METEOR RoundHeadRenderer.java
+# PATH: C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\utils\render\RoundHeadRenderer.java
+################################################################################
+
+package meteordevelopment.meteorclient.utils.render;
+
+import meteordevelopment.meteorclient.gui.morzh.MorzhSmoothRenderer;
+import meteordevelopment.meteorclient.gui.morzh.dropdown.DropDownColors;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.client.render.entity.state.LivingEntityRenderState;
+import net.minecraft.client.util.SkinTextures;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Identifier;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
+
+/** Expensive-style SDF rounded player/mob head for HUD. */
+public final class RoundHeadRenderer {
+    private static final HeadPipeline PIPELINE = new HeadPipeline();
+
+    private static final float FACE_U0 = 8f / 64f;
+    private static final float FACE_V0 = 8f / 64f;
+    private static final float FACE_U1 = 16f / 64f;
+    private static final float FACE_V1 = 16f / 64f;
+    private static final float HAT_U0 = 40f / 64f;
+    private static final float HAT_V0 = 8f / 64f;
+    private static final float HAT_U1 = 48f / 64f;
+    private static final float HAT_V1 = 16f / 64f;
+
+    private RoundHeadRenderer() {}
+
+    public static void draw(DrawContext context, LivingEntity entity, float x, float y, float size, float radius, float alpha, float hurt) {
+        if (entity == null || size <= 0 || alpha <= 0.01f) return;
+
+        Identifier texture = resolveTexture(entity);
+        if (texture != null) {
+            float a = alpha / 255f;
+            PIPELINE.draw(texture, x, y, size, size, FACE_U0, FACE_V0, FACE_U1, FACE_V1, radius, a, hurt);
+            if (entity instanceof PlayerEntity) {
+                PIPELINE.draw(texture, x, y, size, size, HAT_U0, HAT_V0, HAT_U1, HAT_V1, radius, a, hurt);
+            }
+            return;
+        }
+
+        if (context == null) return;
+        MorzhSmoothRenderer.roundedRect(context, x, y, size, size, radius * 0.5f, DropDownColors.rgba(0, 0, 0, (int) alpha));
+        String q = "?";
+        double fs = 0.75;
+        float qw = (float) MorzhSmoothRenderer.textWidth(q, fs);
+        MorzhSmoothRenderer.text(context, q, x + (size - qw) / 2f, y + (size - 12f * (size / 26f)) / 2f - 1f,
+            DropDownColors.rgba(255, 255, 255, (int) alpha), true, fs);
+    }
+
+    private static Identifier resolveTexture(LivingEntity entity) {
+        if (entity instanceof AbstractClientPlayerEntity player) {
+            return player.getSkinTextures().texture();
+        }
+        if (entity instanceof PlayerEntity player && mc.getNetworkHandler() != null) {
+            PlayerListEntry entry = mc.getNetworkHandler().getPlayerListEntry(player.getUuid());
+            if (entry != null) return entry.getSkinTextures().texture();
+        }
+
+        EntityRenderer<?, ?> base = mc.getEntityRenderDispatcher().getRenderer(entity);
+        if (base instanceof LivingEntityRenderer<?, ?, ?> living) {
+            @SuppressWarnings("unchecked")
+            LivingEntityRenderer<LivingEntity, LivingEntityRenderState, ?> renderer =
+                (LivingEntityRenderer<LivingEntity, LivingEntityRenderState, ?>) living;
+            LivingEntityRenderState state = renderer.getAndUpdateRenderState(entity, 1f);
+            return renderer.getTexture(state);
+        }
+        return null;
+    }
+}
+
+
+
+################################################################################
+# METEOR StaffBoardHud.java (PlayerSkinDrawer ref)
+# PATH: C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\hud\elements\StaffBoardHud.java
+################################################################################
+
+package meteordevelopment.meteorclient.systems.hud.elements;
+
+import meteordevelopment.meteorclient.gui.morzh.MorzhSmoothRenderer;
+import meteordevelopment.meteorclient.gui.morzh.dropdown.DropDownColors;
+import meteordevelopment.meteorclient.systems.hud.Hud;
+import meteordevelopment.meteorclient.systems.hud.HudChrome;
+import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
+import meteordevelopment.meteorclient.systems.hud.HudRenderer;
+import meteordevelopment.meteorclient.systems.hud.ScaledHudElement;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.PlayerSkinDrawer;
+import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.scoreboard.Team;
+import net.minecraft.util.Formatting;
+import net.minecraft.world.GameMode;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
+
+public class StaffBoardHud extends ScaledHudElement {
+    public static final HudElementInfo<StaffBoardHud> INFO = new HudElementInfo<>(
+        Hud.GROUP, "staff-board", "Online / vanish staff list.", StaffBoardHud::new
+    );
+
+    private static final Pattern NAME = Pattern.compile("^\\w{3,16}$");
+    private final List<Row> rows = new ArrayList<>();
+    private int staffScan;
+
+    public StaffBoardHud() {
+        super(INFO);
+        setSize(90, 28);
+    }
+
+    @Override
+    public void tick(HudRenderer renderer) {
+        if (++staffScan < 10 && !rows.isEmpty()) return;
+        staffScan = 0;
+        rows.clear();
+        if (mc.player == null || mc.getNetworkHandler() == null || mc.world == null) return;
+        if (mc.isInSingleplayer()) return;
+
+        List<String> online = new ArrayList<>();
+        for (PlayerListEntry entry : mc.getNetworkHandler().getPlayerList()) {
+            String n = entry.getProfile().getName();
+            if (NAME.matcher(n).matches()) online.add(n);
+        }
+
+        for (PlayerListEntry entry : mc.getNetworkHandler().getPlayerList()) {
+            if (entry.getScoreboardTeam() == null) continue;
+            String prefix = Formatting.strip(entry.getScoreboardTeam().getPrefix().getString());
+            if (!isStaff(prefix, entry.getProfile().getName())) continue;
+            String shown = entry.getScoreboardTeam().getPrefix().getString() + entry.getProfile().getName();
+            Status status = entry.getGameMode() == GameMode.SPECTATOR ? Status.Gm3 : Status.Active;
+            rows.add(new Row(shown, status, entry));
+        }
+
+        if (mc.world.getScoreboard() != null) {
+            for (Team team : mc.world.getScoreboard().getTeams()) {
+                String prefix = team.getPrefix().getString();
+                if (prefix.isEmpty()) continue;
+                for (String member : team.getPlayerList()) {
+                    if (online.contains(member) || member.isEmpty()) continue;
+                    if (!isStaff(Formatting.strip(prefix), member)) continue;
+                    rows.add(new Row(prefix + member, Status.Vanish, null));
+                }
+            }
+        }
+
+        rows.sort(Comparator.comparing(r -> r.name.toLowerCase(Locale.ROOT)));
+    }
+
+    @Override
+    public void render(HudRenderer renderer) {
+        float s = scale();
+        double fs = 0.52 * s;
+        float header = 20 * s;
+        float rowH = 16 * s;
+
+        List<Row> draw = rows;
+        if (draw.isEmpty() && isInEditor()) draw = List.of(new Row("Helper Steve", Status.Active, null));
+        if (draw.isEmpty() && !isInEditor()) {
+            setSize(80 * s, header);
+        }
+
+        float max = 90 * s;
+        for (Row row : draw) {
+            max = Math.max(max, (float) MorzhSmoothRenderer.textWidth(row.name, fs) + 48 * s);
+        }
+        float h = header + Math.max(draw.isEmpty() ? 0 : draw.size(), isInEditor() ? 1 : 0) * rowH + 4 * s;
+        if (draw.isEmpty()) h = header;
+        setSize(max, Math.max(header, h));
+
+        List<Row> finalDraw = draw;
+        renderer.post(() -> {
+            DrawContext context = HudRenderer.INSTANCE.drawContext;
+            if (context == null) return;
+            HudChrome.card(context, x, y, getWidth(), getHeight(), 7 * s);
+            HudChrome.header(context, "Staff", x, y, getWidth(), s, fs);
+            if (finalDraw.isEmpty()) return;
+
+            float yOff = y + header;
+            for (Row row : finalDraw) {
+                if (row.entry != null) {
+                    PlayerSkinDrawer.draw(context, row.entry.getSkinTextures(), Math.round(x + 8 * s), Math.round(yOff + 2 * s), Math.round(10 * s));
+                }
+                MorzhSmoothRenderer.text(context, row.name, x + 22 * s, yOff + 3 * s, 0xFFFFFFFF, true, fs);
+                String mark = switch (row.status) {
+                    case Vanish -> "V";
+                    case Gm3 -> "GM3";
+                    case Active -> "Z";
+                };
+                int color = switch (row.status) {
+                    case Vanish -> DropDownColors.rgb(230, 80, 80);
+                    case Gm3 -> DropDownColors.rgb(230, 200, 70);
+                    case Active -> DropDownColors.rgb(90, 210, 110);
+                };
+                float mw = (float) MorzhSmoothRenderer.textWidth(mark, fs) + 8 * s;
+                float pillX = x + getWidth() - 6 * s - mw;
+                MorzhSmoothRenderer.roundedRect(context, pillX, yOff + 1 * s, mw, 12 * s, 4 * s, HudChrome.RV_PILL);
+                MorzhSmoothRenderer.text(context, mark, pillX + 4 * s, yOff + 2 * s, color, true, fs);
+                yOff += rowH;
+            }
+        });
+    }
+
+    private static boolean isStaff(String prefix, String name) {
+        String p = prefix == null ? "" : prefix.toLowerCase(Locale.ROOT);
+        String n = name == null ? "" : name.toLowerCase(Locale.ROOT);
+        if (p.contains("yt") || (p.contains("y") && p.contains("t") && p.length() < 8)) return true;
+        return p.contains("helper") || p.contains("moder") || p.contains("admin") || p.contains("owner")
+            || p.contains("curator") || p.contains("РєСѓСЂР°С‚РѕСЂ") || p.contains("РјРѕРґРµСЂ") || p.contains("Р°РґРјРёРЅ")
+            || p.contains("С…РµР»РїРµСЂ") || p.contains("РїРѕРґРґРµСЂР¶РєР°") || p.contains("СЃРѕС‚СЂСѓРґРЅРёРє") || p.contains("СЃС‚Р°Р¶С‘СЂ")
+            || p.contains("СЃС‚Р°Р¶РµСЂ") || n.contains("timings") || n.contains("ruthless");
+    }
+
+    private enum Status { Active, Gm3, Vanish }
+
+    private record Row(String name, Status status, PlayerListEntry entry) {}
+}
+
+
+
+################################################################################
+# METEOR PotionTimersHud.java (working HUD pattern)
+# PATH: C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\hud\elements\PotionTimersHud.java
+################################################################################
+
+package meteordevelopment.meteorclient.systems.hud.elements;
+
+import meteordevelopment.meteorclient.gui.morzh.MorzhSmoothRenderer;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.hud.Hud;
+import meteordevelopment.meteorclient.systems.hud.HudChrome;
+import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
+import meteordevelopment.meteorclient.systems.hud.HudRenderer;
+import meteordevelopment.meteorclient.systems.hud.ScaledHudElement;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.resource.language.I18n;
+import net.minecraft.client.texture.Sprite;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.util.math.MathHelper;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
+
+/**
+ * Really Visual potions card + Wonderful timers: roman level, Inf, max-duration ring, fade in/out.
+ */
+public class PotionTimersHud extends ScaledHudElement {
+    public static final HudElementInfo<PotionTimersHud> INFO = new HudElementInfo<>(
+        Hud.GROUP, "potion-timers", "Active potion timers.", PotionTimersHud::new
+    );
+
+    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
+    private final Setting<Boolean> colored = sgGeneral.add(new BoolSetting.Builder()
+        .name("colored")
+        .description("Color names by effect color.")
+        .defaultValue(false)
+        .build()
+    );
+
+    private final Map<StatusEffect, Float> fade = new LinkedHashMap<>();
+    private final Map<StatusEffect, Integer> maxDurations = new HashMap<>();
+    private final Map<StatusEffect, Snapshot> snapshots = new HashMap<>();
+
+    public PotionTimersHud() {
+        super(INFO);
+        setSize(120, 40);
+    }
+
+    @Override
+    public void tick(HudRenderer renderer) {
+        Map<StatusEffect, StatusEffectInstance> active = new HashMap<>();
+        if (mc.player != null) {
+            for (StatusEffectInstance instance : mc.player.getStatusEffects()) {
+                StatusEffect type = instance.getEffectType().value();
+                active.put(type, instance);
+                snapshots.put(type, Snapshot.from(instance));
+                int duration = instance.getDuration();
+                Integer prev = maxDurations.get(type);
+                if (prev == null || duration > prev) maxDurations.put(type, duration);
+            }
+        }
+
+        for (StatusEffect type : active.keySet()) fade.putIfAbsent(type, 0f);
+
+        Iterator<Map.Entry<StatusEffect, Float>> it = fade.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<StatusEffect, Float> entry = it.next();
+            boolean on = active.containsKey(entry.getKey());
+            float next = MathHelper.lerp(0.18f, entry.getValue(), on ? 1f : 0f);
+            if (!on && next < 0.02f) {
+                it.remove();
+                snapshots.remove(entry.getKey());
+                maxDurations.remove(entry.getKey());
+            } else {
+                entry.setValue(next);
+            }
+        }
+    }
+
+    @Override
+    public void render(HudRenderer renderer) {
+        float s = scale();
+        double fs = 0.58 * s;
+        List<Row> rows = new ArrayList<>();
+
+        if (fade.isEmpty() && isInEditor()) {
+            rows.add(new Row(null, "Strength", "3:12", 1f, 0.72f, 0xFFFFFFFF));
+            rows.add(new Row(null, "Fire Resi", "1:20", 1f, 0.45f, 0xFFFFFFFF));
+            rows.add(new Row(null, "Speed II", "0:45", 1f, 0.22f, 0xFFFFFFFF));
+        } else {
+            for (Map.Entry<StatusEffect, Float> entry : fade.entrySet()) {
+                Snapshot snap = snapshots.get(entry.getKey());
+                if (snap == null || entry.getValue() < 0.02f) continue;
+                int max = Math.max(1, maxDurations.getOrDefault(entry.getKey(), snap.duration));
+                float progress = snap.infinite ? 1f : MathHelper.clamp(snap.duration / (float) max, 0f, 1f);
+                int color = colored.get() ? (0xFF000000 | entry.getKey().getColor()) : 0xFFFFFFFF;
+                rows.add(new Row(snap.effect, snap.name, snap.time, entry.getValue(), progress, color));
+            }
+        }
+
+        if (rows.isEmpty() && !isInEditor()) {
+            setSize(0, 0);
+            return;
+        }
+
+        float cardWidth = 120 * s;
+        for (Row row : rows) {
+            cardWidth = Math.max(cardWidth, (float) MorzhSmoothRenderer.textWidth(row.name, fs) + 70 * s);
+        }
+        float header = 22 * s;
+        float rowH = 16 * s;
+        float height = header + Math.max(1, rows.size()) * rowH + 4 * s;
+        setSize(cardWidth, height);
+
+        List<Row> draw = rows;
+        renderer.post(() -> {
+            DrawContext context = HudRenderer.INSTANCE.drawContext;
+            if (context == null) return;
+
+            HudChrome.card(context, x, y, getWidth(), getHeight(), 7 * s);
+            HudChrome.header(context, "Potions", x, y, getWidth(), s, fs);
+
+            float rowY = y + header;
+            for (Row row : draw) {
+                int alpha = MathHelper.clamp((int) (255 * row.fade), 0, 255);
+                int nameColor = (row.color & 0x00FFFFFF) | (alpha << 24);
+
+                drawIcon(context, row.effect, x + 8 * s, rowY + 2 * s, 10 * s);
+                MorzhSmoothRenderer.text(context, row.name, x + 22 * s, rowY + 2 * s, nameColor, true, fs);
+
+                float ring = 6 * s;
+                float pillH = 12 * s;
+                float timeW = (float) MorzhSmoothRenderer.textWidth(row.time, fs) + 8 * s;
+                float pillX = x + getWidth() - 6 * s - timeW;
+                float ringX = pillX - 4 * s - ring;
+
+                MorzhSmoothRenderer.circle(context, ringX + ring / 2f, rowY + 7 * s, ring / 2f, HudChrome.RV_PILL);
+                if (row.progress > 0.02f) {
+                    MorzhSmoothRenderer.arcRing(
+                        context,
+                        ringX + ring / 2f,
+                        rowY + 7 * s,
+                        ring / 2f,
+                        1.6f * s,
+                        -90,
+                        Math.max(8f, 360f * row.progress),
+                        HudChrome.RV_ORANGE
+                    );
+                }
+
+                MorzhSmoothRenderer.roundedRect(context, pillX, rowY + 1 * s, timeW, pillH, 4 * s, HudChrome.RV_PILL);
+                MorzhSmoothRenderer.text(context, row.time, pillX + 4 * s, rowY + 2 * s, nameColor, true, fs);
+                rowY += rowH;
+            }
+        });
+    }
+
+    private static void drawIcon(DrawContext context, RegistryEntry<StatusEffect> effect, float x, float y, float size) {
+        if (effect == null || mc.getStatusEffectSpriteManager() == null) {
+            MorzhSmoothRenderer.roundedRect(context, x, y + 1, size - 2, size - 2, 2, HudChrome.RV_ORANGE);
+            return;
+        }
+        Sprite sprite = mc.getStatusEffectSpriteManager().getSprite(effect);
+        context.drawSpriteStretched(RenderLayer::getGuiTextured, sprite, Math.round(x), Math.round(y), Math.round(size), Math.round(size));
+    }
+
+    private record Row(RegistryEntry<StatusEffect> effect, String name, String time, float fade, float progress, int color) {}
+
+    private record Snapshot(RegistryEntry<StatusEffect> effect, String name, String time, int duration, boolean infinite) {
+        static Snapshot from(StatusEffectInstance instance) {
+            String name = I18n.translate(instance.getTranslationKey());
+            int amp = instance.getAmplifier();
+            if (amp > 0) name = name + " " + roman(amp + 1);
+            int dur = instance.getDuration();
+            boolean inf = instance.isInfinite() || dur > 32000;
+            String time = inf ? "Inf" : String.format("%d:%02d", dur / 20 / 60, dur / 20 % 60);
+            return new Snapshot(instance.getEffectType(), name, time, dur, inf);
+        }
+    }
+
+    private static String roman(int n) {
+        return switch (n) {
+            case 1 -> "I";
+            case 2 -> "II";
+            case 3 -> "III";
+            case 4 -> "IV";
+            case 5 -> "V";
+            default -> String.valueOf(n);
+        };
+    }
+}
+
+
+
+################################################################################
+# METEOR ArmorHud.java (item render ref)
+# PATH: C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\systems\hud\elements\ArmorHud.java
+################################################################################
+
+/*
+ * This file is part of the Meteor Client distribution.
+ * Copyright (c) Meteor Development.
+ */
+
+package meteordevelopment.meteorclient.systems.hud.elements;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import meteordevelopment.meteorclient.gui.morzh.MorzhSmoothRenderer;
+import meteordevelopment.meteorclient.gui.morzh.dropdown.DropDownColors;
+import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.hud.Hud;
+import meteordevelopment.meteorclient.systems.hud.HudChrome;
+import meteordevelopment.meteorclient.systems.hud.HudElement;
+import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
+import meteordevelopment.meteorclient.systems.hud.HudRenderer;
+import meteordevelopment.meteorclient.systems.hud.HudScalableElement;
+import meteordevelopment.meteorclient.utils.render.RenderUtils;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.util.math.MathHelper;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
+
+public class ArmorHud extends HudElement implements HudScalableElement {
+    public static final HudElementInfo<ArmorHud> INFO = new HudElementInfo<>(Hud.GROUP, "armor", "Displays your armor.", ArmorHud::new);
+
+    private static final float BASE_ITEM = 16f;
+    private static final float BASE_GAP = 2f;
+    private static final float BASE_PAD = 6f;
+
+    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgStyle = settings.createGroup("Style");
+    private final SettingGroup sgDurability = settings.createGroup("Durability");
+
+    private final Setting<Mode> mode = sgStyle.add(new EnumSetting.Builder<Mode>()
+        .name("mode")
+        .description("Visual style of the armor display.")
+        .defaultValue(Mode.V2)
+        .onChanged(m -> calculateSize())
+        .build()
+    );
+
+    private final Setting<Orientation> orientation = sgGeneral.add(new EnumSetting.Builder<Orientation>()
+        .name("orientation")
+        .description("How to display armor.")
+        .defaultValue(Orientation.Horizontal)
+        .onChanged(val -> calculateSize())
+        .build()
+    );
+
+    private final Setting<Boolean> flipOrder = sgGeneral.add(new BoolSetting.Builder()
+        .name("flip-order")
+        .description("Flips the order of armor items.")
+        .defaultValue(true)
+        .build()
+    );
+
+    private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
+        .name("scale")
+        .description("The scale.")
+        .defaultValue(1)
+        .onChanged(aDouble -> calculateSize())
+        .min(0.5)
+        .sliderRange(0.5, 5)
+        .build()
+    );
+
+    private final Setting<Integer> roundness = sgStyle.add(new IntSetting.Builder()
+        .name("roundness")
+        .description("Corner radius of the panel.")
+        .defaultValue(6)
+        .min(0)
+        .sliderMax(16)
+        .build()
+    );
+
+    private final Setting<SettingColor> backgroundColor = sgStyle.add(new ColorSetting.Builder()
+        .name("background-color")
+        .description("Panel background color.")
+        .defaultValue(new SettingColor(20, 20, 25, 230))
+        .build()
+    );
+
+    private final Setting<SettingColor> outlineColor = sgStyle.add(new ColorSetting.Builder()
+        .name("outline-color")
+        .description("Panel outline color.")
+        .defaultValue(new SettingColor(48, 53, 60, 255))
+        .build()
+    );
+
+    private final Setting<Durability> durability = sgDurability.add(new EnumSetting.Builder<Durability>()
+        .name("durability")
+        .description("How to display armor durability.")
+        .defaultValue(Durability.Percentage)
+        .onChanged(durability1 -> calculateSize())
+        .build()
+    );
+
+    private final Setting<SettingColor> durabilityColor = sgDurability.add(new ColorSetting.Builder()
+        .name("durability-color")
+        .description("Color of the durability text.")
+        .visible(() -> durability.get() == Durability.Total || durability.get() == Durability.Percentage)
+        .defaultValue(new SettingColor(161, 164, 177))
+        .build()
+    );
+
+    private final Setting<Boolean> durabilityShadow = sgDurability.add(new BoolSetting.Builder()
+        .name("durability-shadow")
+        .description("Text shadow.")
+        .visible(() -> durability.get() == Durability.Total || durability.get() == Durability.Percentage)
+        .defaultValue(false)
+        .build()
+    );
+
+    public ArmorHud() {
+        super(INFO);
+        calculateSize();
+    }
+
+    @Override
+    public void adjustScale(double delta) {
+        scale.set(MathHelper.clamp(scale.get() + delta, 0.5, 5.0));
+        calculateSize();
+    }
+
+    @Override
+    public double getScaleValue() {
+        return scale.get();
+    }
+
+    private void calculateSize() {
+        float itemSize = BASE_ITEM * scale.get().floatValue();
+        float gap = BASE_GAP * scale.get().floatValue();
+        float pad = BASE_PAD * scale.get().floatValue();
+
+        if (orientation.get() == Orientation.Horizontal) {
+            setSize(pad * 2 + itemSize * 4 + gap * 3, pad * 2 + itemSize);
+        }
+        else {
+            setSize(pad * 2 + itemSize, pad * 2 + itemSize * 4 + gap * 3);
+        }
+    }
+
+    @Override
+    public void render(HudRenderer renderer) {
+        float w = getWidth();
+        float h = getHeight();
+        float pad = BASE_PAD * scale.get().floatValue();
+        float itemSize = BASE_ITEM * scale.get().floatValue();
+        float gap = BASE_GAP * scale.get().floatValue();
+        float spacing = itemSize + gap;
+        float itemScale = scale.get().floatValue();
+        float radius = roundness.get();
+
+        MorzhSmoothRenderer.roundedRectNoBegin(renderer.drawContext, x, y, w, h, Math.max(5.5f, radius),
+            HudChrome.RV_OUTER);
+        MorzhSmoothRenderer.roundedRectNoBegin(renderer.drawContext, x + 1, y + 1, w - 2, h - 2, Math.max(4.5f, radius - 0.5f),
+            HudChrome.RV_INNER);
+
+        float startX = x + pad;
+        float startY = y + pad;
+
+        renderer.post(() -> renderArmorItems(
+            HudRenderer.INSTANCE.drawContext != null ? HudRenderer.INSTANCE.drawContext : renderer.drawContext,
+            startX, startY, itemScale, spacing, itemSize
+        ));
+    }
+
+    private void renderArmorItems(DrawContext context, float startX, float startY, float itemScale, float spacing, float itemSize) {
+        int slot = flipOrder.get() ? 3 : 0;
+
+        for (int position = 0; position < 4; position++) {
+            ItemStack stack = getItem(slot);
+            float drawX = orientation.get() == Orientation.Horizontal ? startX + position * spacing : startX;
+            float drawY = orientation.get() == Orientation.Vertical ? startY + position * spacing : startY;
+            int ix = Math.round(drawX);
+            int iy = Math.round(drawY);
+            int pixelSize = Math.max(1, Math.round(itemSize));
+
+            boolean overlayBar = stack.isDamageable() && durability.get() == Durability.Bar;
+
+            if (mode.get() == Mode.V2 && stack.isDamageable() && durability.get() == Durability.Bar) {
+                RenderSystem.setShaderColor(0.4f, 0.4f, 0.4f, 0.35f);
+                RenderUtils.drawItem(context, stack, ix, iy, itemScale, false);
+                RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+
+                float ratio = 1f - (float) stack.getDamage() / stack.getMaxDamage();
+                float headOffset = slot == 3 ? -4f * itemScale : 0f;
+
+                int clipTop = iy + Math.round(headOffset + (itemSize - headOffset) * (1f - ratio));
+                int clipBottom = iy + Math.round(headOffset + itemSize);
+                context.enableScissor(ix, clipTop, ix + pixelSize, clipBottom);
+                RenderUtils.drawItem(context, stack, ix, iy, itemScale, true);
+                context.disableScissor();
+            }
+            else {
+                RenderUtils.drawItem(context, stack, ix, iy, itemScale, overlayBar);
+            }
+
+            if (stack.isDamageable() && !isInEditor() && durability.get() != Durability.Bar && durability.get() != Durability.None) {
+                String message = switch (durability.get()) {
+                    case Total -> Integer.toString(stack.getMaxDamage() - stack.getDamage());
+                    case Percentage -> Math.round(((stack.getMaxDamage() - stack.getDamage()) * 100f) / (float) stack.getMaxDamage()) + "%";
+                    default -> "";
+                };
+
+                double messageWidth = MorzhSmoothRenderer.textWidth(message);
+                float textX = drawX + itemSize / 2f - (float) messageWidth / 2f;
+                float textY = drawY + itemSize - (float) MorzhSmoothRenderer.textHeight() + 1;
+                MorzhSmoothRenderer.text(context, message, textX, textY, durabilityColor.get().getPacked(), durabilityShadow.get());
+            }
+
+            if (flipOrder.get()) slot--;
+            else slot++;
+        }
+    }
+
+    private ItemStack getItem(int i) {
+        if (isInEditor()) {
+            return switch (i) {
+                case 1 -> Items.NETHERITE_LEGGINGS.getDefaultStack();
+                case 2 -> Items.NETHERITE_CHESTPLATE.getDefaultStack();
+                case 3 -> Items.NETHERITE_HELMET.getDefaultStack();
+                default -> Items.NETHERITE_BOOTS.getDefaultStack();
+            };
+        }
+
+        return mc.player.getInventory().getArmorStack(i);
+    }
+
+    public enum Mode {
+        V1,
+        V2;
+
+        @Override
+        public String toString() {
+            return name();
+        }
+    }
+
+    public enum Durability {
+        None,
+        Bar,
+        Total,
+        Percentage
+    }
+
+    public enum Orientation {
+        Horizontal,
+        Vertical
+    }
+}
+
+
+
+################################################################################
+# METEOR Render2D.java
+# PATH: C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\gui\rasty\util\render\Render2D.java
+################################################################################
+
+package meteordevelopment.meteorclient.gui.rasty.util.render;
+
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.texture.Sprite;
+import net.minecraft.util.Identifier;
+import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL14;
+import meteordevelopment.meteorclient.gui.rasty.Initialization;
+import meteordevelopment.meteorclient.gui.rasty.util.ColorUtil;
+import meteordevelopment.meteorclient.gui.rasty.util.render.pipeline.Arc2D;
+import meteordevelopment.meteorclient.gui.rasty.util.render.pipeline.ArcOutline2D;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Render2D {
+
+    private static boolean inOverlayMode = false;
+    private static boolean savedDepthTest = false;
+    private static boolean savedDepthMask = false;
+    private static boolean savedBlend = false;
+
+    private static final Identifier BACKGROUND_TEXTURE = Identifier.of("meteor-client", "textures/menu/backmenu.png");
+
+    private static final List<Runnable> OVERRIDE_TASKS = new ArrayList<>();
+    private static final float Z_OVERRIDE = 0.0f;
+    private static final float FIXED_GUI_SCALE = 2.0f;
+
+    public static int getFixedScaledWidth() {
+        var window = MinecraftClient.getInstance().getWindow();
+        return (int) Math.ceil((double) window.getFramebufferWidth() / FIXED_GUI_SCALE);
+    }
+
+    public static int getFixedScaledHeight() {
+        var window = MinecraftClient.getInstance().getWindow();
+        return (int) Math.ceil((double) window.getFramebufferHeight() / FIXED_GUI_SCALE);
+    }
+
+    public static float getFixedGuiScale() {
+        return FIXED_GUI_SCALE;
+    }
+
+    public static float getScaleMultiplier() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        float currentScale = (float) client.getWindow().getScaleFactor();
+        return FIXED_GUI_SCALE / currentScale;
+    }
+
+    public static void beginOverlay() {
+        inOverlayMode = true;
+
+        savedDepthTest = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
+        savedDepthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
+        savedBlend = GL11.glIsEnabled(GL11.GL_BLEND);
+
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glDepthMask(false);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL14.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+    }
+
+    public static void endOverlay() {
+        if (savedDepthMask) {
+            GL11.glDepthMask(true);
+        }
+        if (savedDepthTest) {
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
+        } else {
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+        }
+        if (!savedBlend) {
+            GL11.glDisable(GL11.GL_BLEND);
+        }
+
+        inOverlayMode = false;
+    }
+
+    public static void clearDepth() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.getFramebuffer() != null) {
+            GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
+        }
+    }
+
+    public static void enableBlend() {
+        GL11.glEnable(GL11.GL_BLEND);
+        GL14.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+    }
+
+    public static void disableBlend() {
+        GL11.glDisable(GL11.GL_BLEND);
+    }
+
+    public static void enableDepthTest() {
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+    }
+
+    public static void disableDepthTest() {
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+    }
+
+    public static void depthMask(boolean mask) {
+        GL11.glDepthMask(mask);
+    }
+
+    public static void backgroundImage(float opacity) {
+        backgroundImage(opacity, 1.0f);
+    }
+
+    public static void backgroundImage(float opacity, float zoom) {
+        int screenWidth = getFixedScaledWidth();
+        int screenHeight = getFixedScaledHeight();
+
+        float zoomedWidth = screenWidth * zoom;
+        float zoomedHeight = screenHeight * zoom;
+        float offsetX = (screenWidth - zoomedWidth) / 2f;
+        float offsetY = (screenHeight - zoomedHeight) / 2f;
+
+        int alpha = (int) (opacity * 255);
+        int color = (alpha << 24) | 0xFFFFFF;
+        texture(BACKGROUND_TEXTURE, offsetX, offsetY, zoomedWidth, zoomedHeight, color);
+    }
+
+    public static void backgroundImage(float x, float y, float width, float height, float opacity) {
+        int alpha = (int) (opacity * 255);
+        int color = (alpha << 24) | 0xFFFFFF;
+        texture(BACKGROUND_TEXTURE, x, y, width, height, color);
+    }
+
+    public static void rect(float x, float y, float width, float height, int color) {
+        int[] colors = ColorUtil.solid(color);
+        float[] radii = {0, 0, 0, 0};
+        Initialization.getInstance().getManager().getRenderCore().getRectPipeline()
+                .drawRect(x, y, width, height, colors, radii);
+    }
+
+    public static void rect(float x, float y, float width, float height, int color, float radius) {
+        int[] colors = ColorUtil.solid(color);
+        float[] radii = {radius, radius, radius, radius};
+        Initialization.getInstance().getManager().getRenderCore().getRectPipeline()
+                .drawRect(x, y, width, height, colors, radii);
+    }
+
+    public static void rect(float x, float y, float width, float height, int color,
+                            float topLeft, float topRight, float bottomRight, float bottomLeft) {
+        int[] colors = ColorUtil.solid(color);
+        float[] radii = {topLeft, topRight, bottomRight, bottomLeft};
+        Initialization.getInstance().getManager().getRenderCore().getRectPipeline()
+                .drawRect(x, y, width, height, colors, radii);
+    }
+
+    public static void gradientRect(float x, float y, float width, float height,
+                                    int[] colors, float radius) {
+        float[] radii = {radius, radius, radius, radius};
+        Initialization.getInstance().getManager().getRenderCore().getRectPipeline()
+                .drawRect(x, y, width, height, colors, radii);
+    }
+
+    public static void gradientRect(float x, float y, float width, float height,
+                                    int[] colors, float topLeft, float topRight,
+                                    float bottomRight, float bottomLeft) {
+        float[] radii = {topLeft, topRight, bottomRight, bottomLeft};
+        Initialization.getInstance().getManager().getRenderCore().getRectPipeline()
+                .drawRect(x, y, width, height, colors, radii);
+    }
+
+    public static void gradientRect9(float x, float y, float width, float height,
+                                     int topLeft, int topCenter, int topRight,
+                                     int leftCenter, int center, int rightCenter,
+                                     int bottomLeft, int bottomCenter, int bottomRight,
+                                     float radius) {
+        int[] colors = {topLeft, topCenter, topRight, leftCenter, center, rightCenter, bottomLeft, bottomCenter, bottomRight};
+        float[] radii = {radius, radius, radius, radius};
+        Initialization.getInstance().getManager().getRenderCore().getRectPipeline()
+                .drawRect(x, y, width, height, colors, radii);
+    }
+
+    public static void gradientRect9(float x, float y, float width, float height,
+                                     int[] colors9, float radius) {
+        float[] radii = {radius, radius, radius, radius};
+        Initialization.getInstance().getManager().getRenderCore().getRectPipeline()
+                .drawRect(x, y, width, height, colors9, radii);
+    }
+
+    public static void gradientRect9(float x, float y, float width, float height,
+                                     int[] colors9, float topLeft, float topRight,
+                                     float bottomRight, float bottomLeft) {
+        float[] radii = {topLeft, topRight, bottomRight, bottomLeft};
+        Initialization.getInstance().getManager().getRenderCore().getRectPipeline()
+                .drawRect(x, y, width, height, colors9, radii);
+    }
+
+    public static void gradientRect9(float x, float y, float width, float height,
+                                     int topLeft, int topCenter, int topRight,
+                                     int leftCenter, int center, int rightCenter,
+                                     int bottomLeft, int bottomCenter, int bottomRight,
+                                     float radius, float innerBlur) {
+        int[] colors = {topLeft, topCenter, topRight, leftCenter, center, rightCenter, bottomLeft, bottomCenter, bottomRight};
+        float[] radii = {radius, radius, radius, radius};
+        Initialization.getInstance().getManager().getRenderCore().getRectPipeline()
+                .drawRect(x, y, width, height, colors, radii, innerBlur);
+    }
+
+    public static void gradientRect9(float x, float y, float width, float height,
+                                     int[] colors9, float radius, float innerBlur) {
+        float[] radii = {radius, radius, radius, radius};
+        Initialization.getInstance().getManager().getRenderCore().getRectPipeline()
+                .drawRect(x, y, width, height, colors9, radii, innerBlur);
+    }
+
+    public static void outline(float x, float y, float width, float height, float thickness, int color) {
+        int[] colors = ColorUtil.solid8(color);
+        float[] thicknesses = {thickness, thickness, thickness, thickness, thickness, thickness, thickness, thickness};
+        float[] radii = {0, 0, 0, 0};
+        Initialization.getInstance().getManager().getRenderCore().getOutlinePipeline()
+                .drawOutline(x, y, width, height, colors, thicknesses, radii, 1.0f);
+    }
+
+    public static void outline(float x, float y, float width, float height, float thickness, int color, float radius) {
+        int[] colors = ColorUtil.solid8(color);
+        float[] thicknesses = {thickness, thickness, thickness, thickness, thickness, thickness, thickness, thickness};
+        float[] radii = {radius, radius, radius, radius};
+        Initialization.getInstance().getManager().getRenderCore().getOutlinePipeline()
+                .drawOutline(x, y, width, height, colors, thicknesses, radii, 1.0f);
+    }
+
+    public static void outline(float x, float y, float width, float height, float thickness, int color,
+                               float topLeft, float topRight, float bottomRight, float bottomLeft) {
+        int[] colors = ColorUtil.solid8(color);
+        float[] thicknesses = {thickness, thickness, thickness, thickness, thickness, thickness, thickness, thickness};
+        float[] radii = {topLeft, topRight, bottomRight, bottomLeft};
+        Initialization.getInstance().getManager().getRenderCore().getOutlinePipeline()
+                .drawOutline(x, y, width, height, colors, thicknesses, radii, 1.0f);
+    }
+
+    public static void gradientOutline(float x, float y, float width, float height, float thickness,
+                                       int[] colors, float radius) {
+        float[] thicknesses = {thickness, thickness, thickness, thickness, thickness, thickness, thickness, thickness};
+        float[] radii = {radius, radius, radius, radius};
+        Initialization.getInstance().getManager().getRenderCore().getOutlinePipeline()
+                .drawOutline(x, y, width, height, colors, thicknesses, radii, 1.0f);
+    }
+
+    public static void blur(float x, float y, float width, float height, float blurRadius, int tintColor) {
+        float[] radii = {0, 0, 0, 0};
+        Initialization.getInstance().getManager().getRenderCore().getBlurPipeline()
+                .drawBlur(x, y, width, height, blurRadius, radii, tintColor);
+    }
+
+    public static void blur(float x, float y, float width, float height, float blurRadius, float cornerRadius, int tintColor) {
+        float[] radii = {cornerRadius, cornerRadius, cornerRadius, cornerRadius};
+        Initialization.getInstance().getManager().getRenderCore().getBlurPipeline()
+                .drawBlur(x, y, width, height, blurRadius, radii, tintColor);
+    }
+
+    public static void blur(float x, float y, float width, float height, float blurRadius,
+                            float topLeft, float topRight, float bottomRight, float bottomLeft, int tintColor) {
+        float[] radii = {topLeft, topRight, bottomRight, bottomLeft};
+        Initialization.getInstance().getManager().getRenderCore().getBlurPipeline()
+                .drawBlur(x, y, width, height, blurRadius, radii, tintColor);
+    }
+
+    public static void texture(Identifier id, float x, float y, float width, float height, int color) {
+        texture(id, x, y, width, height, 0, 0, 1, 1, color, 1f, 0f);
+    }
+
+    public static void texture(Identifier id, float x, float y, float width, float height, float smoothness, int color) {
+        texture(id, x, y, width, height, 0, 0, 1, 1, color, smoothness, 0f);
+    }
+
+    public static void texture(Identifier id, float x, float y, float width, float height, float smoothness, float radius, int color) {
+        texture(id, x, y, width, height, 0, 0, 1, 1, color, smoothness, radius);
+    }
+
+    public static void texture(Identifier id, float x, float y, float width, float height,
+                               float u0, float v0, float u1, float v1, int color) {
+        texture(id, x, y, width, height, u0, v0, u1, v1, color, 1f, 0f);
+    }
+
+    public static void texture(Identifier id, float x, float y, float width, float height,
+                               float u0, float v0, float u1, float v1, int color, float radius) {
+        texture(id, x, y, width, height, u0, v0, u1, v1, color, 1f, radius);
+    }
+
+    public static void texture(Identifier id, float x, float y, float width, float height,
+                               float u0, float v0, float u1, float v1, int color, float smoothness, float radius) {
+        int[] colors = {color, color, color, color};
+        float[] radii = {radius, radius, radius, radius};
+        Initialization.getInstance().getManager().getRenderCore().getTexturePipeline()
+                .drawTexture(id, x, y, width, height, u0, v0, u1, v1, colors, radii, smoothness);
+    }
+
+    public static void drawTexture(DrawContext context, Identifier id,
+                                   float x, float y, float width, float height,
+                                   float u, float v, float regionWidth, float regionHeight,
+                                   float textureWidth, float textureHeight,
+                                   int color) {
+        float u0 = u / textureWidth;
+        float v0 = v / textureHeight;
+        float u1 = (u + regionWidth) / textureWidth;
+        float v1 = (v + regionHeight) / textureHeight;
+
+        texture(id, x, y, width, height, u0, v0, u1, v1, color, 1f, 0f);
+    }
+
+    public static void drawTexture(DrawContext context, Identifier id,
+                                   float x, float y, float width, float height,
+                                   float u, float v, float regionWidth, float regionHeight,
+                                   float textureWidth, float textureHeight,
+                                   int color, float radius) {
+        float u0 = u / textureWidth;
+        float v0 = v / textureHeight;
+        float u1 = (u + regionWidth) / textureWidth;
+        float v1 = (v + regionHeight) / textureHeight;
+
+        texture(id, x, y, width, height, u0, v0, u1, v1, color, 1f, radius);
+    }
+
+    public static void drawSprite(Sprite sprite, float x, float y, float width, float height, int color) {
+        drawSprite(sprite, x, y, width, height, color, true);
+    }
+
+    public static void drawSprite(Sprite sprite, float x, float y, float width, float height, int color, boolean pixelPerfect) {
+        if (sprite == null || width == 0 || height == 0) return;
+
+        float smoothness = pixelPerfect ? 1f : 0f;
+        texture(sprite.getAtlasId(), x, y, width, height,
+                sprite.getMinU(), sprite.getMinV(),
+                sprite.getMaxU(), sprite.getMaxV(),
+                color, smoothness, 0f);
+    }
+
+    public static void drawSpriteSmooth(Sprite sprite, float x, float y, float width, float height, int color) {
+        drawSprite(sprite, x, y, width, height, color, false);
+    }
+
+    public static void drawFramebufferTexture(int textureId, float x, float y, float width, float height,
+                                              float r, float g, float b, float a) {
+        int color = ((int)(a * 255) << 24) | ((int)(r * 255) << 16) | ((int)(g * 255) << 8) | (int)(b * 255);
+        int[] colors = {color, color, color, color};
+        float[] radii = {0, 0, 0, 0};
+
+        Initialization.getInstance().getManager().getRenderCore().getTexturePipeline()
+                .drawFramebufferTexture(textureId, x, y, width, height, colors, radii, a);
+    }
+
+    public static void glowOutline(float x, float y, float width, float height, float thickness,
+                                   int color, float radius, float progress, float baseAlpha) {
+        float[] radii = {radius, radius, radius, radius};
+        Initialization.getInstance().getManager().getRenderCore().getGlowOutlinePipeline()
+                .drawGlowOutline(x, y, width, height, color, thickness, radii, progress, baseAlpha);
+    }
+
+    public static void glowOutline(float x, float y, float width, float height, float thickness,
+                                   int color, float topLeft, float topRight, float bottomRight, float bottomLeft,
+                                   float progress, float baseAlpha) {
+        float[] radii = {topLeft, topRight, bottomRight, bottomLeft};
+        Initialization.getInstance().getManager().getRenderCore().getGlowOutlinePipeline()
+                .drawGlowOutline(x, y, width, height, color, thickness, radii, progress, baseAlpha);
+    }
+
+    public static Matrix4f createProjection() {
+        int width = getFixedScaledWidth();
+        int height = getFixedScaledHeight();
+        return new Matrix4f().ortho(0, width, height, 0, -1000, 1000);
+    }
+
+    public static void arc(DrawContext context, float x, float y, float size, float thickness, float degree,
+                           float rotation, int color, boolean overrideContext) {
+        arc(createProjection(), x, y, size, thickness, degree, rotation, color, overrideContext);
+    }
+
+    public static void arc(DrawContext context, float x, float y, float size, float thickness, float degree,
+                           float rotation, boolean overrideContext, int... colors) {
+        arc(createProjection(), x, y, size, thickness, degree, rotation, overrideContext, colors);
+    }
+
+    public static void arc(Matrix4f matrix, float x, float y, float size, float thickness, float degree, float rotation,
+                           int color, boolean overrideContext) {
+        if (overrideContext) {
+            OVERRIDE_TASKS.add(() -> Arc2D.draw(matrix, x, y, size, thickness, degree, rotation, Z_OVERRIDE, color));
+            return;
+        }
+        Arc2D.draw(matrix, x, y, size, thickness, degree, rotation, Z_OVERRIDE, color);
+    }
+
+    public static void arc(Matrix4f matrix, float x, float y, float size, float thickness, float degree, float rotation,
+                           boolean overrideContext, int... colors) {
+        if (overrideContext) {
+            OVERRIDE_TASKS.add(() -> Arc2D.draw(matrix, x, y, size, thickness, degree, rotation, Z_OVERRIDE, colors));
+            return;
+        }
+        Arc2D.draw(matrix, x, y, size, thickness, degree, rotation, Z_OVERRIDE, colors);
+    }
+
+    public static void arc(float x, float y, float size, float thickness, float degree, float rotation, int color) {
+        Arc2D.draw(createProjection(), x, y, size, thickness, degree, rotation, Z_OVERRIDE, color);
+    }
+
+    public static void arc(float x, float y, float size, float thickness, float degree, float rotation, int... colors) {
+        Arc2D.draw(createProjection(), x, y, size, thickness, degree, rotation, Z_OVERRIDE, colors);
+    }
+
+    public static void arcOutline(float x, float y, float size, float arcThickness, float degree,
+                                  float rotation, float outlineThickness, int fillColor, int outlineColor) {
+        ArcOutline2D.draw(createProjection(), x, y, size, arcThickness, degree, rotation, outlineThickness, fillColor, outlineColor, Z_OVERRIDE);
+    }
+
+    public static void arcOutline(DrawContext context, float x, float y, float size, float arcThickness, float degree,
+                                  float rotation, float outlineThickness, int fillColor, int outlineColor, boolean overrideContext) {
+        Matrix4f matrix = createProjection();
+        if (overrideContext) {
+            OVERRIDE_TASKS.add(() -> ArcOutline2D.draw(matrix, x, y, size, arcThickness, degree, rotation, outlineThickness, fillColor, outlineColor, Z_OVERRIDE));
+            return;
+        }
+        ArcOutline2D.draw(matrix, x, y, size, arcThickness, degree, rotation, outlineThickness, fillColor, outlineColor, Z_OVERRIDE);
+    }
+
+    public static void arcOutline(Matrix4f matrix, float x, float y, float size, float arcThickness, float degree,
+                                  float rotation, float outlineThickness, int fillColor, int outlineColor) {
+        ArcOutline2D.draw(matrix, x, y, size, arcThickness, degree, rotation, outlineThickness, fillColor, outlineColor, Z_OVERRIDE);
+    }
+
+    public static void flushOverrideTasks() {
+        for (Runnable task : OVERRIDE_TASKS) {
+            task.run();
+        }
+        OVERRIDE_TASKS.clear();
+    }
+
+    public static boolean isInOverlayMode() {
+        return inOverlayMode;
+    }
+
+    public static void cleanup() {
+        OVERRIDE_TASKS.clear();
+        Arc2D.shutdown();
+        ArcOutline2D.shutdown();
+    }
+}
+
+
+################################################################################
+# METEOR MorzhSmoothRenderer.java
+# PATH: C:\dev\meteor-fork\src\main\java\meteordevelopment\meteorclient\gui\morzh\MorzhSmoothRenderer.java
+################################################################################
+
+package meteordevelopment.meteorclient.gui.morzh;
+
+import meteordevelopment.meteorclient.renderer.Mesh;
+import meteordevelopment.meteorclient.renderer.Renderer2D;
+import meteordevelopment.meteorclient.utils.render.color.Color;
+import net.minecraft.client.gui.DrawContext;
+
+/**
+ * Shared "smooth" drawing helpers for the whole client HUD.
+ *
+ * Everything here goes through the vector Renderer2D pipeline instead of
+ * DrawContext#fill, and every corner is a real curve with a soft
+ * anti-aliased edge instead of a hard right angle.
+ */
+public final class MorzhSmoothRenderer {
+    private static final int CORNER_SEGMENTS = 18;
+    private static final float AA_FEATHER = 1.25f;
+
+    private MorzhSmoothRenderer() {}
+
+    public static void roundedRect(DrawContext context, float x, float y, float width, float height, float radius, int packedColor) {
+        roundedRect(context, x, y, width, height, radius, packedColor, 0, 0f);
+    }
+
+    public static void roundedRect(DrawContext context, float x, float y, float width, float height, float radius, int fillColor, int outlineColor, float outlineThickness) {
+        if (width <= 0 || height <= 0) return;
+
+        Renderer2D r = Renderer2D.COLOR;
+        r.begin();
+
+        Color fill = unpack(fillColor);
+
+        if (outlineThickness > 0 && (outlineColor >>> 24) > 0) {
+            Color outline = unpack(outlineColor);
+
+            fill(r, x, y, width, height, radius, outline);
+            fill(r, x + outlineThickness, y + outlineThickness,
+                width - outlineThickness * 2, height - outlineThickness * 2,
+                Math.max(0, radius - outlineThickness), fill);
+
+            feather(r, x, y, width, height, radius, outline);
+        }
+        else {
+            fill(r, x, y, width, height, radius, fill);
+            feather(r, x, y, width, height, radius, fill);
+        }
+
+        r.render(context.getMatrices());
+    }
+
+    public static void roundedRectNoBegin(DrawContext context, float x, float y, float width, float height, float radius, int packedColor) {
+        roundedRectNoBegin(context, x, y, width, height, radius, packedColor, 0, 0f);
+    }
+
+    public static void roundedRectNoBegin(DrawContext context, float x, float y, float width, float height, float radius, int fillColor, int outlineColor, float outlineThickness) {
+        if (width <= 0 || height <= 0) return;
+
+        Renderer2D r = Renderer2D.COLOR;
+        Color fill = unpack(fillColor);
+
+        if (outlineThickness > 0 && (outlineColor >>> 24) > 0) {
+            Color outline = unpack(outlineColor);
+
+            fill(r, x, y, width, height, radius, outline);
+            fill(r, x + outlineThickness, y + outlineThickness,
+                width - outlineThickness * 2, height - outlineThickness * 2,
+                Math.max(0, radius - outlineThickness), fill);
+
+            feather(r, x, y, width, height, radius, outline);
+        }
+        else {
+            fill(r, x, y, width, height, radius, fill);
+            feather(r, x, y, width, height, radius, fill);
+        }
+    }
+
+    /** Ring segment, degrees clockwise from +X. Used for pearl landing timer. */
+    public static void arcRing(DrawContext context, float cx, float cy, float radius, float thickness, float startDeg, float sweepDeg, int packedColor) {
+        if (radius <= 0 || thickness <= 0 || sweepDeg <= 0) return;
+        Renderer2D r = Renderer2D.COLOR;
+        r.begin();
+        Color color = unpack(packedColor);
+        int segments = Math.max(8, (int) (Math.abs(sweepDeg) / 6));
+        double start = Math.toRadians(startDeg);
+        double step = Math.toRadians(sweepDeg) / segments;
+        double inner = Math.max(0, radius - thickness);
+        for (int i = 0; i < segments; i++) {
+            double a0 = start + step * i;
+            double a1 = start + step * (i + 1);
+            double x0i = cx + Math.cos(a0) * inner, y0i = cy + Math.sin(a0) * inner;
+            double x1i = cx + Math.cos(a1) * inner, y1i = cy + Math.sin(a1) * inner;
+            double x0o = cx + Math.cos(a0) * radius, y0o = cy + Math.sin(a0) * radius;
+            double x1o = cx + Math.cos(a1) * radius, y1o = cy + Math.sin(a1) * radius;
+            r.triangle(x0i, y0i, x0o, y0o, x1o, y1o, color);
+            r.triangle(x0i, y0i, x1o, y1o, x1i, y1i, color);
+        }
+        r.render(context.getMatrices());
+    }
+
+    public static void gradientRect(DrawContext context, float x, float y, float width, float height, int leftColor, int rightColor) {
+        if (width <= 0 || height <= 0) return;
+
+        Renderer2D r = Renderer2D.COLOR;
+        r.begin();
+
+        Color left = unpack(leftColor);
+        Color right = unpack(rightColor);
+
+        r.quad(x, y, width, height, left, right, right, left);
+        r.render(context.getMatrices());
+    }
+
+    public static void circle(DrawContext context, float cx, float cy, float radius, int packedColor) {
+        if (radius <= 0) return;
+
+        Renderer2D r = Renderer2D.COLOR;
+        r.begin();
+
+        Color color = unpack(packedColor);
+        arc(r, cx, cy, radius, 0, 360, CORNER_SEGMENTS * 4, color);
+        featherCorner(r, cx, cy, radius, 0, 360, color);
+
+        r.render(context.getMatrices());
+    }
+
+    public static void text(DrawContext context, String text, double x, double y, int packedColor, boolean shadow) {
+        MorzhFontRenderer.draw(context, text, x, y, packedColor, shadow);
+    }
+
+    public static void text(DrawContext context, String text, double x, double y, int packedColor, boolean shadow, double scale) {
+        MorzhFontRenderer.draw(context, text, x, y, packedColor, shadow, scale);
+    }
+
+    public static double textWidth(String text) {
+        return MorzhFontRenderer.width(text);
+    }
+
+    public static double textWidth(String text, double scale) {
+        return MorzhFontRenderer.width(text, scale);
+    }
+
+    public static double textHeight() {
+        return MorzhFontRenderer.height();
+    }
+
+    public static double textHeight(double scale) {
+        return MorzhFontRenderer.height(scale);
+    }
+
+    public static String fitText(String text, double maxWidth) {
+        return fitText(text, maxWidth, 1.0);
+    }
+
+    public static String fitText(String text, double maxWidth, double scale) {
+        if (text == null || text.isEmpty()) return "";
+        if (maxWidth <= 0) return "";
+        if (textWidth(text, scale) <= maxWidth) return text;
+
+        double ellipsisWidth = textWidth("вЂ¦", scale);
+        if (ellipsisWidth > maxWidth) return "";
+
+        StringBuilder builder = new StringBuilder();
+        double used = 0;
+
+        for (int i = 0; i < text.length(); i++) {
+            double charWidth = textWidth(String.valueOf(text.charAt(i)), scale);
+            if (used + charWidth + ellipsisWidth > maxWidth) break;
+            builder.append(text.charAt(i));
+            used += charWidth;
+        }
+
+        return builder.append('вЂ¦').toString();
+    }
+
+    private static void fill(Renderer2D r, double x, double y, double w, double h, double radius, Color color) {
+        if (w <= 0 || h <= 0) return;
+
+        radius = Math.max(0, Math.min(radius, Math.min(w, h) / 2.0));
+
+        if (radius < 0.5) {
+            r.quad(x, y, w, h, color);
+            return;
+        }
+
+        r.quad(x + radius, y, w - radius * 2, h, color);
+        r.quad(x, y + radius, radius, h - radius * 2, color);
+        r.quad(x + w - radius, y + radius, radius, h - radius * 2, color);
+
+        arc(r, x + radius, y + radius, radius, 180, 270, CORNER_SEGMENTS, color);
+        arc(r, x + w - radius, y + radius, radius, 270, 360, CORNER_SEGMENTS, color);
+        arc(r, x + w - radius, y + h - radius, radius, 0, 90, CORNER_SEGMENTS, color);
+        arc(r, x + radius, y + h - radius, radius, 90, 180, CORNER_SEGMENTS, color);
+    }
+
+    private static void arc(Renderer2D r, double cx, double cy, double radius, double startDeg, double endDeg, int segments, Color color) {
+        double startRad = Math.toRadians(startDeg);
+        double stepRad = Math.toRadians(endDeg - startDeg) / segments;
+
+        double prevX = cx + Math.cos(startRad) * radius;
+        double prevY = cy + Math.sin(startRad) * radius;
+
+        for (int i = 1; i <= segments; i++) {
+            double angle = startRad + stepRad * i;
+            double px = cx + Math.cos(angle) * radius;
+            double py = cy + Math.sin(angle) * radius;
+
+            r.triangle(cx, cy, prevX, prevY, px, py, color);
+
+            prevX = px;
+            prevY = py;
+        }
+    }
+
+    private static void feather(Renderer2D r, double x, double y, double w, double h, double radius, Color base) {
+        Color solid = base.copy();
+        Color clear = base.copy();
+        clear.a(0);
+
+        r.quad(x + radius, y - AA_FEATHER, w - radius * 2, AA_FEATHER, clear, clear, solid, solid);
+        r.quad(x + radius, y + h, w - radius * 2, AA_FEATHER, solid, solid, clear, clear);
+        r.quad(x - AA_FEATHER, y + radius, AA_FEATHER, h - radius * 2, clear, solid, solid, clear);
+        r.quad(x + w, y + radius, AA_FEATHER, h - radius * 2, solid, clear, clear, solid);
+
+        featherCorner(r, x + radius, y + radius, radius, 180, 270, solid);
+        featherCorner(r, x + w - radius, y + radius, radius, 270, 360, solid);
+        featherCorner(r, x + w - radius, y + h - radius, radius, 0, 90, solid);
+        featherCorner(r, x + radius, y + h - radius, radius, 90, 180, solid);
+    }
+
+    private static void featherCorner(Renderer2D r, double cx, double cy, double radius, double startDeg, double endDeg, Color solid) {
+        Mesh mesh = r.triangles;
+
+        Color clear = solid.copy();
+        clear.a(0);
+
+        double startRad = Math.toRadians(startDeg);
+        double stepRad = Math.toRadians(endDeg - startDeg) / CORNER_SEGMENTS;
+
+        double prevOutX = cx + Math.cos(startRad) * (radius + AA_FEATHER);
+        double prevOutY = cy + Math.sin(startRad) * (radius + AA_FEATHER);
+        double prevInX = cx + Math.cos(startRad) * radius;
+        double prevInY = cy + Math.sin(startRad) * radius;
+
+        for (int i = 1; i <= CORNER_SEGMENTS; i++) {
+            double angle = startRad + stepRad * i;
+
+            double outX = cx + Math.cos(angle) * (radius + AA_FEATHER);
+            double outY = cy + Math.sin(angle) * (radius + AA_FEATHER);
+            double inX = cx + Math.cos(angle) * radius;
+            double inY = cy + Math.sin(angle) * radius;
+
+            int i1 = mesh.vec2(prevInX, prevInY).color(solid).next();
+            int i2 = mesh.vec2(prevOutX, prevOutY).color(clear).next();
+            int i3 = mesh.vec2(outX, outY).color(clear).next();
+            int i4 = mesh.vec2(inX, inY).color(solid).next();
+
+            mesh.quad(i1, i2, i3, i4);
+
+            prevOutX = outX; prevOutY = outY;
+            prevInX = inX; prevInY = inY;
+        }
+    }
+
+    private static Color unpack(int packedColor) {
+        return new Color(packedColor >> 16 & 255, packedColor >> 8 & 255, packedColor & 255, packedColor >>> 24);
+    }
+}
+
+
+
+################################################################################
+# METEOR rasty_texture.vert
+# PATH: C:\dev\meteor-fork\src\main\resources\assets\meteor-client\shaders\rasty_texture.vert
+################################################################################
+
+#version 330 core
+
+uniform vec4 u_Rect;
+uniform vec4 u_Uv;
+uniform vec4 u_Radii;
+uniform vec4 u_Rotation;
+uniform vec4 u_Screen;
+uniform vec4 u_Colors[4];
+
+out vec2 fragCoord;
+out vec2 pixelCoord;
+out vec2 texCoord;
+out vec2 rectSize;
+out vec4 cornerRadii;
+out vec4 fragColors[4];
+out float fragSmoothness;
+out float guiScale;
+
+void main() {
+    vec2 positions[6] = vec2[](
+        vec2(0.0, 0.0),
+        vec2(1.0, 0.0),
+        vec2(1.0, 1.0),
+        vec2(0.0, 0.0),
+        vec2(1.0, 1.0),
+        vec2(0.0, 1.0)
+    );
+
+    vec2 pos = positions[gl_VertexID];
+
+    float rotation = u_Rotation.x;
+    vec2 center = u_Rect.xy + u_Rect.zw * 0.5;
+    vec2 localPos = (pos - 0.5) * u_Rect.zw;
+
+    float cosR = cos(rotation);
+    float sinR = sin(rotation);
+    vec2 rotatedPos = vec2(
+        localPos.x * cosR - localPos.y * sinR,
+        localPos.x * sinR + localPos.y * cosR
+    );
+
+    vec2 screenPos = center + rotatedPos;
+    vec2 ndcPos = (screenPos / u_Screen.xy) * 2.0 - 1.0;
+    ndcPos.y = -ndcPos.y;
+
+    gl_Position = vec4(ndcPos, 0.0, 1.0);
+
+    fragCoord = pos;
+    pixelCoord = pos * u_Rect.zw;
+    rectSize = u_Rect.zw;
+    cornerRadii = u_Radii;
+    fragSmoothness = u_Screen.z;
+    guiScale = u_Screen.w;
+
+    texCoord = vec2(
+        mix(u_Uv.x, u_Uv.z, pos.x),
+        mix(u_Uv.y, u_Uv.w, pos.y)
+    );
+
+    for (int i = 0; i < 4; i++) {
+        fragColors[i] = u_Colors[i];
+    }
+}
+
+
+
+################################################################################
+# METEOR rasty_texture.frag
+# PATH: C:\dev\meteor-fork\src\main\resources\assets\meteor-client\shaders\rasty_texture.frag
+################################################################################
+
+#version 330 core
+
+in vec2 fragCoord;
+in vec2 pixelCoord;
+in vec2 texCoord;
+in vec2 rectSize;
+in vec4 cornerRadii;
+in vec4 fragColors[4];
+in float fragSmoothness;
+in float guiScale;
+
+out vec4 fragColor;
+
+uniform sampler2D Sampler0;
+
+float roundedBoxSDF(vec2 p, vec2 b, vec4 r) {
+    r.xy = (p.x > 0.0) ? r.yz : r.xw;
+    r.x = (p.y > 0.0) ? r.y : r.x;
+    vec2 q = abs(p) - b + r.x;
+    return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - r.x;
+}
+
+vec4 sampleGradient(vec2 uv) {
+    vec4 top = mix(fragColors[0], fragColors[3], uv.x);
+    vec4 bottom = mix(fragColors[1], fragColors[2], uv.x);
+    return mix(top, bottom, uv.y);
+}
+
+void main() {
+    vec2 halfSize = rectSize * 0.5;
+    vec2 center = pixelCoord - halfSize;
+
+    vec4 radii = min(cornerRadii, vec4(min(halfSize.x, halfSize.y)));
+    float dist = roundedBoxSDF(center, halfSize, radii);
+
+    float edgeSmoothing = fwidth(dist);
+    float alpha = clamp(0.5 - dist / max(edgeSmoothing, 0.0001), 0.0, 1.0);
+
+    if (alpha <= 0.0) {
+        discard;
+    }
+    vec2 texSize = vec2(textureSize(Sampler0, 0));
+    vec2 sharpTexCoord = (floor(texCoord * texSize) + 0.5) / texSize;
+    vec4 texColor = mix(texture(Sampler0, sharpTexCoord), texture(Sampler0, texCoord), clamp(fragSmoothness, 0.0, 1.0));
+
+    vec4 tintColor = sampleGradient(fragCoord);
+
+    vec3 finalColor = texColor.rgb * tintColor.rgb;
+    float finalAlpha = texColor.a * tintColor.a * alpha;
+
+    fragColor = vec4(finalColor, finalAlpha);
+}
+
+
+
+################################################################################
+# RASTY TargetHud.java
+# PATH: C:\dev\rastyclient-main\rastyclient-main\Rastyclient.cc\Rastyclient\src\main\java\rasty\screens\hud\TargetHud.java
+################################################################################
+
+package rasty.screens.hud;
+
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.client.render.entity.state.LivingEntityRenderState;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.scoreboard.ScoreAccess;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
+import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.util.Identifier;
+import rasty.client.draggables.AbstractHudElement;
+import rasty.modules.impl.combat.Aura;
+import rasty.modules.impl.player.NameProtect;
+import rasty.modules.impl.render.Hud;
+import rasty.util.Instance;
+import rasty.util.network.Network;
+import rasty.util.render.Render2D;
+import rasty.util.render.font.Fonts;
+import rasty.util.timer.StopWatch;
+
+import java.awt.*;
+
+public class TargetHud extends AbstractHudElement {
+
+    private final StopWatch stopWatch    = new StopWatch();
+    private final StopWatch hitStopWatch = new StopWatch();
+
+    private LivingEntity lastTarget;
+    private int prevHurtTime = 0;
+
+    private float healthAnimation     = 0;
+    private float trailAnimation      = 0;
+    private float absorptionAnimation = 0;
+    private float displayedHealth     = 0;
+    private long  lastUpdateTime      = System.currentTimeMillis();
+    private long  startTime           = System.currentTimeMillis();
+
+    private float damageFlashFrom     = 0f;
+    private float damageFlashTo       = 0f;
+    private long  damageFlashStart    = 0L;
+    private float prevHealthForDamage = -1f;
+    private static final long  DAMAGE_FLASH_MS  = 700L;
+    private static final float DAMAGE_MIN_DELTA = 0.005f;
+
+    private float shakeIntensity = 0f;
+    private float shakeOffsetX   = 0f;
+    private float shakeOffsetY   = 0f;
+    private long  lastShakeFlip  = 0;
+
+    private static final float SHAKE_DECAY      = 10f;
+    private static final float SHAKE_MAX_OFFSET = 5.5f;
+    private static final long  SHAKE_FLIP_MS    = 22;
+
+    private static final int   HUD_WIDTH     = 152;
+    private static final int   HUD_HEIGHT    = 52;
+    private static final float FACE_SIZE     = 36f;
+    private static final float FACE_PAD_X    = 8f;
+    private static final float CONTENT_X_OFF = FACE_PAD_X + FACE_SIZE + 7f;
+
+    public TargetHud() {
+        super("TargetHud", 10, 80, HUD_WIDTH, HUD_HEIGHT, true);
+    }
+
+    @Override
+    public boolean visible() { return true; }
+
+    public void setHitTarget(LivingEntity entity) {
+        if (entity == null || entity == mc.player) return;
+        lastTarget   = entity;
+        prevHurtTime = 0;
+        hitStopWatch.reset();
+        startAnimation();
+        triggerShake(1.0f);
+    }
+
+    private void triggerShake(float intensity) {
+        shakeIntensity = Math.min(2.0f, shakeIntensity + intensity);
+    }
+
+    @Override
+    public void tick() {
+        LivingEntity auraTarget = Aura.target;
+
+        if (auraTarget != null) {
+            lastTarget = auraTarget;
+            startAnimation();
+            stopWatch.reset();
+            hitStopWatch.reset();
+        } else if (isChat(mc.currentScreen)) {
+            lastTarget = mc.player;
+            startAnimation();
+            stopWatch.reset();
+        } else {
+            if (!hitStopWatch.finished(3000)) {
+                startAnimation();
+            } else if (stopWatch.finished(10)) {
+                stopAnimation();
+            }
+        }
+
+        if (auraTarget == null && mc.player != null && mc.world != null) {
+            LivingEntity hitCandidate = findRecentlyHitEntity();
+            if (hitCandidate != null) {
+                lastTarget   = hitCandidate;
+                prevHurtTime = hitCandidate.hurtTime;
+                hitStopWatch.reset();
+                startAnimation();
+                triggerShake(1.0f);
+            }
+        }
+
+        if (lastTarget != null) {
+            int cur = lastTarget.hurtTime;
+            if (cur > prevHurtTime && cur >= 8) {
+                triggerShake(1.0f);
+                if (auraTarget == null) {
+                    hitStopWatch.reset();
+                    startAnimation();
+                }
+            }
+            prevHurtTime = cur;
+        } else {
+            prevHurtTime = 0;
+        }
+    }
+
+    private LivingEntity findRecentlyHitEntity() {
+        if (mc.player == null || mc.world == null) return null;
+        LivingEntity best = null;
+        int bestHurt = 0;
+        for (var entity : mc.world.getEntities()) {
+            if (!(entity instanceof LivingEntity living)) continue;
+            if (living == mc.player) continue;
+            if (!living.isAlive()) continue;
+            if (living.distanceTo(mc.player) > 6.0) continue;
+            if (living.hurtTime >= 9) {
+                if (living == lastTarget && living.hurtTime == prevHurtTime) continue;
+                if (living.hurtTime > bestHurt) {
+                    bestHurt = living.hurtTime;
+                    best = living;
+                }
+            }
+        }
+        return best;
+    }
+
+    private float lerp(float current, float target, float deltaTime, float speed) {
+        float factor = (float)(1.0 - Math.pow(0.001, deltaTime * speed));
+        return current + (target - current) * factor;
+    }
+
+    private float snapToStep(float value, float step) {
+        return Math.round(value / step) * step;
+    }
+
+    private float getHealth(LivingEntity entity) {
+        if (entity.isInvisible() && !Network.isSpookyTime() && !Network.isCopyTime())
+            return entity.getMaxHealth();
+        Hud hud = Hud.getInstance();
+        if (hud != null && hud.useScoreboard.isValue()
+                && entity instanceof PlayerEntity player && mc.world != null) {
+            try {
+                ScoreboardObjective obj = mc.world.getScoreboard()
+                        .getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME);
+                if (obj != null) {
+                    ScoreAccess score = mc.world.getScoreboard().getOrCreateScore(player, obj);
+                    if (score != null) return (float) score.getScore();
+                }
+            } catch (Exception ignored) {}
+        }
+        return entity.getHealth();
+    }
+
+    private String getHealthString(float health) {
+        if (lastTarget != null && lastTarget.isInvisible()
+                && !Network.isSpookyTime() && !Network.isCopyTime()) return "??";
+        if (health >= 100) return String.valueOf((int) health);
+        else if (health >= 10) return String.format("%.1f", health);
+        else return String.format("%.2f", health);
+    }
+
+    @Override
+    public void drawDraggable(DrawContext context, int alpha) {
+        if (alpha <= 0) return;
+        if (lastTarget == null) return;
+
+        long  currentTime = System.currentTimeMillis();
+        float deltaTime   = (currentTime - lastUpdateTime) / 1000.0f;
+        lastUpdateTime    = currentTime;
+        deltaTime         = Math.min(deltaTime, 0.1f);
+
+        if (shakeIntensity > 0.005f) {
+            shakeIntensity = lerp(shakeIntensity, 0f, deltaTime, SHAKE_DECAY);
+            long now = System.currentTimeMillis();
+            if (now - lastShakeFlip > SHAKE_FLIP_MS) {
+                lastShakeFlip = now;
+                double angle = Math.random() * Math.PI * 2;
+                float  boost = shakeIntensity > 0.8f ? 1.6f : (shakeIntensity > 0.4f ? 1.2f : 1.0f);
+                shakeOffsetX = (float)(Math.cos(angle) * SHAKE_MAX_OFFSET * shakeIntensity * boost);
+                shakeOffsetY = (float)(Math.sin(angle) * SHAKE_MAX_OFFSET * shakeIntensity * boost);
+            }
+        } else {
+            shakeIntensity = 0f;
+            shakeOffsetX   = 0f;
+            shakeOffsetY   = 0f;
+        }
+
+        setWidth(HUD_WIDTH);
+        setHeight(HUD_HEIGHT);
+
+        float x = getX(), y = getY();
+        float scaleAlpha = scaleAnimation.getOutput().floatValue();
+
+        drawBackground(x, y, scaleAlpha);
+        drawFace(x, y, scaleAlpha);
+        drawContent(x, y, scaleAlpha, deltaTime);
+    }
+
+    private void drawBackground(float x, float y, float alpha) {
+        int alphaInt = (int)(255 * alpha);
+        Render2D.blur(x + 2, y + 2, getWidth() - 4, getHeight() - 4, 15f, 6f, 0x00000000);
+        Render2D.gradientRect(x + 2, y + 2, getWidth() - 4, getHeight() - 4,
+                new int[]{
+                        new Color(15, 15, 15, 90).getRGB(),
+                        new Color(8,  8,  8, 110).getRGB(),
+                        new Color(15, 15, 15, 90).getRGB(),
+                        new Color(8,  8,  8, 110).getRGB()
+                }, 6);
+        Render2D.outline(x + 2, y + 2, getWidth() - 4, getHeight() - 4, 0.35f,
+                new Color(90, 90, 90, alphaInt).getRGB(), 5);
+    }
+
+    private void drawFace(float x, float y, float alpha) {
+        EntityRenderer<? super LivingEntity, ?> baseRenderer =
+                mc.getEntityRenderDispatcher().getRenderer(lastTarget);
+        if (!(baseRenderer instanceof LivingEntityRenderer<?, ?, ?>)) return;
+
+        @SuppressWarnings("unchecked")
+        LivingEntityRenderer<LivingEntity, LivingEntityRenderState, ?> renderer =
+                (LivingEntityRenderer<LivingEntity, LivingEntityRenderState, ?>) baseRenderer;
+
+        LivingEntityRenderState state = renderer.getAndUpdateRenderState(lastTarget, lastTickDelta);
+        Identifier tex = renderer.getTexture(state);
+
+        float faceX = x + FACE_PAD_X + shakeOffsetX;
+        float faceY = y + (HUD_HEIGHT - FACE_SIZE) / 2f + shakeOffsetY;
+
+        float hurt = lastTarget.hurtTime > 0 ? lastTarget.hurtTime / 10.0f : 0f;
+        int color  = new Color(255, (int)(255*(1f-hurt)), (int)(255*(1f-hurt)), (int)(255*alpha)).getRGB();
+
+        Render2D.texture(tex, faceX, faceY, FACE_SIZE, FACE_SIZE,
+                8f/64f, 8f/64f, 16f/64f, 16f/64f, color, 0, 5f);
+        float hatSize = FACE_SIZE * 1.1f, hatOff = (hatSize - FACE_SIZE) / 2f;
+        Render2D.texture(tex, faceX - hatOff, faceY - hatOff, hatSize, hatSize,
+                40f/64f, 8f/64f, 48f/64f, 16f/64f, color, 0f, 5f);
+    }
+
+    private void drawContent(float x, float y, float alpha, float deltaTime) {
+        float hp     = getHealth(lastTarget);
+        float maxHp  = lastTarget.getMaxHealth();
+        float absorp = lastTarget.getAbsorptionAmount();
+
+        boolean isInvisible = lastTarget.isInvisible()
+                && !Network.isSpookyTime() && !Network.isCopyTime();
+
+        float curHpPercent = isInvisible ? 1f : hp / maxHp;
+        if (prevHealthForDamage < 0f) {
+            prevHealthForDamage = curHpPercent;
+        } else {
+            float delta = prevHealthForDamage - curHpPercent;
+            if (delta > DAMAGE_MIN_DELTA) {
+                if (System.currentTimeMillis() - damageFlashStart < DAMAGE_FLASH_MS) {
+                    damageFlashFrom = Math.max(damageFlashFrom, prevHealthForDamage);
+                } else {
+                    damageFlashFrom = prevHealthForDamage;
+                }
+                damageFlashTo    = curHpPercent;
+                damageFlashStart = System.currentTimeMillis();
+            } else if (delta < -DAMAGE_MIN_DELTA) {
+                if (curHpPercent >= damageFlashFrom) {
+                    damageFlashStart = 0L;
+                }
+            }
+            prevHealthForDamage = curHpPercent;
+        }
+
+        float targetDisplayHealth = isInvisible ? maxHp : hp + absorp;
+        displayedHealth = lerp(displayedHealth, targetDisplayHealth, deltaTime, 5f);
+        String hpStr = getHealthString(snapToStep(displayedHealth, 0.25f));
+
+        // в”Ђв”Ђ Р¤РРљРЎ: РµСЃР»Рё С‚Р°СЂРіРµС‚ вЂ” СЃР°Рј РёРіСЂРѕРє Рё NameProtect РІРєР»СЋС‡С‘РЅ вЂ” РїРѕРєР°Р·С‹РІР°РµРј Р·Р°С‰РёС‰С‘РЅРЅРѕРµ РёРјСЏ
+        NameProtect np = Instance.get(NameProtect.class);
+        String name;
+        if (lastTarget == mc.player && np != null && np.isState()) {
+            try {
+                java.lang.reflect.Field nameSettingField = NameProtect.class.getDeclaredField("nameSetting");
+                nameSettingField.setAccessible(true);
+                rasty.modules.module.setting.implement.TextSetting nameSetting = (rasty.modules.module.setting.implement.TextSetting) nameSettingField.get(np);
+                name = nameSetting.getText();
+            } catch (Exception e) {
+                name = lastTarget.getName().getString();
+            }
+        } else {
+            name = lastTarget.getName().getString();
+        }
+
+        float cx        = x + CONTENT_X_OFF;
+        float rightEdge = x + getWidth() - 8f;
+
+        float row1 = y + 9f;
+        float row2 = y + 19f;
+        float row3 = y + 29f;
+        float barY = y + getHeight() - 13f;
+
+        float hpWidth = Fonts.BOLD.getWidth(hpStr, 6.5f);
+        Fonts.BOLD.draw(name, cx, row1, 6.5f,
+                new Color(255, 255, 255, (int)(255 * alpha)).getRGB());
+        Fonts.BOLD.draw(hpStr, rightEdge - hpWidth, row1, 6.5f,
+                new Color(215, 215, 215, (int)(255 * alpha)).getRGB());
+
+        float dist = mc.player != null ? (float) mc.player.distanceTo(lastTarget) : 0f;
+        Fonts.BOLD.draw(String.format("%.1f blk", dist), cx, row2, 6.0f,
+                new Color(140, 140, 148, (int)(190 * alpha)).getRGB());
+
+        float   myHp    = mc.player != null ? mc.player.getHealth() : 0f;
+        boolean winning = myHp >= hp;
+        Color   statusClr = winning
+                ? new Color(100, 205, 100, (int)(210 * alpha))
+                : new Color(210, 75,  75,  (int)(210 * alpha));
+        Render2D.rect(cx, row3 + 1f, 4f, 4f, statusClr.getRGB(), 2f);
+        Fonts.BOLD.draw(winning ? "Winning" : "Losing", cx + 6.5f, row3, 6.0f, statusClr.getRGB());
+
+        float barWidth  = rightEdge - cx;
+        float barHeight = 3.5f;
+        float barRadius = 1.5f;
+
+        Render2D.rect(cx, barY, barWidth, barHeight,
+                new Color(25, 25, 25, (int)(210 * alpha)).getRGB(), barRadius);
+
+        float targetHealth  = isInvisible ? 1.0f : hp / maxHp;
+        healthAnimation     = lerp(healthAnimation, targetHealth, deltaTime, 3f);
+        if (targetHealth > trailAnimation) trailAnimation = targetHealth;
+        trailAnimation      = lerp(trailAnimation, targetHealth, deltaTime, 3.5f);
+
+        float healthPercent = Math.max(0, Math.min(1, healthAnimation));
+        float trailPercent  = Math.max(0, Math.min(1, trailAnimation));
+
+        if (trailPercent > healthPercent) {
+            Render2D.rect(cx, barY, barWidth * trailPercent, barHeight,
+                    new Color(55, 55, 55, (int)(160 * alpha)).getRGB(), barRadius);
+        }
+
+        long flashElapsed = System.currentTimeMillis() - damageFlashStart;
+        if (damageFlashStart > 0 && flashElapsed < DAMAGE_FLASH_MS
+                && damageFlashFrom > damageFlashTo + DAMAGE_MIN_DELTA) {
+            float flashProgress = (float) flashElapsed / DAMAGE_FLASH_MS;
+            float flashAlpha    = (float) Math.pow(1f - flashProgress, 1.5f);
+            float flashLeft     = cx + barWidth * Math.max(0, damageFlashTo);
+            float flashRight    = cx + barWidth * Math.min(1, damageFlashFrom);
+            float flashW        = flashRight - flashLeft;
+            if (flashW > 0.5f) {
+                int flashColor = new Color(220, 50, 50, (int)(200 * flashAlpha * alpha)).getRGB();
+                int glowColor  = new Color(255, 80, 80, (int)(80 * flashAlpha * alpha)).getRGB();
+                Render2D.rect(flashLeft, barY - 0.5f, flashW, barHeight + 1f, glowColor, barRadius);
+                Render2D.rect(flashLeft, barY, flashW, barHeight, flashColor, barRadius);
+            }
+        }
+
+        if (healthPercent > 0.01f) {
+            long  elapsed   = System.currentTimeMillis() - startTime;
+            float wavePhase = (elapsed % 1500L) / 1500f * (float)(Math.PI * 2);
+            int[] colors    = new int[4];
+            for (int i = 0; i < 2; i++) {
+                int g2 = (int)(155 + 100 * ((Math.sin(wavePhase - i * 1.5f) + 1f) / 2f));
+                colors[i*2]   = new Color(g2, g2, g2, (int)(255*alpha)).getRGB();
+                colors[i*2+1] = new Color(g2, g2, g2, (int)(255*alpha)).getRGB();
+            }
+            Render2D.gradientRect(cx, barY, barWidth * healthPercent, barHeight, colors, barRadius);
+        }
+
+        float targetAbsorption  = isInvisible ? 0 : absorp / maxHp;
+        absorptionAnimation     = lerp(absorptionAnimation, targetAbsorption, deltaTime, 3f);
+        float absorptionPercent = Math.max(0, Math.min(1, absorptionAnimation));
+
+        if (absorptionPercent > 0.01f && !Network.isFunTime()) {
+            long  elapsed   = System.currentTimeMillis() - startTime;
+            float wavePhase = (elapsed % 1200L) / 1200f * (float)(Math.PI * 2);
+            int[] gc        = new int[4];
+            for (int i = 0; i < 2; i++) {
+                float wf  = (float)((Math.sin(wavePhase - i * 1.5f) + 1f) / 2f);
+                gc[i*2]   = new Color(255, (int)(165+50*wf), 0, (int)(200*alpha)).getRGB();
+                gc[i*2+1] = new Color(255, (int)(165+50*wf), 0, (int)(200*alpha)).getRGB();
+            }
+            Render2D.gradientRect(cx, barY, barWidth * absorptionPercent, barHeight, gc, barRadius);
+        }
+    }
+}
+
+
+################################################################################
+# WILD/XYETA TargetHudElement.java
+# PATH: C:\dev\Xyeta\Xyeta\src\main\java\dev\client\ui\hud\impl\TargetHudElement.java
+################################################################################
+
+package dev.client.ui.hud.impl;
+
+import dev.client.WildClient;
+import dev.client.managers.FontManager;
+import dev.client.modules.impl.combat.Aura;
+import dev.client.modules.impl.combat.TriggerBot;
+import dev.client.modules.impl.player.NameProtect;
+import dev.client.ui.draggable.impl.TargetHudDraggable;
+import dev.client.ui.hud.HudElement;
+import dev.client.util.animations.Animation;
+import dev.client.util.animations.Direction;
+import dev.client.util.animations.impl.EaseBackIn;
+import dev.client.util.color.ColorUtil;
+import dev.client.util.math.MathUtil;
+import dev.client.util.render.AnimationUtil;
+import dev.client.util.render.ItemRenderUtil;
+import dev.client.util.render.LastTarget;
+import dev.client.util.render.builders.Builder;
+import dev.client.util.render.builders.impl.TextBuilder;
+import dev.client.util.render.builders.states.QuadColorState;
+import dev.client.util.render.builders.states.QuadRadiusState;
+import dev.client.util.render.builders.states.SizeState;
+import dev.client.util.render.msdf.MsdfFont;
+import dev.client.util.render.renderers.impl.BuiltBlur;
+import dev.client.util.render.renderers.impl.BuiltBorder;
+import dev.client.util.render.renderers.impl.BuiltRectangle;
+import dev.client.util.render.renderers.impl.BuiltText;
+import dev.client.util.render.renderers.impl.BuiltTexture;
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.texture.AbstractTexture;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import org.joml.Matrix4f;
+
+@Environment(EnvType.CLIENT)
+public class TargetHudElement extends HudElement {
+   private final Animation animation;
+   private LastTarget lastTarget = new LastTarget();
+   float health;
+   private NameProtect nameProtect;
+
+   public TargetHudElement() {
+      super(new TargetHudDraggable(), "TargetHUD");
+      this.animation = new EaseBackIn(300, (double)1.0F, 0.1F, Direction.BACKWARDS);
+      this.health = 0.0F;
+   }
+
+   public void render(DrawContext drawContext) {
+      float width = 130.0F;
+      float widthBlack = 76.0F;
+      if (this.nameProtect == null) {
+         this.nameProtect = (NameProtect)WildClient.INSTANCE.getModuleManager().getByClass(NameProtect.class);
+      }
+
+      Matrix4f matrix = drawContext.getMatrices().peek().getPositionMatrix();
+      Color clientColor = ColorUtil.setAlpha(this.animation.getOutput(), WildClient.INSTANCE.getThemeManager().getTheme().color());
+      Color white = ColorUtil.setAlpha(this.animation.getOutput(), Color.WHITE);
+      Color gray = ColorUtil.setAlpha(this.animation.getOutput(), new Color(2063597567, true));
+      Color black = ColorUtil.setAlpha(this.animation.getOutput(), new Color(-1206577638, true));
+      if (!this.animation.finished(Direction.BACKWARDS)) {
+         BuiltBlur blur = (BuiltBlur)Builder.blur().size(new SizeState(width, 50.0F)).radius(new QuadRadiusState(11.0F)).blurRadius((float)((double)12.0F * this.animation.getOutput())).smoothness((float)((double)1.0F * this.animation.getOutput())).color(new QuadColorState(Color.white)).build();
+         blur.render(matrix, (float)this.draggable.x, (float)this.draggable.y);
+         BuiltRectangle rectangle = (BuiltRectangle)Builder.rectangle().size(new SizeState(width, 50.0F)).color(new QuadColorState(ColorUtil.setAlpha(this.animation.getOutput(), new Color(2048202266, true)))).radius(new QuadRadiusState(11.0F)).smoothness(1.15F).build();
+         rectangle.render(matrix, (float)this.draggable.x, (float)this.draggable.y);
+         rectangle = (BuiltRectangle)Builder.rectangle().size(new SizeState(42.0F, 42.0F)).color(new QuadColorState(black)).radius(new QuadRadiusState(8.0F, 8.0F, 5.0F, 5.0F)).smoothness(1.15F).build();
+         rectangle.render(matrix, (float)(this.draggable.x + 4), (float)(this.draggable.y + 4));
+         AbstractTexture abstractTexture = MinecraftClient.getInstance().getTextureManager().getTexture(this.lastTarget.getAvatar());
+         float hurtPercent = ((float)this.lastTarget.getHurtTime() - (this.lastTarget.getHurtTime() != 0 ? MinecraftClient.getInstance().getRenderTickCounter().getTickDelta(false) : 0.0F)) / 10.0F;
+         Color imageColor = white;
+         if (hurtPercent > 0.0F) {
+            int f = (int)(hurtPercent * 90.0F);
+            if (f > 200) {
+               f = 200;
+            }
+
+            imageColor = new Color(255, 255 - f, 255 - f, white.getAlpha());
+         }
+
+         if (this.lastTarget.isPlayer()) {
+            BuiltTexture texture = (BuiltTexture)Builder.texture().size(new SizeState(32.0F, 32.0F)).radius(new QuadRadiusState(6.0F)).texture(0.125F, 0.125F, 0.125F, 0.125F, abstractTexture).color(new QuadColorState(imageColor)).build();
+            texture.render(matrix, (float)(this.draggable.x + 9), (float)(this.draggable.y + 9));
+         } else {
+            rectangle = (BuiltRectangle)Builder.rectangle().size(new SizeState(32.0F, 32.0F)).color(new QuadColorState(black)).radius(new QuadRadiusState(6.0F)).smoothness(1.15F).build();
+            rectangle.render(matrix, (float)(this.draggable.x + 9), (float)(this.draggable.y + 9));
+            ((BuiltText)Builder.text().font((MsdfFont)FontManager.SUISSEINTMEDIUM.get()).text("?").color(white).size(25.0F).thickness(0.05F).build()).render(matrix, (float)(this.draggable.x + 17), (float)(this.draggable.y + 10));
+         }
+
+         rectangle = (BuiltRectangle)Builder.rectangle().size(new SizeState((double)widthBlack, (double)19.5F)).color(new QuadColorState(black)).radius(new QuadRadiusState(3.0F, 3.0F, 3.0F, 7.0F)).smoothness(1.15F).build();
+         rectangle.render(matrix, (float)(this.draggable.x + 48), (float)(this.draggable.y + 4));
+         BuiltText themeText = (BuiltText)Builder.text().font((MsdfFont)FontManager.SUISSEINTMEDIUM.get()).text(this.nameProtect.replace(this.lastTarget.getName())).color(white).size(7.5F).thickness(0.05F).build();
+         themeText.render(matrix, (float)(this.draggable.x + 54), (float)(this.draggable.y + 9));
+         rectangle = (BuiltRectangle)Builder.rectangle().size(new SizeState((double)widthBlack, (double)19.5F)).color(new QuadColorState(black)).radius(new QuadRadiusState(3.0F, 3.0F, 7.0F, 3.0F)).smoothness(1.15F).build();
+         rectangle.render(matrix, (double)(this.draggable.x + 48), (double)this.draggable.y + (double)25.5F);
+         rectangle = (BuiltRectangle)Builder.rectangle().size(new SizeState((double)(widthBlack - 10.0F), (double)3.25F)).color(new QuadColorState(ColorUtil.setAlpha(this.animation.getOutput(), new Color(184549375, true)))).radius(new QuadRadiusState(0.5F)).smoothness(1.15F).build();
+         rectangle.render(matrix, (float)(this.draggable.x + 52), (float)(this.draggable.y + 38));
+         rectangle = (BuiltRectangle)Builder.rectangle().size(new SizeState((double)((widthBlack - 10.0F) * (this.health > 1.0F ? 1.0F : this.health)), (double)3.25F)).color(new QuadColorState(clientColor)).radius(new QuadRadiusState(0.5F)).smoothness(1.15F).build();
+         rectangle.render(matrix, (float)(this.draggable.x + 52), (float)(this.draggable.y + 38));
+         TextBuilder var10000 = Builder.text().font((MsdfFont)FontManager.SUISSEINTMEDIUM.get());
+         double var10001 = (double)this.health * this.lastTarget.getMaxHealth();
+         themeText = (BuiltText)var10000.text("" + (int)MathUtil.round(var10001, (double)0.5F)).color(white).size(6.0F).thickness(0.05F).build();
+         themeText.render(matrix, (float)this.draggable.x + widthBlack + 25.0F, (float)(this.draggable.y + 29));
+         themeText = (BuiltText)Builder.text().font((MsdfFont)FontManager.SUISSEINTMEDIUM.get()).text("hp").color(gray).size(6.0F).thickness(0.05F).build();
+         themeText.render(matrix, (float)this.draggable.x + widthBlack + 35.0F, (float)(this.draggable.y + 29));
+
+         for(int i = 0; i < 4; ++i) {
+            rectangle = (BuiltRectangle)Builder.rectangle().size(new SizeState(8.0F, 8.0F)).color(new QuadColorState(ColorUtil.setAlpha(this.animation.getOutput(), new Color(67108863, true)))).radius(new QuadRadiusState(0.5F)).smoothness(1.15F).build();
+            rectangle.render(matrix, (double)(this.draggable.x + 52 + i * 10), (double)this.draggable.y + (double)28.5F);
+            BuiltBorder border = (BuiltBorder)Builder.border().size(new SizeState(8.0F, 8.0F)).color(new QuadColorState(ColorUtil.colorAlpha(new Color(184549375, true), 3))).radius(new QuadRadiusState(0.5F)).thickness(0.01F).smoothness(0.65F, 0.65F).build();
+            border.render(matrix, (double)(this.draggable.x + 52 + i * 10), (double)this.draggable.y + (double)28.5F);
+         }
+
+         if (this.lastTarget.getEntity() != null) {
+            Entity var32 = this.lastTarget.getEntity();
+            if (var32 instanceof PlayerEntity) {
+               PlayerEntity player = (PlayerEntity)var32;
+               this.renderItems(drawContext, this.draggable.x + 53, (int)((float)this.draggable.y + 30.5F), player, (float)this.animation.getOutput());
+            }
+         }
+
+         this.health = MathUtil.fast(this.health, (float)(this.lastTarget.getHealth() / this.lastTarget.getMaxHealth()), 5.0F);
+      }
+
+      if (this.getTarget() != null) {
+         Entity target = this.getTarget();
+         this.animation.setDirection(Direction.FORWARDS);
+         this.lastTarget.setEntity(target);
+         this.lastTarget.update(target);
+         if (target instanceof PlayerEntity) {
+            PlayerEntity player = (PlayerEntity)target;
+            this.lastTarget.setName(player.getName().getString());
+         } else {
+            this.lastTarget.setName(target.getName().getString());
+         }
+
+         if (target instanceof LivingEntity) {
+            LivingEntity livingEntity = (LivingEntity)target;
+            this.lastTarget.setHealth((double)livingEntity.getHealth());
+            this.lastTarget.setMaxHealth(this.lastTarget.getMaxHealth());
+         }
+      } else {
+         this.animation.setDirection(Direction.BACKWARDS);
+      }
+
+   }
+
+   void renderItems(DrawContext drawContext, int x, int y, PlayerEntity player, float alpha) {
+      MatrixStack matrices = drawContext.getMatrices();
+      int xoffset = 0;
+      matrices.push();
+      AnimationUtil.sizeAnimation(drawContext, (double)x, (double)y, 0.38);
+      ArrayList<ItemStack> armorItems = new ArrayList((Collection)player.getArmorItems());
+      Collections.reverse(armorItems);
+
+      for(ItemStack item : armorItems) {
+         if (item.getItem() != Items.AIR) {
+            ItemRenderUtil.drawItemAlpha(matrices, item, x + xoffset, y - 2, alpha);
+            xoffset += 26;
+         }
+      }
+
+      matrices.pop();
+   }
+
+   private Entity getTarget() {
+      Aura aura = (Aura)WildClient.INSTANCE.getModuleManager().getByClass(Aura.class);
+      TriggerBot triggerBot = (TriggerBot)WildClient.INSTANCE.getModuleManager().getByClass(TriggerBot.class);
+      if (MinecraftClient.getInstance().currentScreen instanceof ChatScreen) {
+         return MinecraftClient.getInstance().player;
+      } else if (aura.isEnabled() && aura.getTarget() != null) {
+         return aura.getTarget();
+      } else {
+         return triggerBot.isEnabled() && triggerBot.getTarget() != null ? triggerBot.getTarget() : null;
+      }
+   }
+}
+
+
+
+################################################################################
+# EXPENSIVE 4 TargetHudWidget.java
+# PATH: C:\dev\Expensive-Last-src\expensive latest\src\main\java\aethereal\gui\TargetHudWidget.java
+################################################################################
+
+package aethereal.gui;
+import aethereal.*;
+import aethereal.features.modules.Module;
+import aethereal.features.modules.*;
+import aethereal.features.modules.combat.*;
+import aethereal.features.modules.movement.*;
+import aethereal.features.modules.player.*;
+import aethereal.features.modules.render.*;
+import aethereal.features.modules.misc.*;
+import aethereal.features.modules.earnings.*;
+import aethereal.features.modules.autobuy.*;
+import aethereal.features.commands.*;
+import aethereal.gui.*;
+import aethereal.graphics.*;
+import aethereal.system.config.*;
+import aethereal.system.events.*;
+import aethereal.system.network.*;
+import aethereal.system.resources.*;
+import aethereal.core.models.*;
+import aethereal.core.types.*;
+import aethereal.core.accessors.*;
+import aethereal.core.annotations.*;
+import aethereal.utils.*;
+import aethereal.utils.math.*;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.BooleanSupplier;
+import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.client.texture.AbstractTexture;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.StringHelper;
+import net.minecraft.util.math.Vec3d;
+import org.joml.Matrix4f;
+
+public class TargetHudWidget extends Draggable {
+    public float width;
+    public float height;
+    public final AnimatedFloat fadeAnimation;
+    public final ToggleAnimator toggleAnimatorA;
+    public final ToggleAnimator toggleAnimatorB;
+    public final AnimatedFloat healthAnimation;
+    public final AnimatedFloat absorptionAnimation;
+    public final GlTextureObject backgroundTexture;
+    public final GlTextureObject heartTexture;
+    public final GlTextureObject gappleTexture;
+    public final MsdfFont nameFont;
+    public final MsdfFont valueFont;
+    public LivingEntity target;
+
+    public final WidgetBounds avatarBounds;
+    public final WidgetBounds contentBounds;
+    public final WidgetBounds itemsBounds;
+    public final WidgetBounds nameBounds;
+    static final float padding = 10.0f;
+    static final float cornerRadius = 8.0f;
+    static final float itemSize = 12.0f;
+    static final float itemSpacing = 3.0f;
+    static final int iconSize = 10;
+    static final float halfDivisor = 2.0f;
+    static final float sectionGap = 4.0f;
+    static final float minWidth = 180.0f;
+    public final BooleanSetting showInRaycast;
+    public final BooleanSetting onlySmallVersion;
+    static final int spacingTwo = 2;
+
+    static final double roundIncrement = 0.5d;
+
+    static final double raycastExpand = 0.7d;
+
+    public TargetHudWidget(BooleanSupplier booleanSupplier) {
+        super("TargetHud", booleanSupplier);
+        this.width = 200.0f;
+        this.height = 70.0f;
+        this.fadeAnimation = new AnimatedFloat(200, Easings.LINEAR);
+        this.toggleAnimatorA = new ToggleAnimator(200, Easings.EASE_IN_OUT_CUBIC);
+        this.toggleAnimatorB = new ToggleAnimator(200, Easings.EASE_IN_OUT_CUBIC);
+        this.healthAnimation = new AnimatedFloat(160, Easings.LINEAR);
+        this.absorptionAnimation = new AnimatedFloat(180, Easings.LINEAR);
+        this.backgroundTexture = new GlTextureObject(new ClasspathResource("/textures/hud_background.png"));
+        this.heartTexture = new GlTextureObject(new ClasspathResource("/icons/menu/new/heartpulse.png"));
+        this.gappleTexture = new GlTextureObject(new ClasspathResource("/icons/menu/new/gapple.png"));
+        this.nameFont = Fonts.INTER_SEMIBOLD.get();
+        this.valueFont = Fonts.INTER_BOLD.get();
+        this.avatarBounds = new WidgetBounds(0.0f, 0.0f, 50.0f, 50.0f);
+        this.contentBounds = new WidgetBounds(0.0f, 0.0f, 0.0f, 50.0f);
+        this.itemsBounds = new WidgetBounds(0.0f, 0.0f, 0.0f, 0.0f);
+        this.nameBounds = new WidgetBounds(0.0f, 0.0f, 0.0f, 0.0f);
+        this.showInRaycast = new BooleanSetting(Lang.WIDGET_TARGETHUD_SHOW_IN_RAYCAST);
+        
+        Translation onlySmallVersionTrans= new Translation() {
+            @Override public void lookupFromDictionary(StringLookup dict) {}
+            @Override public String original() { return "Only small version"; }
+            @Override public String effective() { return Expensive.INSTANCE.languages().current == Language.ru_RU ? "РўРѕР»СЊРєРѕ РјР°Р»РµРЅСЊРєР°СЏ РІРµСЂСЃРёСЏ" : "Only small version"; }
+            @Override public String firstLetterUppercase() { return effective(); }
+        };
+        this.onlySmallVersion = new BooleanSetting(onlySmallVersionTrans, onlySmallVersionTrans);
+        
+        addSettings(this.showInRaycast, this.onlySmallVersion);
+        this.x = 604.0f;
+        this.y = 469.0f;
+    }
+
+    @Override
+    public void layout(DragRenderContext class809Var) {
+        float fMax;
+        if (isVisible()) {
+            List<ItemStack> listMethod009= getEquipment(this.target);
+            boolean z= !listMethod009.isEmpty() && !this.onlySmallVersion.value;
+            float f= z ? 70.0f : 50.0f;
+            if (f != this.height) {
+                this.y -= (f - this.height) / halfDivisor;
+                this.height = f;
+            }
+            float fMax2= Math.max(padding, this.height - 20.0f);
+            this.avatarBounds.withSize(fMax2, fMax2).withPosition(this.x + padding, (this.y + (this.height / halfDivisor)) - (fMax2 / halfDivisor));
+            this.contentBounds.withPosition(this.avatarBounds.right() + cornerRadius, this.avatarBounds.y()).withSize(((width() - 20.0f) - this.avatarBounds.width()) - cornerRadius, this.avatarBounds.height());
+            float size= z ? (listMethod009.size() * itemSize) + ((listMethod009.size() - 1) * itemSpacing) : 0.0f;
+            float fMin= Math.min(this.nameFont.getWidth(getDisplayName(this.target), 13.0f), Math.max(0.0f, (160.0f - fMax2) - cornerRadius));
+            float fMax3= Math.max(this.valueFont.getWidth("20.0", padding), this.valueFont.getWidth("Unknown", padding));
+            float width= this.valueFont.getWidth("20.0", padding);
+            float f2= fMax3 + halfDivisor + padding;
+            float f3= width + halfDivisor + padding;
+            boolean zMethod012= shouldShowAbsorption(this.target);
+            if (z) {
+                fMax = Math.max(f2, f3);
+            } else {
+                fMax = f2 + (zMethod012 ? sectionGap + f3 : 0.0f);
+            }
+            float fWidth= padding + this.avatarBounds.width() + cornerRadius + Math.max(size, fMin) + cornerRadius + fMax + padding;
+            this.width = z ? Math.max(minWidth, fWidth) : fWidth;
+        }
+    }
+
+    @Override
+    public void render(DragRenderContext class809Var) {
+        if (isVisible()) {
+            float fAnimatedValue= this.fadeAnimation.animatedValue();
+            if (this.fadeAnimation.isZero() || this.target == null) {
+                return;
+            }
+            GraphicsDrawEngine class154VarDrawEngine= class809Var.drawEngine();
+            MatrixStack matrixStack= class809Var.matrixStack();
+            PaletteColorStack class115VarColorStack= class154VarDrawEngine.colorStack();
+            StylePalette class764VarPalette= class809Var.theme().palette();
+            List<ItemStack> listMethod009= getEquipment(this.target);
+            boolean z= !listMethod009.isEmpty() && !this.onlySmallVersion.value;
+            class115VarColorStack.push();
+            class115VarColorStack.alpha(fAnimatedValue);
+            int iComputeColor= class115VarColorStack.computeColor(class764VarPalette.surfaceBackground().tone(801).argb());
+            int iComputeColor2= class115VarColorStack.computeColor(class764VarPalette.surfaceBackground().tone(900).argb());
+            int blurAttachment= FrameBufferUtils.getColorAttachmentId(Expensive.INSTANCE.windowController().headerBlur().getBlurFramebuffer());
+            if (blurAttachment > 0) {
+                class154VarDrawEngine.roundedBlur(matrixStack.peek().getPositionMatrix(), this.x, this.y, width(), height(), cornerRadius, class115VarColorStack.white(), blurAttachment);
+            }
+            class154VarDrawEngine.roundedRectangle(matrixStack.peek().getPositionMatrix(), this.x, this.y, width(), height(), cornerRadius, 2.5f, class115VarColorStack.computeColor(class764VarPalette.surfaceOutline().tone(600).argb()), iComputeColor2, iComputeColor2, iComputeColor, iComputeColor);
+            class154VarDrawEngine.texture(matrixStack.peek().getPositionMatrix(), this.x, this.y + (z ? 15.0f : padding), width(), Math.max(0.0f, height() - (z ? 40.0f : 20.0f)), class154VarDrawEngine.bindTexture(this.backgroundTexture.textureWithSTB()), class115VarColorStack.white());
+            try {
+                renderAvatar(class154VarDrawEngine, matrixStack.peek().getPositionMatrix(), class115VarColorStack, this.avatarBounds.x(), this.avatarBounds.y(), this.avatarBounds.width(), this.avatarBounds.height(), z ? cornerRadius : 6.0f);
+            } catch (Throwable ignored) {}
+            if (z) {
+                try {
+                    float fX= this.contentBounds.x();
+                    float fY= this.contentBounds.y();
+                    for (ItemStack itemStack : listMethod009) {
+                        if (!itemStack.isEmpty()) {
+                            class154VarDrawEngine.itemStack(matrixStack.peek().getPositionMatrix(), itemStack, fX, fY, 0.375f, 1.0f);
+                            fX += 15.0f;
+                        }
+                    }
+                } catch (Throwable ignored) {}
+                this.itemsBounds.withSize((listMethod009.size() * itemSize) + ((listMethod009.size() - 1) * itemSpacing), itemSize).withPosition(this.contentBounds.x(), this.contentBounds.y());
+            } else {
+                this.itemsBounds.withSize(0.0f, 0.0f).withPosition(this.contentBounds.x(), this.contentBounds.y());
+            }
+            try {
+                String strMethod008= getDisplayName(this.target);
+                float fMax= Math.max(this.valueFont.getWidth("20.0", padding), this.valueFont.getWidth("Unknown", padding));
+                float width= this.valueFont.getWidth("20.0", padding);
+                float f= fMax + halfDivisor + padding;
+                float f2= width + halfDivisor + padding;
+                float fWidth= this.contentBounds.width() - (z ? Math.max(f, f2) : f + (shouldShowAbsorption(this.target) ? sectionGap + f2 : 0.0f));
+                float fMin= Math.min(this.nameFont.getWidth(strMethod008, 13.0f), fWidth);
+                if (z) {
+                    this.nameBounds.withPosition(this.contentBounds.x(), this.itemsBounds.bottom() + halfDivisor).withSize(fMin, this.nameFont.getHeight(13.0f));
+                } else {
+                    this.nameBounds.withPosition(this.contentBounds.x(), this.contentBounds.y()).withSize(fMin, this.nameFont.getHeight(13.0f));
+                }
+                int iComputeColor3= class115VarColorStack.computeColor(class764VarPalette.text().tone(50).argb());
+                if (this.nameFont.getWidth(strMethod008, 13.0f) > fWidth) {
+                    class154VarDrawEngine.msdfFontWithHorizontalGradient(matrixStack.peek().getPositionMatrix(), this.nameFont, truncateToWidth(this.nameFont, strMethod008, 13, fWidth), this.nameBounds.x(), this.nameBounds.y(), 13.0f, 0.05f, iComputeColor3, iComputeColor3 & 16777215);
+                } else {
+                    class154VarDrawEngine.msdfFont(matrixStack.peek().getPositionMatrix(), this.nameFont, strMethod008, this.nameBounds.x(), this.nameBounds.y(), 13.0f, 0.05f, iComputeColor3);
+                }
+                float healthBelowName= ScoreboardHelper.INSTANCE.getHealthBelowName(this.target);
+                float fMethod007= getEffectiveMaxHealth(this.target);
+                float f3= fMethod007 > 0.0f ? healthBelowName / fMethod007 : 0.0f;
+                this.absorptionAnimation.destination(FastMathUtils.clamp(this.target.getAbsorptionAmount() / 20.0f, 0.0f, 1.0f));
+                this.healthAnimation.destination(FastMathUtils.clamp(f3, 0.0f, 1.0f));
+                boolean zMethod012= shouldShowAbsorption(this.target);
+                float fX2= this.contentBounds.x();
+                float fWidth2= this.contentBounds.width() - sectionGap;
+                float fBottom= z ? (this.contentBounds.bottom() - 7.0f) - itemSpacing : (this.contentBounds.bottom() - itemSpacing) - itemSpacing;
+                class154VarDrawEngine.roundedRectangle(matrixStack.peek().getPositionMatrix(), fX2, fBottom, fWidth2, itemSpacing, halfDivisor, class115VarColorStack.computeColor(class764VarPalette.surfaceBackground().tone(500).argb()));
+                class154VarDrawEngine.roundedRectangle(matrixStack.peek().getPositionMatrix(), fX2, fBottom, fWidth2 * this.healthAnimation.animatedValue(), itemSpacing, halfDivisor, class115VarColorStack.computeColor(class764VarPalette.accent().argb()));
+                if (zMethod012) {
+                    class154VarDrawEngine.roundedRectangle(matrixStack.peek().getPositionMatrix(), fX2, fBottom, fWidth2 * this.absorptionAnimation.animatedValue(), itemSpacing, halfDivisor, class115VarColorStack.computeColor(StylePalette.darkGolden.argb()));
+                }
+                boolean z2= healthBelowName > this.target.getMaxHealth() + 20.0f;
+                float fAnimatedValue2= this.healthAnimation.animatedValue() * getEffectiveMaxHealth(this.target);
+                float fAnimatedValue3= this.absorptionAnimation.animatedValue() * (this.target.getMaxAbsorption() != 0.0f ? this.target.getMaxAbsorption() : 20.0f);
+                String strMethod002= formatValue(fAnimatedValue2, z2);
+                String strMethod003= (!zMethod012 || fAnimatedValue3 <= 0.0f) ? "" : formatValue(fAnimatedValue3, false);
+                if (z) {
+                    float fY2= zMethod012 ? this.contentBounds.y() : (((this.contentBounds.bottom() - 7.0f) - itemSpacing) - cornerRadius) - this.valueFont.getHeight(padding);
+                    float fX3= (this.contentBounds.x() + this.contentBounds.width()) - this.valueFont.getWidth(strMethod002, padding);
+                    class154VarDrawEngine.msdfFont(matrixStack.peek().getPositionMatrix(), this.valueFont, strMethod002, fX3, fY2, padding, 0.05f, class115VarColorStack.computeColor(class764VarPalette.accent().argb()));
+                    class154VarDrawEngine.textureVerticalC(matrixStack.peek().getPositionMatrix(), this.heartTexture, (fX3 - halfDivisor) - padding, fY2 + (this.valueFont.getHeight(padding) / halfDivisor), iconSize, iconSize, class115VarColorStack.computeColor(class764VarPalette.accent().argb()));
+                    if (!strMethod003.isEmpty()) {
+                        float fBottom2= (((this.contentBounds.bottom() - 7.0f) - itemSpacing) - cornerRadius) - this.valueFont.getHeight(padding);
+                        float fX4= (this.contentBounds.x() + this.contentBounds.width()) - this.valueFont.getWidth(strMethod003, padding);
+                        class154VarDrawEngine.msdfFont(matrixStack.peek().getPositionMatrix(), this.valueFont, strMethod003, fX4, fBottom2, padding, 0.05f, class115VarColorStack.computeColor(StylePalette.darkGolden.argb()));
+                        class154VarDrawEngine.textureVerticalC(matrixStack.peek().getPositionMatrix(), this.gappleTexture, (fX4 - halfDivisor) - padding, fBottom2 + (this.valueFont.getHeight(padding) / halfDivisor), iconSize, iconSize, class115VarColorStack.white());
+                    }
+                } else {
+                    float fBottom3= this.nameBounds.bottom() - this.valueFont.getHeight(padding);
+                    float f4= fX2 + fWidth2;
+                    float width2= this.valueFont.getWidth(strMethod002, padding);
+                    float f5= width2 + halfDivisor + padding;
+                    if (strMethod003.isEmpty()) {
+                        class154VarDrawEngine.msdfFont(matrixStack.peek().getPositionMatrix(), this.valueFont, strMethod002, f4 - width2, fBottom3, padding, 0.05f, class115VarColorStack.computeColor(class764VarPalette.accent().argb()));
+                        class154VarDrawEngine.textureVerticalC(matrixStack.peek().getPositionMatrix(), this.heartTexture, ((f4 - width2) - halfDivisor) - padding, fBottom3 + (this.valueFont.getHeight(padding) / halfDivisor), iconSize, iconSize, class115VarColorStack.computeColor(class764VarPalette.accent().argb()));
+                    } else {
+                        float width3= this.valueFont.getWidth(strMethod003, padding);
+                        float f6= f4 - ((width3 + halfDivisor) + padding);
+                        class154VarDrawEngine.msdfFont(matrixStack.peek().getPositionMatrix(), this.valueFont, strMethod003, f4 - width3, fBottom3, padding, 0.05f, class115VarColorStack.computeColor(StylePalette.darkGolden.argb()));
+                        class154VarDrawEngine.textureVerticalC(matrixStack.peek().getPositionMatrix(), this.gappleTexture, ((f4 - width3) - halfDivisor) - padding, fBottom3 + (this.valueFont.getHeight(padding) / halfDivisor), iconSize, iconSize, class115VarColorStack.white());
+                        float f7= f6 - sectionGap;
+                        class154VarDrawEngine.msdfFont(matrixStack.peek().getPositionMatrix(), this.valueFont, strMethod002, f7 - width2, fBottom3, padding, 0.05f, class115VarColorStack.computeColor(class764VarPalette.accent().argb()));
+                        class154VarDrawEngine.textureVerticalC(matrixStack.peek().getPositionMatrix(), this.heartTexture, ((f7 - width2) - halfDivisor) - padding, fBottom3 + (this.valueFont.getHeight(padding) / halfDivisor), iconSize, iconSize, class115VarColorStack.computeColor(class764VarPalette.accent().argb()));
+                    }
+                }
+            } catch (Throwable ignored) {}
+            class115VarColorStack.pop();
+        }
+    }
+
+    @Override
+    public boolean click(MouseButtonInput2 class807Var, boolean z) {
+        return false;
+    }
+
+    @Override
+    public boolean cursor(MouseMoveInput class808Var, boolean z) {
+        return z && !class808Var.intercepted();
+    }
+
+    @Override
+    public void animate(WeightedEngine class141Var) {
+        this.healthAnimation.animate(class141Var);
+        this.absorptionAnimation.animate(class141Var);
+        this.fadeAnimation.animate(class141Var);
+        this.toggleAnimatorA.animate(class141Var);
+        this.toggleAnimatorB.animate(class141Var);
+    }
+
+    public void updateTarget() {
+        LivingEntity livingEntityMethod001= findTarget();
+        if (livingEntityMethod001 == null) {
+            if (this.target != null) {
+                this.fadeAnimation.destination(0.0f);
+            }
+            if (this.fadeAnimation.isZero()) {
+                this.target = null;
+                this.healthAnimation.set(0.0f);
+                this.absorptionAnimation.set(0.0f);
+                return;
+            }
+            return;
+        }
+        if (!Objects.equals(this.target, livingEntityMethod001)) {
+            this.target = livingEntityMethod001;
+            float healthBelowName= ScoreboardHelper.INSTANCE.getHealthBelowName(livingEntityMethod001);
+            float fMethod007= getEffectiveMaxHealth(livingEntityMethod001);
+            this.healthAnimation.set(FastMathUtils.clamp(fMethod007 > 0.0f ? healthBelowName / fMethod007 : 0.0f, 0.0f, 1.0f));
+            this.absorptionAnimation.set(FastMathUtils.clamp(livingEntityMethod001.getAbsorptionAmount() / 20.0f, 0.0f, 1.0f));
+        }
+        this.fadeAnimation.destination(1.0f);
+    }
+
+    public void renderAvatar(GraphicsDrawEngine class154Var, Matrix4f matrix4f, PaletteColorStack class115Var, float f, float f2, float f3, float f4, float f5) {
+        try {
+            Mc class815Var= Mc.INSTANCE;
+            if (this.target == null || class815Var.getEntityRenderDispatcher() == null) return;
+            if (class815Var.getEntityRenderDispatcher().getRenderer(this.target) instanceof LivingEntityRenderer renderer) {
+                LivingEntityRenderer livingEntityRenderer= renderer;
+                float tickDelta= class815Var.getRenderTickCounter().getTickProgress(false);
+                AbstractTexture texture= (AbstractTexture) (class815Var.getTextureManager().getTexture(livingEntityRenderer.getTexture((net.minecraft.client.render.entity.state.LivingEntityRenderState) livingEntityRenderer.getAndUpdateRenderState(this.target, tickDelta))));
+                ItemSpriteManager class219Var= ItemSpriteManager.INSTANCE;
+                if (texture == null) return;
+                GlTextureObject orCreateTexture= class219Var.getOrCreateTexture(texture);
+                if (orCreateTexture == null) return;
+                UvBounds faceUV= class219Var.getFaceUV(livingEntityRenderer);
+                int i= this.target.hurtTime;
+                float f6= 1.0f - ((i - (i != 0 ? tickDelta : 0.0f)) / padding);
+                int iComputeColor= class115Var.computeColor(this.fadeAnimation.animatedValue(), StencilBufferUtil.STENCIL_MASK, (int) (100.0f + (155.0f * f6)), (int) (100.0f + (155.0f * f6)));
+                class154Var.roundedTexture(matrix4f, f, f2, f3, f4, f5, f5, f5, f5, faceUV != null ? faceUV.u0() : 0.125f, faceUV != null ? faceUV.v0() : 0.125f, faceUV != null ? faceUV.u1() : 0.25f, faceUV != null ? faceUV.v1() : 0.25f, class154Var.bindTexture(orCreateTexture.textureWithSTB()), iComputeColor, iComputeColor, iComputeColor, iComputeColor);
+                int iComputeColor2= class115Var.computeColor(395026, 0.0f);
+                int iComputeColor3= class115Var.computeColor(395026, 0.5f);
+                class154Var.roundedRectangle(matrix4f, f, f2, f3, f4, cornerRadius, iComputeColor3, iComputeColor3, iComputeColor2, iComputeColor2);
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    public LivingEntity findTarget() {
+        LivingEntity livingEntityMethod005;
+        Mc class815Var= Mc.INSTANCE;
+        AttackAuraModule class878Var= (AttackAuraModule) Expensive.INSTANCE.moduleRepository().get(AttackAuraModule.class);
+        if (class878Var.isState() && class878Var.target() != null && !class878Var.getName().isEmpty()) {
+            return class878Var.target();
+        }
+        if (this.showInRaycast.isValue() && (livingEntityMethod005 = raycastTarget(class815Var)) != null && !livingEntityMethod005.getName().getString().isEmpty()) {
+            return livingEntityMethod005;
+        }
+        if (!(class815Var.getCurrentScreen() instanceof ChatScreen) || getDisplayName(class815Var.getPlayer()).isEmpty()) {
+            return null;
+        }
+        return class815Var.getPlayer();
+    }
+
+    @Override
+    public void update() {
+        if (isVisible()) {
+            updateTarget();
+        }
+    }
+
+    @Override
+    public float width() {
+        return this.width;
+    }
+
+    @Override
+    public float height() {
+        return this.height;
+    }
+
+    public static float getEffectiveMaxHealth(LivingEntity livingEntity) {
+        float maxHealth= livingEntity.getMaxHealth();
+        float healthBelowName= ScoreboardHelper.INSTANCE.getHealthBelowName(livingEntity);
+        return (healthBelowName > (maxHealth + 20.0f) ? 1 : (healthBelowName == (maxHealth + 20.0f) ? 0 : -1)) > 0 ? maxHealth : Math.max(maxHealth, healthBelowName);
+    }
+
+    public static boolean shouldShowAbsorption(LivingEntity livingEntity) {
+        return livingEntity != null && !ServerUtil.isConnectedToServer("funtime") && livingEntity.getAbsorptionAmount() > 0.0f && livingEntity.getMaxAbsorption() <= 20.0f;
+    }
+
+    public static String formatValue(float f, boolean z) {
+        return z ? "Unknown" : String.valueOf(FastMathUtils.round(f, roundIncrement));
+    }
+
+    public static List<ItemStack> getEquipment(LivingEntity livingEntity) {
+        if (livingEntity == null) {
+            return Collections.emptyList();
+        }
+        List<ItemStack> list= new ArrayList<>(EquipmentUtil.armor(livingEntity));
+        Collections.reverse(list);
+        list.removeIf((v0) -> {
+            return v0.isEmpty();
+        });
+        ItemStack mainHandStack= livingEntity.getMainHandStack();
+        ItemStack offHandStack= livingEntity.getOffHandStack();
+        if (!mainHandStack.isEmpty()) {
+            list.add(mainHandStack);
+        }
+        if (!offHandStack.isEmpty()) {
+            list.add(offHandStack);
+        }
+        return list;
+    }
+
+    public static String truncateToWidth(MsdfFont class161Var, String str, int i, float f) {
+        if (str == null || str.isEmpty()) {
+            return "";
+        }
+        if (class161Var.getWidth(str, i) <= f) {
+            return str;
+        }
+        int i2= 0;
+        int length= str.length();
+        int i3= 0;
+        while (i2 <= length) {
+            int i4= (i2 + length) >>> 1;
+            if (class161Var.getWidth(str.substring(0, i4), i) <= f) {
+                i3 = i4;
+                i2 = i4 + 1;
+            } else {
+                length = i4 - 1;
+            }
+        }
+        return i3 <= 0 ? "" : str.substring(0, i3);
+    }
+
+    public String getDisplayName(LivingEntity livingEntity) {
+        if (livingEntity == null) {
+            return "";
+        }
+        String strStripTextFormat= StringHelper.stripTextFormat(livingEntity.getName().getString());
+        NameProtectModule class512Var= (NameProtectModule) Expensive.INSTANCE.moduleRepository().get(NameProtectModule.class);
+        return class512Var.isState() ? class512Var.replace(strStripTextFormat) : strStripTextFormat;
+    }
+
+    public LivingEntity raycastTarget(Mc class815Var) {
+        ClientPlayerEntity player= class815Var.getPlayer();
+        Entity cameraEntity= class815Var.getCameraEntity();
+        if (player == null || cameraEntity == null || class815Var.getWorld() == null) {
+            return null;
+        }
+        double entityInteractionRange= player.getEntityInteractionRange();
+        Vec3d cameraPosVec= cameraEntity.getCameraPosVec(1.0f);
+        Vec3d rotationVec= cameraEntity.getRotationVec(1.0f);
+        Vec3d vec3dAdd= cameraPosVec.add(rotationVec.multiply(entityInteractionRange));
+        List<LivingEntity> entitiesByClass= class815Var.getWorld().getEntitiesByClass(LivingEntity.class, cameraEntity.getBoundingBox().stretch(rotationVec.multiply(entityInteractionRange)).expand(1.0d), livingEntity -> {
+            return (livingEntity == player || !livingEntity.isAlive() || livingEntity.isSpectator()) ? false : true;
+        });
+        LivingEntity livingEntityMethod010= raycastSingle(this.target, raycastExpand, cameraPosVec, vec3dAdd);
+        if (livingEntityMethod010 != null) {
+            return livingEntityMethod010;
+        }
+        if (entitiesByClass.size() <= 2) {
+            return findClosestRaycast(entitiesByClass, roundIncrement, cameraPosVec, vec3dAdd);
+        }
+        return null;
+    }
+
+    public LivingEntity findClosestRaycast(List<LivingEntity> list, double d, Vec3d vec3d, Vec3d vec3d2) {
+        LivingEntity livingEntity= null;
+        double d2= Double.MAX_VALUE;
+        for (LivingEntity livingEntity2 : list) {
+            Optional optionalRaycast= livingEntity2.getBoundingBox().expand(d).raycast(vec3d, vec3d2);
+            if (!optionalRaycast.isEmpty()) {
+                double dSquaredDistanceTo= vec3d.squaredDistanceTo((Vec3d) optionalRaycast.get());
+                if (dSquaredDistanceTo < d2) {
+                    d2 = dSquaredDistanceTo;
+                    livingEntity = livingEntity2;
+                }
+            }
+        }
+        return livingEntity;
+    }
+
+    public LivingEntity raycastSingle(LivingEntity livingEntity, double d, Vec3d vec3d, Vec3d vec3d2) {
+        if (livingEntity != null && livingEntity.isAlive() && livingEntity.getBoundingBox().expand(d).raycast(vec3d, vec3d2).isPresent()) {
+            return livingEntity;
+        }
+        return null;
+    }
+}
+
