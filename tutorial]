@@ -1,0 +1,788 @@
+
+Ksafik
+Ksafik
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    5 Ноя 2023
+
+Сообщения
+    235
+
+Реакции
+    0
+
+    22 Мар 2025 
+
+    Добавить закладку
+    #1
+
+Такого на форуме не замечал, решил слить
+
+ПРИМЕЧАНИЕ!!! Я ИСПОЛЬЗУЮ EXPENSIVE 3.1 НО ВЫ МОЖЕТЕ ИСПОЛЬЗОВАТЬ ЛЮБУЮ БАЗУ НА 1.16.5
+
+Преимущество рендера головы именно так - нету глупых мини пропастей на углах головы, голова более лучше и гибче закругляется, оптимизация
+
+Для начала по пути (im\expensive\utils\shader\shaders) создаем класс HeadGlsl и пишем туда следующее:
+
+|
+HeadGlsl.java:
+
+package im.expensive.utils.shader.shaders;
+
+import im.expensive.utils.shader.IShader;
+
+public class HeadGlsl implements IShader {
+
+    [USER=1367676]@override[/USER]
+    public String glsl() {
+        return """
+                        #version 120
+                                                    
+                        uniform sampler2D texture;
+                        uniform vec2 size;
+                        uniform float radius;
+                        uniform float hurt_time;
+                        uniform float alpha;
+                        uniform float startX, endX;
+                        uniform float startY, endY;
+                                                    
+                        uniform float texXSize;
+                        uniform float texYSize;
+                                                    
+                        float signedDistanceField(vec2 p, vec2 b, float r) {
+                            return length(max(abs(p) - b, 0.0)) - r;
+                        }
+                                                    
+                        void main() {
+                            vec2 tex = gl_TexCoord[0].st;
+                            vec2 clippedTexCoord = vec2(
+                            mix(startX / texXSize, endX / texXSize, tex.x),
+                            mix(startY / texYSize, endY / texYSize, tex.y)
+                            );
+                            vec4 smpl = texture2D(texture, clippedTexCoord);
+                            vec2 pixel = tex * size;
+                            vec2 centre = 0.5 * size;
+                            float sa = smoothstep(0.0, 1, signedDistanceField(centre - pixel, centre - radius - 1, radius));
+                            vec4 c = mix(vec4(smpl.rgb, smpl.a), vec4(smpl.rgb, 0), sa);
+                            gl_FragColor = vec4(mix(smpl.rgb, vec3(1.0, 0.0, 0.0), hurt_time), c.a * alpha);
+                        }""";
+    }
+
+}
+
+
+далее идем в класс ShaderUtil (или похожий) и пишем туда следующее:
+
+там где список ваших шейдеров (ниже будет скрин примера)
+
+1742662599873.png
+
+добавляем строку:
+Код:
+
+ public static ShaderUtil head = new ShaderUtil("round-head");
+
+
+далее в классе Shaders добавляем строку (куда добавить будет скрин ниже)
+
+1742662740407.png
+
+
+добавляем сюда:
+
+Код:
+
+    @Getter
+    private IShader head = new HeadGlsl();
+
+
+Далее идем туда где рендерится ваш таргет худ и вместо строк с рендером головы пишем:
+
+Код:
+
+float hurtPercent = (entity.hurtTime - (entity.hurtTime != 0 ? mc.timer.renderPartialTicks : 0.0f)) / 10.0f;
+String rs = EntityType.getKey(((Entity)entity).getType()).getPath();
+ResourceLocation skin = entity instanceof AbstractClientPlayerEntity e ? (e).getLocationSkin() : new ResourceLocation("textures/entity/"+rs+".png");
+RenderUtil.drawHead(skin, posX, posY, headSize + 5, headSize + 5, 4, 1, hurtPercent);
+
+ 
+Попросить личный Ответить Ответить с хайдом
+Жалоба
+Ksafik
+Ksafik
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    5 Ноя 2023
+
+Сообщения
+    235
+
+Реакции
+    0
+
+    24 Мар 2025 
+
+    Добавить закладку
+    #2
+
+Если я что то забыл пишите в лс на форуме или сюда под тему
+ 
+Ответить Ответить с хайдом
+Жалоба
+ShadowSystem
+Забаненный
+
+Статус
+    Оффлайн 
+
+Регистрация
+    16 Дек 2023
+
+Сообщения
+    637
+
+Реакции
+    9
+
+    24 Мар 2025 
+
+    Добавить закладку
+    #3
+
+Обратите внимание, пользователь заблокирован на форуме. Не рекомендуется проводить сделки.
+
+    Ksafik написал(а):
+    Такого на форуме не замечал, решил слить
+
+    ПРИМЕЧАНИЕ!!! Я ИСПОЛЬЗУЮ EXPENSIVE 3.1 НО ВЫ МОЖЕТЕ ИСПОЛЬЗОВАТЬ ЛЮБУЮ БАЗУ НА 1.16.5
+
+    Преимущество рендера головы именно так - нету глупых мини пропастей на углах головы, голова более лучше и гибче закругляется, оптимизация
+
+    Для начала по пути (im\expensive\utils\shader\shaders) создаем класс HeadGlsl и пишем туда следующее:
+
+    |
+    HeadGlsl.java:
+
+    package im.expensive.utils.shader.shaders;
+
+    import im.expensive.utils.shader.IShader;
+
+    public class HeadGlsl implements IShader {
+
+        [USER=1367676]@override[/USER]
+        public String glsl() {
+            return """
+                            #version 120
+                                                        
+                            uniform sampler2D texture;
+                            uniform vec2 size;
+                            uniform float radius;
+                            uniform float hurt_time;
+                            uniform float alpha;
+                            uniform float startX, endX;
+                            uniform float startY, endY;
+                                                        
+                            uniform float texXSize;
+                            uniform float texYSize;
+                                                        
+                            float signedDistanceField(vec2 p, vec2 b, float r) {
+                                return length(max(abs(p) - b, 0.0)) - r;
+                            }
+                                                        
+                            void main() {
+                                vec2 tex = gl_TexCoord[0].st;
+                                vec2 clippedTexCoord = vec2(
+                                mix(startX / texXSize, endX / texXSize, tex.x),
+                                mix(startY / texYSize, endY / texYSize, tex.y)
+                                );
+                                vec4 smpl = texture2D(texture, clippedTexCoord);
+                                vec2 pixel = tex * size;
+                                vec2 centre = 0.5 * size;
+                                float sa = smoothstep(0.0, 1, signedDistanceField(centre - pixel, centre - radius - 1, radius));
+                                vec4 c = mix(vec4(smpl.rgb, smpl.a), vec4(smpl.rgb, 0), sa);
+                                gl_FragColor = vec4(mix(smpl.rgb, vec3(1.0, 0.0, 0.0), hurt_time), c.a * alpha);
+                            }""";
+        }
+
+    }
+
+
+    далее идем в класс ShaderUtil (или похожий) и пишем туда следующее:
+
+    там где список ваших шейдеров (ниже будет скрин примера)
+
+    Посмотреть вложение 301807
+    добавляем строку:
+    Код:
+
+     public static ShaderUtil head = new ShaderUtil("round-head");
+
+
+    далее в классе Shaders добавляем строку (куда добавить будет скрин ниже)
+
+    Посмотреть вложение 301808
+
+    добавляем сюда:
+
+    Код:
+
+        @Getter
+        private IShader head = new HeadGlsl();
+
+
+    Далее идем туда где рендерится ваш таргет худ и вместо строк с рендером головы пишем:
+
+    Код:
+
+    float hurtPercent = (entity.hurtTime - (entity.hurtTime != 0 ? mc.timer.renderPartialTicks : 0.0f)) / 10.0f;
+    String rs = EntityType.getKey(((Entity)entity).getType()).getPath();
+    ResourceLocation skin = entity instanceof AbstractClientPlayerEntity e ? (e).getLocationSkin() : new ResourceLocation("textures/entity/"+rs+".png");
+    RenderUtil.drawHead(skin, posX, posY, headSize + 5, headSize + 5, 4, 1, hurtPercent);
+
+    Нажмите для раскрытия...
+
+Xd,у меня закругляется шейдером от обычного ректа,без текстуры.Кстати утилку забыл ты дать.
+ 
+Ответить Ответить с хайдом
+Жалоба
+Vuflich
+Vuflich
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    6 Ноя 2023
+
+Сообщения
+    144
+
+Реакции
+    0
+
+    24 Мар 2025 
+
+    Добавить закладку
+    #4
+
+    ShadowSystem написал(а):
+    Xd,у меня закругляется шейдером от обычного ректа,без текстуры.Кстати утилку забыл ты дать.
+
+Лэээээет
+ 
+Ответить Ответить с хайдом
+Жалоба
+Ksafik
+Ksafik
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    5 Ноя 2023
+
+Сообщения
+    235
+
+Реакции
+    0
+
+    24 Мар 2025 
+
+    Добавить закладку
+    #5
+
+шейдер утил же есть в экспе по дефолту
+из за такого закрцгления (которое ты написал ShadowSystem) -оптимизация и на углах пробелы маленькие которые при сильном закруглении сильно видно
+ 
+Ответить Ответить с хайдом
+Жалоба
+ShadowSystem
+Забаненный
+
+Статус
+    Оффлайн 
+
+Регистрация
+    16 Дек 2023
+
+Сообщения
+    637
+
+Реакции
+    9
+
+    24 Мар 2025 
+
+    Добавить закладку
+    #6
+
+Обратите внимание, пользователь заблокирован на форуме. Не рекомендуется проводить сделки.
+
+    Ksafik написал(а):
+    шейдер утил же есть в экспе по дефолту
+    из за такого закрцгления (которое ты написал ShadowSystem) -оптимизация и на углах пробелы маленькие которые при сильном закруглении сильно видно
+
+Скинь
+ 
+Ответить Ответить с хайдом
+Жалоба
+Ksafik
+Ksafik
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    5 Ноя 2023
+
+Сообщения
+    235
+
+Реакции
+    0
+
+    24 Мар 2025 
+
+    Добавить закладку
+    #7
+
+    ShadowSystem написал(а):
+    Скинь
+
+что скинуть?
+ 
+Ответить Ответить с хайдом
+Жалоба
+qqwesda999
+qqwesda999
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    21 Сен 2024
+
+Сообщения
+    11
+
+Реакции
+    0
+
+    24 Мар 2025 
+
+    Добавить закладку
+    #8
+
+Скинь рендерутил
+ 
+Ответить Ответить с хайдом
+Жалоба
+ezfarmilapve
+ezfarmilapve
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    11 Апр 2024
+
+Сообщения
+    141
+
+Реакции
+    1
+
+    24 Мар 2025 
+
+    Добавить закладку
+    #9
+
+Скрытый контент для пользователей Ksafik.
+ 
+Ответить Ответить с хайдом
+Жалоба
+Fabos1337
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    14 Июл 2024
+
+Сообщения
+    603
+
+Реакции
+    6
+
+    24 Мар 2025 
+
+    Добавить закладку
+    #10
+
+Нахуя??
+ 
+Ответить Ответить с хайдом
+Жалоба
+McDonalds
+McDonalds
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    3 Май 2023
+
+Сообщения
+    997
+
+Реакции
+    9
+
+    24 Мар 2025 
+
+    Добавить закладку
+    #11
+
+    Fabos1337 написал(а):
+    Нахуя??
+
+фабос ты ваще заебал скамить
+ 
+Ответить Ответить с хайдом
+Жалоба
+Ksafik
+Ksafik
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    5 Ноя 2023
+
+Сообщения
+    235
+
+Реакции
+    0
+
+    25 Мар 2025 
+
+    Добавить закладку
+    #12
+
+    Fabos1337 написал(а):
+    Нахуя??
+
+сказал тип который снял сабку за то что я сказал что то про клиент (когда я написал "за что" ты ответил "за россию")
+
+    ezfarmilapve написал(а):
+    Скрытое содержимое
+
+static ShaderUtil head = new ShaderUtil("round-head");
+public static void drawHead(ResourceLocation skin,float x, float y, float width, float height, float radius, float alpha, float hurtPercent){
+mc.getTextureManager().bindTexture(skin); // биндим текстуру головы игрока
+RenderSystem.pushMatrix();
+RenderSystem.enableBlend();
+head.attach(); // атачим шейдер для рендера
+head.setUniformf("size", width,height); //ставим размер головы
+head.setUniformf("radius", radius); // ставим закругление головы
+head.setUniformf("hurt_time", hurtPercent); //дамаг энтити (красное затемнение)
+head.setUniformf("alpha", alpha); // прозрачность
+
+head.setUniformf("startX", 4); // не менять
+head.setUniformf("startY", 4); // тоже не менять
+
+head.setUniformf("endX", 8); // опять не менять
+head.setUniformf("endY", 8); //не менять
+
+head.setUniformf("texXSize", 32); //размер текстурки (НЕ МЕНЯТЬ)
+head.setUniformf("texYSize", 32); //не менять тоже размер текстурки
+head.drawQuads(x+2, y+2, width, height); //рисуем голову на координатах
+head.detach(); // детачим шейдер чтобы gl11 нас не бом бомнул
+RenderSystem.disableBlend();
+RenderSystem.popMatrix();
+}
+
+и еще добавь в шейдер утилке вот тут:
+1742888642982.png
+
+
+вот это:
+case "round-head" -> createShader(Shaders.getInstance().getHead(), GL_FRAGMENT_SHADER);
+ 
+Ответить Ответить с хайдом
+Жалоба
+chirada
+chirada
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    4 Авг 2022
+
+Сообщения
+    62
+
+Реакции
+    0
+
+    26 Мар 2025 
+
+    Добавить закладку
+    #13
+
+зря слил
+ 
+Ответить Ответить с хайдом
+Жалоба
+Fabos1337
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    14 Июл 2024
+
+Сообщения
+    603
+
+Реакции
+    6
+
+    26 Мар 2025 
+
+    Добавить закладку
+    #14
+
+    Ksafik написал(а):
+    сказал тип который снял сабку за то что я сказал что то про клиент (когда я написал "за что" ты ответил "за россию")
+
+    static ShaderUtil head = new ShaderUtil("round-head");
+    public static void drawHead(ResourceLocation skin,float x, float y, float width, float height, float radius, float alpha, float hurtPercent){
+    mc.getTextureManager().bindTexture(skin); // биндим текстуру головы игрока
+    RenderSystem.pushMatrix();
+    RenderSystem.enableBlend();
+    head.attach(); // атачим шейдер для рендера
+    head.setUniformf("size", width,height); //ставим размер головы
+    head.setUniformf("radius", radius); // ставим закругление головы
+    head.setUniformf("hurt_time", hurtPercent); //дамаг энтити (красное затемнение)
+    head.setUniformf("alpha", alpha); // прозрачность
+
+    head.setUniformf("startX", 4); // не менять
+    head.setUniformf("startY", 4); // тоже не менять
+
+    head.setUniformf("endX", 8); // опять не менять
+    head.setUniformf("endY", 8); //не менять
+
+    head.setUniformf("texXSize", 32); //размер текстурки (НЕ МЕНЯТЬ)
+    head.setUniformf("texYSize", 32); //не менять тоже размер текстурки
+    head.drawQuads(x+2, y+2, width, height); //рисуем голову на координатах
+    head.detach(); // детачим шейдер чтобы gl11 нас не бом бомнул
+    RenderSystem.disableBlend();
+    RenderSystem.popMatrix();
+    }
+
+    и еще добавь в шейдер утилке вот тут:
+    Посмотреть вложение 302046
+
+    вот это:
+    case "round-head" -> createShader(Shaders.getInstance().getHead(), GL_FRAGMENT_SHADER);
+    Нажмите для раскрытия...
+
+Мой слоняра ZOV!
+ 
+Ответить Ответить с хайдом
+Жалоба
+ezfarmilapve
+ezfarmilapve
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    11 Апр 2024
+
+Сообщения
+    141
+
+Реакции
+    1
+
+    27 Мар 2025 
+
+    Добавить закладку
+    #15
+
+Скрытый контент для пользователей Ksafik.
+ 
+Ответить Ответить с хайдом
+Жалоба
+Ksafik
+Ksafik
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    5 Ноя 2023
+
+Сообщения
+    235
+
+Реакции
+    0
+
+    27 Мар 2025 
+
+    Добавить закладку
+    #16
+
+Скрытый контент для пользователей ezfarmilapve.
+
+    chirada написал(а):
+    зря слил
+
+а чо
+
+    Fabos1337 написал(а):
+    Мой слоняра ZOV!
+
+спасибо легенда
+ 
+Ответить Ответить с хайдом
+Жалоба
+chirada
+chirada
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    4 Авг 2022
+
+Сообщения
+    62
+
+Реакции
+    0
+
+    28 Мар 2025 
+
+    Добавить закладку
+    #17
+
+    Ksafik написал(а):
+    Скрытое содержимое
+
+    а чо
+
+    спасибо легенда
+
+хз пастером что бы не досталось
+ 
+Ответить Ответить с хайдом
+Жалоба
+Ksafik
+Ksafik
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    5 Ноя 2023
+
+Сообщения
+    235
+
+Реакции
+    0
+
+    28 Мар 2025 
+
+    Добавить закладку
+    #18
+
+    chirada написал(а):
+    хз пастером что бы не досталось
+
+да пусть радуются, хотя почему не досталось aloweeed слил Hachclient Free где все это есть
+ 
+Ответить Ответить с хайдом
+Жалоба
+ezfarmilapve
+ezfarmilapve
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    11 Апр 2024
+
+Сообщения
+    141
+
+Реакции
+    1
+
+    28 Мар 2025 
+
+    Добавить закладку
+    #19
+
+Скрытый контент для пользователей Ksafik.
+ 
+Ответить Ответить с хайдом
+Жалоба
+xG0sti
+Начинающий
+
+Статус
+    Оффлайн 
+
+Регистрация
+    1 Сен 2023
+
+Сообщения
+    28
+
+Реакции
+    0
+
+    28 Мар 2025 
+
+    Добавить закладку
+    #20
+
+    ezfarmilapve написал(а):
+    Скрытое содержимое
+
+ути какие мы скрытные пастер
+ 
+Ответить Ответить с хайдом
+Жалоба
